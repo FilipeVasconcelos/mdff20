@@ -2,6 +2,7 @@
 #include "constants.h"
 #include "thermo.h"
 #include "md.h"
+#include "config.h"
 #include "cell.h"
 
 void write_thermo(){
@@ -29,5 +30,10 @@ void write_thermo(){
     printf("  ---------------------------------------------\n");
     printf("  Etot                  = %19.12e\n"        ,e_tot);
     printf("  Htot                  = %19.12e\n"        ,e_tot);
-
+    printf("\n");
+    printf("\n");
+    printf("non_bonded stress tensor\n");
+    for (int i=0;i<3;i++){
+        printf("%19.12e %19.12e %19.12e\n",tau_nonb[i][0],tau_nonb[i][1],tau_nonb[i][2]);
+    }
 }
