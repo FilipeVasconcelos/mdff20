@@ -14,20 +14,19 @@ void lattice(CELL * Cell)
     Cell->G[1][2] = Cell->G[2][1];
     Cell->G[2][2] = Cell->A[2][2]*Cell->A[2][2];
 
-    double u1[3],u2[3],tmp[3];
-
     expro(Cell->B[0],Cell->A[1],Cell->A[2]);
     expro(Cell->B[1],Cell->A[2],Cell->A[0]);
     expro(Cell->B[2],Cell->A[0],Cell->A[1]);
-
     
-    double omega;
+    double omega,inveomega;
     omega = Cell->B[0][0]*Cell->A[0][0]+Cell->B[1][0]*Cell->A[1][0] + Cell->B[2][0]*Cell->A[2][0];
     Cell->Omega=omega;
+    inveomega=1.0/omega;
+    printf("cell volume : %12.20f\n",omega);
 
     for(int i=0;i<3;i++) {
         for(int j=0;j<3;j++) {
-            Cell->B[i][j]=Cell->B[i][j]/omega ;
+            Cell->B[i][j]=Cell->B[i][j] *inveomega ;
         }
     }
 
