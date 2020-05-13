@@ -23,9 +23,9 @@ void pbc(double *rxij,double *ryij,double *rzij){
     double syij = *ryij - nint ( *ryij );
     double szij = *rzij - nint ( *rzij );
     //printf("test nint %f %f %f %f %f %f %d %d %d",sxij,syij,szij,*rxij,*ryij,*rzij,nint ( *rxij ),nint ( *ryij ),nint ( *rzij ));
-    *rxij = sxij * psimu_cell->A[0][0] + syij * psimu_cell->A[0][1] + szij * psimu_cell->A[0][2];
-    *ryij = sxij * psimu_cell->A[1][0] + syij * psimu_cell->A[1][1] + szij * psimu_cell->A[1][2];
-    *rzij = sxij * psimu_cell->A[2][0] + syij * psimu_cell->A[2][1] + szij * psimu_cell->A[2][2];
+    *rxij = sxij * psimu_cell->A[0][0] + syij * psimu_cell->A[1][0] + szij * psimu_cell->A[2][0];
+    *ryij = sxij * psimu_cell->A[0][1] + syij * psimu_cell->A[1][1] + szij * psimu_cell->A[2][1];
+    *rzij = sxij * psimu_cell->A[0][2] + syij * psimu_cell->A[1][2] + szij * psimu_cell->A[2][2];
     //printf(" after : %f %f %f %f\n",*rxij,*ryij,*rzij,psimu_cell->A[0][0]);
 
 }
@@ -74,7 +74,7 @@ void init_nmlj(){
             // sigma*^2
             sigsq[it][jt]= two16 * two16 * sigmalj[it][jt] * sigmalj[it][jt] ;
             // for the virial                                                          
-            fc[it][jt] =  ppqq [it][jt] * epsp [it][jt] /  sigsq [it][jt];
+            fc[it][jt] =  (ppqq [it][jt] * epsp [it][jt]) /  sigsq [it][jt];
             printf("fc : %f sigsq : %f epsp : %f pq : %f\n",fc[it][jt],sigsq[it][jt],epsp[it][jt],ppqq[it][jt]);
 
         }
@@ -92,6 +92,11 @@ void engforce_nmlj_pbc(double *u)
 
     int p1,p2;
     *u=0;
+    for (int i=0;i<3;i++){
+        for(int j=0;j<3;j++){
+            tau_nonb[i][j]=0.0;
+        }
+    }
 
     /*************************************** 
             cartesian to direct                    
@@ -136,14 +141,30 @@ void engforce_nmlj_pbc(double *u)
                     // virial;
                     vir = vir + wij * rijsq;
                     // forces
-		    fx [ ia ] = fx [ ia ] + fxij;
-                    fy [ ia ] = fy [ ia ] + fyij;
-                    fz [ ia ] = fz [ ia ] + fzij;
-                    fx [ ja ] = fx [ ja ] - fxij;
-                    fy [ ja ] = fy [ ja ] - fyij;
-                    fz [ ja ] = fz [ ja ] - fzij;
+		    fx[ia] += fxij;
+                    fy[ia] += fyij;
+                    fz[ia] += fzij;
+                    fx[ja] -= fxij;
+                    fy[ja] -= fyij;
+                    fz[ja] -= fzij;
+                    // stress tensor
+                    tau_nonb[0][0] += (rxij*fxij + rxij*fxij)*0.5;
+                    tau_nonb[0][1] += (rxij*fyij + ryij*fxij)*0.5;
+                    tau_nonb[0][2] += (rxij*fzij + rzij*fxij)*0.5;
+                    tau_nonb[1][0] += (ryij*fxij + rxij*fyij)*0.5;
+                    tau_nonb[1][1] += (ryij*fyij + ryij*fyij)*0.5;
+                    tau_nonb[1][2] += (ryij*fzij + rzij*fyij)*0.5;
+                    tau_nonb[2][0] += (rzij*fxij + rxij*fzij)*0.5;
+                    tau_nonb[2][1] += (rzij*fyij + ryij*fzij)*0.5;
+                    tau_nonb[2][2] += (rzij*fzij + rzij*fzij)*0.5;
                 }
             }
+        }
+    }
+    double coeff=1./(psimu_cell->Omega*press_unit);
+    for (int i=0;i<3;i++){
+        for(int j=0;j<3;j++){
+            tau_nonb[i][j] *= coeff;
         }
     }
 
