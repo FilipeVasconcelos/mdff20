@@ -68,17 +68,17 @@ void maxwellboltzmann_velocities()
 
 void calc_temp(double *temp, double *ekin, int flag)
 {
-    double l = 3.0 * (double) nion;
+    double l = 3.0 * ((double) nion);
     double kin;
 
     kin = 0.0;
     for (int ia=0; ia< nion; ia++)
     {
-        kin =  kin + ( vx[ia]*vx[ia] + vy[ia]*vy[ia] + vz[ia]*vz[ia] ) * massia[ia] ;
+        kin += ( vx[ia]*vx[ia] + vy[ia]*vy[ia] + vz[ia]*vz[ia] ) * massia[ia] ;
     //    printf("(in calc_temp %d %f %f %f %f %f\n",ia,kin, vx[ia], vy[ia], vz[ia],massia[ia]);
     }
     *ekin=(kin*0.5);
-    *temp = (2.0 * kin / ( l * boltz_unit ));
+    *temp = (2.0 * kin) / ( l * boltz_unit );
 //    printf("out calc_temp\n");
 //    if (flag) exit(0);
     
@@ -91,9 +91,9 @@ void rescale_velocities()
     double T,ekin;
     
     calc_temp(&T,&ekin,0);
-    //printf("(before rescaling) temp : %f kin : %f \n",T,ekin);
+    if (itime%nprint==0) printf("(before rescaling) temp : %f kin : %f \n",T,ekin);
    
-    double lambda = sqrt( ( 1.0 + (dt / tauTberendsen) * ( ( temp / T / boltz_unit ) - 1.0 ) ) ) ;
+    double lambda = pow( 1.0 + (dt / tauTberendsen) * (( temp / T / boltz_unit ) - 1.0 ), 0.5) ;
     //printf("lambda %f dt %f tau %f temp %f T %f boltz %f\n",lambda,dt,tauTberendsen,temp/boltz_unit,T/boltz_unit,boltz_unit); 
 
     for(int ia=0; ia<nion; ia++) {
