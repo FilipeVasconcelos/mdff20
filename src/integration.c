@@ -11,12 +11,10 @@ void prop_velocity_verlet(){
     fxs=malloc(nion*sizeof(*fxs));
     fys=malloc(nion*sizeof(*fys));
     fzs=malloc(nion*sizeof(*fzs));
+    double dtsq2 = dt * dt * 0.5L; 
+    double dt2 = dt * 0.5L;
     for(int ia=0;ia<nion;ia++){
         fxs[ia]=fx[ia];fys[ia]=fy[ia];fzs[ia]=fz[ia];
-    }
-    double dtsq2 = dt * dt * 0.5; 
-    double dt2 = dt * 0.5;
-    for(int ia=0;ia<nion;ia++){
         rx[ia] += vx[ia] * dt + (fx[ia] * dtsq2 ) * invemassia[ia] ;
         ry[ia] += vy[ia] * dt + (fy[ia] * dtsq2 ) * invemassia[ia] ;
         rz[ia] += vz[ia] * dt + (fz[ia] * dtsq2 ) * invemassia[ia] ;
