@@ -28,12 +28,8 @@ $(info branch   $(BRANCH))
 #   -DMPI       : 
 #   possible debug/timing 
 # --------------------------------------------------------------------------- 
-#CPPDEFS=-DHOST=\"$(HOST)\"   \
-#        -DBRANCH=\"$(BRANCH)\" \
-#        -DMPI
 CPPDEFS=-DMPI -DHOST="$(HOST)" -DBRANCH="$(BRANCH)" 
 $(info CPPDEFS  $(CPPDEFS))
-
 
 
 %.o: %.c $(DEPS)
