@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
+#include <mpi.h>
 
 #include "constants.h"
 #include "cell.h"
@@ -22,6 +23,14 @@ int main(int argc, char *argv[])
     double elapsed;
     char * controlfn;
 
+    MPI_Init(NULL,NULL);
+
+    int myrank,numprocs;
+    MPI_Comm_rank(MPI_COMM_WORLD,&myrank);
+    MPI_Comm_size(MPI_COMM_WORLD,&numprocs);
+    printf("proc : %d numprocs : %d\n",myrank,numprocs);
+
+    init_rand();
     if(argc < 2)
     {
         printf("Usage : ./mdff20 <filename>\n");
@@ -69,6 +78,8 @@ int main(int argc, char *argv[])
     free(vz);
     free(massia);
     //free(atype);
+
+    MPI_Finalize();
 
     return EXIT_SUCCESS;
 }
