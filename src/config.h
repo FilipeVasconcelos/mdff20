@@ -11,7 +11,8 @@ double *rxs,*rys,*rzs;
 double *massia;  
 double *invemassia;  
 char   **atype;  
-int     *itype;  
+int     *itype; 
+double tau_nonb[3][3];
 
 int read_config();
 void init_config();
