@@ -7,6 +7,7 @@
 double TPI ;
 double boltz_unit;
 double time_unit;
+double press_unit;
 double mass   [NTYPEMAX];
 int    natmi  [NTYPEMAX];
 char*  atypei [NTYPEMAX];  
