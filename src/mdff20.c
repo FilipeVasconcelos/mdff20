@@ -1,8 +1,8 @@
-#include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
+#include <time.h>
 #include <mpi.h>
 
 #include "constants.h"
@@ -14,6 +14,7 @@
 #include "nmlj.h"
 #include "kinetic.h"
 #include "md.h"
+#include "io.h"
 
 
 int main(int argc, char *argv[])
@@ -21,14 +22,16 @@ int main(int argc, char *argv[])
     time_t starting_time, finishing_time;
     clock_t t1=clock();
     double elapsed;
-    char * controlfn;
+    //char * controlfn;
 
+#ifdef MPI_
     MPI_Init(NULL,NULL);
 
     int myrank,numprocs;
     MPI_Comm_rank(MPI_COMM_WORLD,&myrank);
     MPI_Comm_size(MPI_COMM_WORLD,&numprocs);
     printf("proc : %d numprocs : %d\n",myrank,numprocs);
+#endif
 
     init_rand();
     if(argc < 2)
@@ -39,11 +42,8 @@ int main(int argc, char *argv[])
     controlfn=argv[1];
 
     starting_time = time(NULL);
-    printf("%s\n","===========================================");
-    printf("%s\n","                MDFF C2020                 ");
-    printf("%s\n","===========================================");
-    printf("Date :       %s", asctime(localtime(&starting_time)));
-    printf("Input file : %s\n",controlfn);
+    
+    headerstdout(starting_time);
 
     gen_constants();
 
@@ -79,7 +79,9 @@ int main(int argc, char *argv[])
     free(massia);
     //free(atype);
 
+#ifdef MPI_
     MPI_Finalize();
+#endif
 
     return EXIT_SUCCESS;
 }
