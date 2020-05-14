@@ -1,6 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 #include "constants.h"
+#include "mpi_mdff.h"
 int nion; double onenion;
 int ntype;
 
@@ -16,6 +17,9 @@ double *invemassia;
 char   **atype;  
 int     *itype; 
 double tau_nonb[3][3];
+
+struct DEC atom_dec;
+
 
 int read_config();
 void init_config();
