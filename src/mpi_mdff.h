@@ -7,4 +7,4 @@ typedef struct DEC
     char* label;
 }DEC ;
 
-void do_split(int n,int np,int mrank,DEC dec,char* lab);
+int do_split(int n,int np,int mrank,DEC dec,char* lab);
