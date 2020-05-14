@@ -1,8 +1,16 @@
-#include<stdio.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/utsname.h>
 #include <time.h>
 #include "io.h"
 
-void headerstdout(time_t starting_time){
+void headerstdout(time_t starting_time, int numprocs){
+
+    char *username = getenv("USER");
+    char *plural;
+    plural = ((numprocs>1) ? "s" : "\0");
+    struct utsname hostname;
+    uname(&hostname);
 
     printf("                            \\\\|//                          \n");
     printf("                           -(o o)-                           \n");
@@ -17,9 +25,12 @@ void headerstdout(time_t starting_time){
     printf("                                         |_______|'.____.'   \n");
     printf("\n");
     SEPARATOR;
-    printf("Date :       %s", asctime(localtime(&starting_time)));
 
-    printf("MOLECULAR DYNAMICS ...for fun in 2020 in now in C            \n");
+    printf("MOLECULAR DYNAMICS ...for fun in 2020 ... but now in C ;)    \n");
     printf("filipe.manuel.vasconcelos@gmail.com                          \n");
+    printf("Runnin on : %d node%s\n",numprocs,plural);
+    printf("by user   : %s\n",username);
+    printf("host      : %s %s %s\n",hostname.nodename,hostname.sysname,hostname.machine);
+    printf("Date :       %s", asctime(localtime(&starting_time)));
 
 }

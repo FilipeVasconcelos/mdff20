@@ -21,7 +21,6 @@ int main(int argc, char *argv[])
 {
     time_t starting_time, finishing_time;
     clock_t t1=clock();
-    double elapsed;
     //char * controlfn;
 
 #ifdef MPI_
@@ -31,6 +30,8 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD,&myrank);
     MPI_Comm_size(MPI_COMM_WORLD,&numprocs);
     printf("proc : %d numprocs : %d\n",myrank,numprocs);
+#else
+    int numprocs=1;
 #endif
 
     init_rand();
@@ -43,7 +44,7 @@ int main(int argc, char *argv[])
 
     starting_time = time(NULL);
     
-    headerstdout(starting_time);
+    headerstdout(starting_time,numprocs);
 
     gen_constants();
 
@@ -68,9 +69,8 @@ int main(int argc, char *argv[])
 
     run_md();
     
-    finishing_time = time(NULL);
-    elapsed = starting_time - finishing_time;
     printf("Elapsed time : %f\n", ((double) clock()-t1)/CLOCKS_PER_SEC );
+    finishing_time = time(NULL);
     printf("Date :       %s", asctime(localtime(&finishing_time)));
 
     free(vx);

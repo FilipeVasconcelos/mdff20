@@ -5,5 +5,5 @@
 
 char *controlfn; 
 
-void headerstdout(time_t time);
+void headerstdout(time_t time ,int numprocs);
 #endif
