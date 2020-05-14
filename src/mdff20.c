@@ -1,8 +1,9 @@
-#include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 #include <math.h>
+#include <time.h>
 #include <mpi.h>
 
 #include "constants.h"
@@ -14,21 +15,25 @@
 #include "nmlj.h"
 #include "kinetic.h"
 #include "md.h"
+#include "io.h"
 
 
 int main(int argc, char *argv[])
 {
     time_t starting_time, finishing_time;
     clock_t t1=clock();
-    double elapsed;
-    char * controlfn;
+    char* Cstarting_time, *Cfinishing_time;
 
+#ifdef MPI_
     MPI_Init(NULL,NULL);
 
     int myrank,numprocs;
     MPI_Comm_rank(MPI_COMM_WORLD,&myrank);
     MPI_Comm_size(MPI_COMM_WORLD,&numprocs);
     printf("proc : %d numprocs : %d\n",myrank,numprocs);
+#else
+    int numprocs=1;
+#endif
 
     init_rand();
     if(argc < 2)
@@ -37,49 +42,62 @@ int main(int argc, char *argv[])
         exit(0);
     }
     controlfn=argv[1];
-
     starting_time = time(NULL);
-    printf("%s\n","===========================================");
-    printf("%s\n","                MDFF C2020                 ");
-    printf("%s\n","===========================================");
-    printf("Date :       %s", asctime(localtime(&starting_time)));
-    printf("Input file : %s\n",controlfn);
+    Cstarting_time=strdup(asctime(localtime(&starting_time)));
+   
+    // header output à la MDFF 
+    headerstdout(Cstarting_time,numprocs);
 
+    // main constants of the code
     gen_constants();
 
+    //à mettre ailleur
     psimu_cell=&simu_cell;
+
+    //read configuration from file POSFF
+    //allocate main quantities when nion is known
     read_posff(psimu_cell);
-    lattice(psimu_cell);
-//    read_config(controlfn);
+
+    //à mettre dans POSFF
+
+
+    
+//    read_config(controlfn); //needed ?
+
+    //read md parameters 
     read_md(controlfn);
+    //read field parameters 
     read_field(controlfn);
 
+    //some initialize quantities à regrouper ailleur
     init_nmlj();
-    init_config();
-    /*
-    printf("%f\n",simu_cell.B[0][0]);
-    printf("%f\n",simu_cell.A[0][0]);
-    exit(1);
-    */
     init_velocities();
-    //print_velocities();
     maxwellboltzmann_velocities();
-    //print_velocities();
 
+    // main md function
     run_md();
     
+
+    //
+    double elapsed_time=((double) clock()-t1)/CLOCKS_PER_SEC;
+    printf("\n");
+    SEPARATOR;
     finishing_time = time(NULL);
-    elapsed = starting_time - finishing_time;
-    printf("Elapsed time : %f\n", ((double) clock()-t1)/CLOCKS_PER_SEC );
-    printf("Date :       %s", asctime(localtime(&finishing_time)));
+    Cfinishing_time=strdup(asctime(localtime(&finishing_time)));
+    printf("Elapsed time : %f (s)\n", elapsed_time );
+    printf("Date         : %s", Cfinishing_time);
 
     free(vx);
     free(vy);
     free(vz);
     free(massia);
-    //free(atype);
+    //free(atype); double free corruption ???
+    free(Cstarting_time);
+    free(Cfinishing_time);
 
+#ifdef MPI_
     MPI_Finalize();
+#endif
 
     return EXIT_SUCCESS;
 }

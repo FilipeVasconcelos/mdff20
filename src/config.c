@@ -6,8 +6,9 @@
 #include "config.h"
 
 int read_config (char* controlfn) {
-   char buffer[10];
-   int data;
+
+//   char buffer[10];
+//   int data;
    FILE * fp;
 
 
@@ -41,29 +42,78 @@ int read_config (char* controlfn) {
 }
 
 
+void alloc_config(){
+
+    onenion=1.0/( (double) nion) ;
+    massia= malloc(nion*sizeof *massia );
+    invemassia= malloc(nion*sizeof *invemassia );
+    atype= malloc(nion*sizeof *atype);
+    if (atype==NULL){
+        printf("**atype malloc failure\n");
+    }
+    for (int ia=0;ia<nion;ia++)  {
+        atype[ia]=NULL;
+        atype[ia]=malloc((MAX_LEN+1)*sizeof(*atype));
+        if (atype[ia] == NULL){
+            printf("atype %d malloc failure\n",ia);
+        }
+    }
+    vx= malloc(nion*sizeof(*vx));
+    vy= malloc(nion*sizeof(*vy));
+    vz= malloc(nion*sizeof(*vz));
+    rx= malloc(nion*sizeof(*rx));
+    ry= malloc(nion*sizeof(*ry));
+    rz= malloc(nion*sizeof(*rz));
+    fx= malloc(nion*sizeof(*fx));
+    fy= malloc(nion*sizeof(*fy));
+    fz= malloc(nion*sizeof(*fz));
+    rxs= malloc(nion*sizeof(*rxs));
+    rys= malloc(nion*sizeof(*rys));
+    rzs= malloc(nion*sizeof(*rzs));
+    for(int ia=0; ia<nion; ia++) {
+        massia[ia]=1.0;
+        invemassia[ia]=1.0;
+        rx[ia]=0.0;ry[ia]=0.0;rz[ia]=0.0;
+        vx[ia]=0.0;vy[ia]=0.0;vz[ia]=0.0;
+        fx[ia]=0.0;fy[ia]=0.0;fz[ia]=0.0;
+        rxs[ia]=0.0;rys[ia]=0.0;rzs[ia]=0.0;
+    }
+
+    init_config();
+}
+
+void free_config(){
+    free(massia);
+    free(invemassia);
+    for (int ia=0;ia<nion;ia++)  {
+        free(atype[ia]);
+    }
+    free(atype);
+    free(rx);free(ry);free(rz);
+    free(vx);free(vy);free(vz);
+    free(fx);free(fy);free(fz);
+    free(rxs);free(rys);free(rzs);
+}
+
+
 void init_config()
 {
 
     int ccs,cc;
 
     itype=malloc(nion*sizeof*itype);
-
-
-    printf("inside init_config %d %d\n",nion,ntype);
+    //printf("inside init_config %d %d\n",nion,ntype);
     cc=0;
     for ( int it=0; it <= ntype-1;it++)
     {
         ccs = cc;
         cc  = cc + natmi[it];
-      //  printf("it : %d %d %d %.2f\n",it,ccs, cc,mass[it]);
 
         for ( int ia=ccs;ia<=(cc-1);ia++)
         {
             massia[ia] = mass[it];
             invemassia[ia] = 1.0/mass[it];
             itype[ia]  = it;
-    //        printf("ia : %d %d %d %d %.2f %.2f \n",it,ia,ccs,cc,mass[it],massia[ia]);
-//            printf("it : %d %d %d\n",it,ia,ccs, cc,mass[it],massia[ia]);
         }
 
     }

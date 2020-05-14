@@ -38,12 +38,12 @@ void read_nmlj(){
 void init_nmlj(){
     double rcut=cutshortrange;
     rcutsq=rcut*rcut;
-    double rcut3=rcutsq*rcut;
-    double rskin = rcut + skindiff;
-    double rskinsq = rskin*rskin;
+//    double rcut3=rcutsq*rcut;
+//    double rskin = rcut + skindiff;
+//    double rskinsq = rskin*rskin;
     
     double ppqq[ntype][ntype];
-    double one13 = (1.0 / 3.0) ;
+//    double one13 = (1.0 / 3.0) ;
     double one16 = (1.0 / 6.0) ;
     double two16 = pow(2.0,one16);  
 

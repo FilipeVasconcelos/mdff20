@@ -95,7 +95,7 @@ void rescale_velocities()
    
     double lambda = pow( 1.0 + (dt / tauTberendsen) * (( temp / T / boltz_unit ) - 1.0 ), 0.5) ;
     //printf("lambda %f dt %f tau %f temp %f T %f boltz %f\n",lambda,dt,tauTberendsen,temp/boltz_unit,T/boltz_unit,boltz_unit); 
-
+    //
     for(int ia=0; ia<nion; ia++) {
         vx [ia] *= lambda;
         vy [ia] *= lambda;
@@ -104,6 +104,7 @@ void rescale_velocities()
         sy += vy [ia] ;
         sz += vz [ia] ;
     }
+    /*
     sx*=onenion;
     sy*=onenion;
     sz*=onenion;
@@ -111,7 +112,7 @@ void rescale_velocities()
         vx [ia] -= sx;
         vy [ia] -= sy;
         vz [ia] -= sz;
-    }
+    }*/
 
     calc_temp(&T,&ekin,0);
     if (itime%nprint==0) printf("(after rescaling) temp : %f kin : %f lambda %f\n",T,ekin,lambda);
