@@ -4,7 +4,7 @@
 #include <time.h>
 #include "io.h"
 
-void headerstdout(time_t starting_time, int numprocs){
+void headerstdout(char *starting_time, int numprocs){
 
     char *username = getenv("USER");
     char *plural;
@@ -25,12 +25,12 @@ void headerstdout(time_t starting_time, int numprocs){
     printf("                                         |_______|'.____.'   \n");
     printf("\n");
     SEPARATOR;
-
     printf("MOLECULAR DYNAMICS ...for fun in 2020 ... but now in C ;)    \n");
     printf("filipe.manuel.vasconcelos@gmail.com                          \n");
     printf("Runnin on : %d node%s\n",numprocs,plural);
     printf("by user   : %s\n",username);
     printf("host      : %s %s %s\n",hostname.nodename,hostname.sysname,hostname.machine);
-    printf("Date :       %s", asctime(localtime(&starting_time)));
+    printf("Date      : %s", starting_time);
+    SEPARATOR;
 
 }
