@@ -1,3 +1,4 @@
 *.o
 src/control
 src/mdff20.x
+src/log

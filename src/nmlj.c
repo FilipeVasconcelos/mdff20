@@ -100,7 +100,6 @@ void engforce_nmlj_pbc(double *u)
             tau_nonb[i][j]=0.0;
         }
     }
-
     /*************************************** 
             cartesian to direct                    
      ***************************************/
