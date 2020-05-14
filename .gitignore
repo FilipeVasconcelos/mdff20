@@ -1,3 +1,3 @@
 *.o
-control
-mdff20.x
+src/control
+src/mdff20.x
