@@ -23,28 +23,31 @@ int main(int argc, char *argv[])
     time_t starting_time, finishing_time;
     clock_t t1=clock();
     char* Cstarting_time, *Cfinishing_time;
+    
+    starting_time = time(NULL);
+    Cstarting_time=strdup(asctime(localtime(&starting_time)));
 
-#ifdef MPI_
+#ifdef MPI
     MPI_Init(NULL,NULL);
-
+    init_io();
     int myrank,numprocs;
     MPI_Comm_rank(MPI_COMM_WORLD,&myrank);
     MPI_Comm_size(MPI_COMM_WORLD,&numprocs);
-    printf("proc : %d numprocs : %d\n",myrank,numprocs);
 #else
-    int numprocs=1;
+    int myrank=0; int numprocs=1;
+    init_io();
 #endif
+    
 
     init_rand();
+
     if(argc < 2)
     {
-        printf("Usage : ./mdff20 <filename>\n");
+        io_node printf("Usage : ./mdff20 <filename>\n");
         exit(0);
     }
     controlfn=argv[1];
-    starting_time = time(NULL);
-    Cstarting_time=strdup(asctime(localtime(&starting_time)));
-   
+
     // header output à la MDFF 
     headerstdout(Cstarting_time,numprocs);
 
@@ -58,9 +61,10 @@ int main(int argc, char *argv[])
     //allocate main quantities when nion is known
     read_posff(psimu_cell);
 
-    //à mettre dans POSFF
-
-
+    // atom decomposition
+    patom_dec=&atom_dec;
+    do_split(nion,numprocs,myrank,patom_dec,"atoms");
+    printf("%d %d %d\n",nion,patom_dec->iaStart,patom_dec->iaEnd);
     
 //    read_config(controlfn); //needed ?
 
@@ -76,7 +80,6 @@ int main(int argc, char *argv[])
 
     // main md function
     run_md();
-    
 
     //
     double elapsed_time=((double) clock()-t1)/CLOCKS_PER_SEC;
@@ -84,8 +87,9 @@ int main(int argc, char *argv[])
     SEPARATOR;
     finishing_time = time(NULL);
     Cfinishing_time=strdup(asctime(localtime(&finishing_time)));
-    printf("Elapsed time : %f (s)\n", elapsed_time );
-    printf("Date         : %s", Cfinishing_time);
+    
+    io_node printf("Elapsed time : %f (s)\n", elapsed_time );
+    io_node printf("Date         : %s", Cfinishing_time);
 
     free(vx);
     free(vy);
@@ -95,7 +99,7 @@ int main(int argc, char *argv[])
     free(Cstarting_time);
     free(Cfinishing_time);
 
-#ifdef MPI_
+#ifdef MPI
     MPI_Finalize();
 #endif
 

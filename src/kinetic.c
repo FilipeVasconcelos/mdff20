@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include "constants.h"
+#include "io.h"
 #include "rand.h"
 #include "config.h"
 #include "md.h"
@@ -62,8 +63,6 @@ void maxwellboltzmann_velocities()
     double temp,ekin;
     calc_temp(&temp, &ekin,0);
     printf("(after maxwell) temp : %f kin : %f \n",temp,ekin);
-    printf("here\n");
-
 }
 
 void calc_temp(double *temp, double *ekin, int flag)
@@ -77,8 +76,8 @@ void calc_temp(double *temp, double *ekin, int flag)
         kin += ( vx[ia]*vx[ia] + vy[ia]*vy[ia] + vz[ia]*vz[ia] ) * massia[ia] ;
     //    printf("(in calc_temp %d %f %f %f %f %f\n",ia,kin, vx[ia], vy[ia], vz[ia],massia[ia]);
     }
-    *ekin=(kin*0.5);
-    *temp = (2.0 * kin) / ( l * boltz_unit );
+    (*ekin)=(kin*0.5);
+    (*temp)= (2.0 * kin) / ( l * boltz_unit );
 //    printf("out calc_temp\n");
 //    if (flag) exit(0);
     
@@ -91,9 +90,10 @@ void rescale_velocities()
     double T,ekin;
     
     calc_temp(&T,&ekin,0);
-    if (itime%nprint==0) printf("(before rescaling) temp : %f kin : %f \n",T,ekin);
-   
-    double lambda = pow( 1.0 + (dt / tauTberendsen) * (( temp / T / boltz_unit ) - 1.0 ), 0.5) ;
+    if ((ionode)&&(itime%nprint==0)) printf("(before rescaling) temp : %f kin : %f \n",T,ekin);
+    ekin*=0.5 ;
+    //double lambda = sqrt(1.0+dt/tauTberendsen*(temp/(2.0*ekin/3.0/nion)-1.0));
+    double lambda = sqrt(1.0 + (dt / tauTberendsen) * (( temp / T / boltz_unit ) - 1.0 )) ;
     //printf("lambda %f dt %f tau %f temp %f T %f boltz %f\n",lambda,dt,tauTberendsen,temp/boltz_unit,T/boltz_unit,boltz_unit); 
     //
     for(int ia=0; ia<nion; ia++) {
@@ -104,7 +104,7 @@ void rescale_velocities()
         sy += vy [ia] ;
         sz += vz [ia] ;
     }
-    /*
+    
     sx*=onenion;
     sy*=onenion;
     sz*=onenion;
@@ -112,36 +112,10 @@ void rescale_velocities()
         vx [ia] -= sx;
         vy [ia] -= sy;
         vz [ia] -= sz;
-    }*/
+    }
 
     calc_temp(&T,&ekin,0);
-    if (itime%nprint==0) printf("(after rescaling) temp : %f kin : %f lambda %f\n",T,ekin,lambda);
+//    if (itime%nprint==0) printf("(after rescaling) temp : %f kin : %f lambda %f\n",T,ekin,lambda);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

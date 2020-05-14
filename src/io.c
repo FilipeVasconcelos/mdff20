@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <sys/utsname.h>
 #include <time.h>
+#include <mpi.h>
 #include "io.h"
 
 void headerstdout(char *starting_time, int numprocs){
@@ -11,6 +12,8 @@ void headerstdout(char *starting_time, int numprocs){
     plural = ((numprocs>1) ? "s" : "\0");
     struct utsname hostname;
     uname(&hostname);
+
+    if (ionode) {
 
     printf("                            \\\\|//                          \n");
     printf("                           -(o o)-                           \n");
@@ -33,4 +36,24 @@ void headerstdout(char *starting_time, int numprocs){
     printf("Date      : %s", starting_time);
     SEPARATOR;
 
+    }
 }
+
+void init_io(){
+    int myrank =0;
+#ifdef MPI
+    int numprocs;
+    MPI_Comm_rank(MPI_COMM_WORLD,&myrank);
+    MPI_Comm_size(MPI_COMM_WORLD,&numprocs);
+#endif
+
+    if (myrank==0) {
+        ionode = true;
+    }
+    else{
+        ionode = false;
+    }
+
+}
+
+
