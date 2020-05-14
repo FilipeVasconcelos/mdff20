@@ -2,17 +2,13 @@
 #include "io.h"
 #include "mpi_mdff.h"
 
-int do_split(int n,int np,int mrank,DEC dec,char* lab){
-#ifndef MPI
-    //quick return
-    return 1; 
-#endif
+int do_split(int n,int np,int mrank,DEC* dec,char* lab){
 
     int x,y;
     int istartV[np], iendV[np];
     int splitnumberV[np];
 
-    int imin=1; int imax=n;
+    int imin=0; int imax=n-1;
     int isteps= (imax-imin)+1;
     x=isteps/np;
     y=isteps%np;
@@ -35,14 +31,15 @@ int do_split(int n,int np,int mrank,DEC dec,char* lab){
         }
     }
 
-    dec.iaStart=istartV[mrank];
-    dec.iaEnd=iendV[mrank];
-    dec.dimData=(iendV[mrank] - istartV[mrank] )+1;
-    dec.label=lab;
+    dec->iaStart=istartV[mrank];
+    dec->iaEnd=iendV[mrank];
+    dec->dimData=(iendV[mrank] - istartV[mrank] )+1;
+    dec->label=lab;
 
-    io_node printf("paralelisation - %s decomposition\n",dec.label);
+    io_node printf("paralelisation - %s decomposition\n",dec->label);
     for (int me=0;me<np;me++){
-        printf("rank = %d %s %d to %d load : %d \n",me,dec.label,istartV[me],iendV[me],(iendV[me]-istartV[me] +1));
+        printf("rank = %d %s %d to %d load : %d \n",\
+        me,dec->label,istartV[me],iendV[me],(iendV[me]-istartV[me] +1));
     }
 
 

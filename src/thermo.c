@@ -1,4 +1,5 @@
 #include "stdio.h"
+#include "io.h"
 #include "constants.h"
 #include "thermo.h"
 #include "md.h"
@@ -14,6 +15,7 @@ void write_thermo(){
     double ccell=simu_cell.Anorm[2];
     double e_tot=u_lj+e_kin;
 
+    if (ionode) {
     printf("\n");
     printf("  Thermodynamic information                    \n");
     printf("  ---------------------------------------------\n");
@@ -35,5 +37,6 @@ void write_thermo(){
     printf("non_bonded stress tensor\n");
     for (int i=0;i<3;i++){
         printf("%19.12e %19.12e %19.12e\n",tau_nonb[i][0],tau_nonb[i][1],tau_nonb[i][2]);
+    }
     }
 }

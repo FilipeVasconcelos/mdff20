@@ -92,6 +92,9 @@ void engforce_nmlj_pbc(double *u)
 
     int p1,p2;
     *u=0;
+    for(int ia=0;ia<nion;ia++){
+        fx[ia]=0.0;fy[ia]=0.0;fz[ia]=0.0;
+    }
     for (int i=0;i<3;i++){
         for(int j=0;j<3;j++){
             tau_nonb[i][j]=0.0;
@@ -106,8 +109,9 @@ void engforce_nmlj_pbc(double *u)
 //    printf("after kardir %f %f\n",ry[100],psimu_cell->B[0][0]);
 
 //    printf("inside engforce_nmlj_pbc %d\n",nion);
-
-    for(int ia=0;ia<nion;ia++) {
+    
+    //printf("%d %d\n",patom_dec->iaStart,patom_dec->iaEnd);
+    for(int ia=patom_dec->iaStart;ia<patom_dec->iaEnd;ia++) {
         rxi = rx[ia];
         ryi = ry[ia];
         rzi = rz[ia];
