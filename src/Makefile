@@ -2,7 +2,7 @@
 CC=mpicc
 #CC=clang
 CFLAGS=-I./
-OFLAGS=-O3 -ffast-math -march=native -mfpmath=sse  -mmmx -mavx 
+OFLAGS=-O2 -ffast-math -march=native -mfpmath=sse  -mmmx -mavx 
 LDFLAGS = -lm # bibliotheque math 
 DEPS=constants.h rand.h read_posff.h \
      cell.h config.h md.h kinetic.h thermo.h
