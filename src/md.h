@@ -8,6 +8,8 @@ double            dt;
 double tauTberendsen;
 int            itime;
 
-int read_md();
+int read_md(char* controlfn);
+void init_md(char* controlfn);
+void info_md();
 void run_md();
 #endif
