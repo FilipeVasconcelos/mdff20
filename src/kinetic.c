@@ -17,9 +17,11 @@ void init_velocities()
 
 void print_velocities()
 {
-    for ( int ia=0; ia < nion; ia++)
-    {
-        printf("%5d %5.3f %5.3f %5.3f\n",ia,vx[ia],vy[ia],vz[ia]);
+    if (ionode){
+        for ( int ia=0; ia < nion; ia++)
+        {
+            printf("%5d %5.3f %5.3f %5.3f\n",ia,vx[ia],vy[ia],vz[ia]);
+        }
     }
 }
 

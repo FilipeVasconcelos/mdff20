@@ -9,6 +9,9 @@
 
 #define io_node if ( ionode ) 
 
+#define pError(X) if (ionode) fprintf(stderr,RED"ERROR : "RES X)
+
+
 char *controlfn; 
 bool ionode;
 

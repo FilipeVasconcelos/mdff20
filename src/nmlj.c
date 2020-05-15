@@ -31,7 +31,7 @@ void pbc(double *rxij,double *ryij,double *rzij){
 
 }
 
-void read_nmlj(){
+void read_nmlj(char* controlfn){
 
 
 }
@@ -187,18 +187,33 @@ void engforce_nmlj_pbc(double *u)
 
 void info_nmlj(){
 
-    LSEPARATOR;
-    printf("n-m lennard-jones\n");
-    LSEPARATOR;
-    putchar('\n');
-    printf("       eps    /    / sigma* \\ q       / sigma*  \\ p  |\n");
-    printf(" V = ------- |  p | ------- |    - q | -------- |    |\n"); 
-    printf("      q - p   \\    \\   r    /         \\    r    /    /\n"); 
-
-    putchar('\n');
-    putchar('\n');
-    printf("cutoff      = %12.4f \n",cutshortrange);
-    printf("truncation  = %s (%d)\n",trunclabel[trunctype],trunctype);        
-    putchar('\n');
+    if (ionode) {
+        LSEPARATOR;
+        printf("n-m lennard-jones\n");
+        LSEPARATOR;
+        putchar('\n');
+        printf("       eps    /    / sigma* \\ q       / sigma*  \\ p  \\ \n");
+        printf(" V = ------- |  p | ------- |    - q | -------- |    |\n"); 
+        printf("      q - p   \\    \\   r    /         \\    r    /    /\n"); 
+    
+        putchar('\n');
+        putchar('\n');
+        printf("cutoff      = %12.4f \n",cutshortrange);
+        printf("truncation  = %s (%d)\n",trunclabel[trunctype],trunctype);        
+        putchar('\n');
+        for(int it=0;it<ntype;it++){
+            for(int jt=0;it<ntype;it++){
+                LSEPARATOR;
+                printf(" %s <--> %s  pair interaction : \n",atypei[it],atypei[jt]);
+                LSEPARATOR;
+                printf("sigma = %16.8e\n",sigmalj[it][jt]);
+                printf("eps   = %16.8e\n",epslj[it][jt]);
+                printf("q     = %16.8e\n",qlj[it][jt]);
+                printf("p     = %16.8e\n",plj[it][jt]);
+            }
+        }
+        putchar('\n');
+        
+    }
 
 }

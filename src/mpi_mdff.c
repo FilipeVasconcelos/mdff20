@@ -36,10 +36,13 @@ int do_split(int n,int np,int mrank,DEC* dec,char* lab){
     dec->dimData=(iendV[mrank] - istartV[mrank] )+1;
     dec->label=lab;
 
-    io_node printf("paralelisation - %s decomposition\n",dec->label);
-    for (int me=0;me<np;me++){
-        printf("rank = %d %s %d to %d load : %d \n",\
-        me,dec->label,istartV[me],iendV[me],(iendV[me]-istartV[me] +1));
+    if (ionode) {
+        printf("paralelisation - %s decomposition\n",dec->label);
+        for (int me=0;me<np;me++){
+            printf("rank = %d %s %d to %d load : %d \n",\
+            me,dec->label,istartV[me],iendV[me],(iendV[me]-istartV[me] +1));
+        }
+        putchar('\n');
     }
 
     return 0; 

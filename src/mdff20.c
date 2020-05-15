@@ -39,7 +39,10 @@ int main(int argc, char *argv[])
     init_io();
 #endif
 
+    // init random number generator (velocities)
     init_rand();
+    // main constants of the code
+    gen_constants();
 
     if(argc < 2)
     {
@@ -51,8 +54,6 @@ int main(int argc, char *argv[])
     // header output à la MDFF 
     headerstdout(Cstarting_time,numprocs);
 
-    // main constants of the code
-    gen_constants();
 
     //à mettre ailleur
     psimu_cell=&simu_cell;
@@ -61,12 +62,9 @@ int main(int argc, char *argv[])
     //allocate main quantities when nion is known
     read_posff(psimu_cell);
 
-    info_config();
-
     // atom decomposition
     patom_dec=&atom_dec;
     do_split(nion,numprocs,myrank,patom_dec,"atoms");
-    printf("%d %d %d\n",nion,patom_dec->iaStart,patom_dec->iaEnd);
     
 //    read_config(controlfn); //needed ?
 
@@ -81,6 +79,8 @@ int main(int argc, char *argv[])
     // main md function
     run_md();
 
+
+
     //
     double elapsed_time=((double) clock()-t1)/CLOCKS_PER_SEC;
     printf("\n");
@@ -92,7 +92,6 @@ int main(int argc, char *argv[])
     io_node printf("Date         : %s", Cfinishing_time);
 
     free_config();
-    //free(atype); double free corruption ???
     free(Cstarting_time);
     free(Cfinishing_time);
 
