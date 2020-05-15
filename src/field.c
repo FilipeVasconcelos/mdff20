@@ -2,9 +2,12 @@
 #include <string.h>
 
 #include "constants.h"
+#include "config.h"
 #include "thermo.h"
 #include "field.h"
 #include "nmlj.h"
+#include "cell.h"
+#include "io.h"
 
 int read_field(char* controlfn)
 {
@@ -39,6 +42,19 @@ int read_field(char* controlfn)
 }
 
 void info_field(){
+
+    double totalMass=0.0;
+    for(int it=0;it<ntype;it++){
+        totalMass+=mass[it]*natmi[it];
+    }
+    double rho; /* mass density */
+    rho = totalMass * simu_cell.inveOmega;
+
+    if (ionode){
+        printf("total mass            = %12.4f a.m     \n",totalMass);               
+        printf("density               = %12.4f g/cm^3  \n",rho*rho_unit);
+        printf("density(N)            = %12.4f ions/A^3\n",rhoN); 
+    }
 
 }
 
