@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <mpi.h>
 
 #include "constants.h"
 #include "config.h"
 #include "cell.h"
+#include "io.h"
 
 int read_posff(CELL *Cell)
 {
@@ -20,6 +22,9 @@ int read_posff(CELL *Cell)
 
     if (NULL == fp ) {
         perror("opening database file\n");
+#ifdef MPI
+        MPI_Finalize();
+#endif
         return (-1);
     }
     // print out info to stdout
@@ -29,7 +34,6 @@ int read_posff(CELL *Cell)
     // reading nion number of ions in POSFF 
     fscanf(fp, "%d", &nion);
 
-    
     // reading config name
     fscanf(fp, "%s", buffer);
     strcpy(configname,buffer); 
@@ -53,24 +57,23 @@ int read_posff(CELL *Cell)
     //can be call only when nion and ntype in known
     alloc_config();
 
-    printf("here !!!!\n");
     //atypei : ion types char 
+    printf("found type information on POSFF : ");
     for (int it=0;it<ntype;it++) {
         fscanf(fp,"%s",buffer);
         strcpy(atypei[it],buffer);
-        printf("%d %s\n",it,atypei[it]);
+        printf("%4s",atypei[it]);
     }
     //natmi : ions per type
+    printf("\n                                 ");
     for (int it=0;it<ntype;it++) {
         fscanf(fp,"%d",&data);
         natmi[it]=data;
-        printf("%d %d\n",it,natmi[it]);
+        printf("%5d",natmi[it]);
     }
-
     // Direct or Cartesian
     fscanf(fp, "%s", buffer);
     strcpy(cpos,buffer);
-
     // reading positions of ions 
     for (int ia=0;ia<nion;ia++) {
         fscanf(fp,"%s %lf %lf %lf",buffer,&f1,&f2,&f3);
@@ -78,15 +81,21 @@ int read_posff(CELL *Cell)
         rx[ia]=f1;ry[ia]=f2;rz[ia]=f3;
     }
 
-    if (strcmp(cpos,"Direct") == 0 ) {
-        printf("Direct to Cartesian\n");
+    if ((strcmp(cpos,"Direct") == 0 ) || (strcmp(cpos,"D") == 0 )) {
+        io_node printf("\natomic positions in Direct coordinates\n");
         dirkar(nion, rx, ry, rz , Cell->A);
+    }
+    else{
+        io_node printf("\natomic positions in Cartesian coordinates\n");
     }
 
     //closing POSFF
     if (fclose(fp))     { 
-       printf("error closing file."); 
-       exit(-1); 
+       io_node printf("error closing file."); 
+#ifdef MPI
+        MPI_Finalize();
+#endif
+       return -1; 
     }
    /* 
     printf("configname  : %s\n", buffer);
