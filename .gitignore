@@ -1,4 +1,5 @@
-*.o
-src/control
+src/*.o
+src/control.s
 src/mdff20.x
+bin/mdff20.x
 src/log
