@@ -4,7 +4,6 @@
 bool lnmlj;
 double cutshortrange;
 double skindiff;
-int trunctype;
 
 
 
