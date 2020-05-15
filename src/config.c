@@ -2,9 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "constants.h"
 #include "config.h"
+#include "constants.h"
+#include "cell.h"
 
+//-----------------------------------------------------------------------------
 int read_config (char* controlfn) {
 
 //   char buffer[10];
@@ -42,6 +44,7 @@ int read_config (char* controlfn) {
 }
 
 
+//-----------------------------------------------------------------------------
 void alloc_config(){
 
     onenion=1.0/( (double) nion) ;
@@ -82,6 +85,7 @@ void alloc_config(){
     init_config();
 }
 
+//-----------------------------------------------------------------------------
 void free_config(){
     free(massia);
     free(invemassia);
@@ -95,7 +99,7 @@ void free_config(){
     free(rxs);free(rys);free(rzs);
 }
 
-
+//-----------------------------------------------------------------------------
 void init_config()
 {
 
@@ -119,3 +123,10 @@ void init_config()
     }
 
 }
+//-----------------------------------------------------------------------------
+
+void info_config(){
+
+    info_cell();
+}
+
