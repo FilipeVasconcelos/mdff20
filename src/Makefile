@@ -4,8 +4,8 @@ HOST:=$(shell hostname)
 $(info compiling on $(HOST))
 $(info -----------------------------------------------------------------------)
 
-CC=gcc
-#CC=mpicc
+#CC=gcc
+CC=mpicc
 #CC=clang
 $(info CC  $(shell which $(CC) ))
 

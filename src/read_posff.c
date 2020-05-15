@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#ifdef MPI
 #include <mpi.h>
+#endif
 
 #include "constants.h"
 #include "config.h"

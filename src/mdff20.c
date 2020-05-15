@@ -4,8 +4,9 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#ifdef MPI
 #include <mpi.h>
-
+#endif
 #include "constants.h"
 #include "cell.h"
 #include "rand.h"

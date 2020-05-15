@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <sys/utsname.h>
 #include <time.h>
+#ifdef MPI
 #include <mpi.h>
+#endif
 #include "io.h"
 
 void headerstdout(char *starting_time, int numprocs){
