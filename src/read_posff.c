@@ -30,8 +30,10 @@ int read_posff(CELL *Cell)
         return (-1);
     }
     // print out info to stdout
-    printf("reading configuration\n");
-    printf("config from file POSFF\n");
+    if (ionode){
+        printf("reading configuration\n");
+        printf("config from file POSFF\n");
+    }
     
     // reading nion number of ions in POSFF 
     fscanf(fp, "%d", &nion);
@@ -48,6 +50,7 @@ int read_posff(CELL *Cell)
     Cell->A[1][0]=f4;   Cell->A[1][1]=f5;   Cell->A[1][2]=f6;
     Cell->A[2][0]=f7;   Cell->A[2][1]=f8;   Cell->A[2][2]=f9;
     lattice(Cell);
+    rhoN=(double)nion * Cell->inveOmega;
 
     // ------------------
     // type informations 
@@ -56,15 +59,12 @@ int read_posff(CELL *Cell)
     //ntype : number of types in POSFF
     fscanf(fp, "%d", &ntype); //ntype
 
-    //can be call only when nion and ntype in known
-    alloc_config();
-
     //atypei : ion types char 
-    printf("found type information on POSFF : ");
+    io_node printf("found type information on POSFF :");
     for (int it=0;it<ntype;it++) {
         fscanf(fp,"%s",buffer);
         strcpy(atypei[it],buffer);
-        printf("%4s",atypei[it]);
+        printf("%5s",atypei[it]);
     }
     //natmi : ions per type
     printf("\n                                 ");
@@ -73,6 +73,11 @@ int read_posff(CELL *Cell)
         natmi[it]=data;
         printf("%5d",natmi[it]);
     }
+    io_node putchar('\n');
+    //can be call only when nion and ntype 
+    //are known and  natmi,atypei readed
+    alloc_config();
+
     // Direct or Cartesian
     fscanf(fp, "%s", buffer);
     strcpy(cpos,buffer);
@@ -90,6 +95,7 @@ int read_posff(CELL *Cell)
     else{
         io_node printf("\natomic positions in Cartesian coordinates\n");
     }
+    io_node putchar('\n');
 
     //closing POSFF
     if (fclose(fp))     { 
@@ -99,12 +105,5 @@ int read_posff(CELL *Cell)
 #endif
        return -1; 
     }
-   /* 
-    printf("configname  : %s\n", buffer);
-    printf("number of types  : %d\n", ntype );
-
-    printf("number of ions  : %d\n", nion );
-    printf("leaving read_posfff\n");
-    */
     return 0;
 }
