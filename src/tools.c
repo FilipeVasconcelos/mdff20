@@ -20,6 +20,11 @@ void sliceC(double S[3], double A[3][3],int index)
     }
 }
 
+int sum(int *arr,size_t n){
+    int s=0; size_t i;
+    for(i=0;i<n;i++) s+=arr[i];
+    return s;
+}
 /*void printV3(double V[3])
 {
 }
