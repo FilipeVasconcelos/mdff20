@@ -2,7 +2,9 @@
 #define CONFIG_H
 #include "constants.h"
 #include "mpi_mdff.h"
-int nion; double onenion;
+int nion; 
+double onenion;      /* 1/nion */
+double onethirdnion; /* 1/(3*nion) */
 int ntype;
 
 char configname[MAX_LEN+1];
@@ -17,6 +19,7 @@ double *invemassia;
 char   **atype;  
 int     *itype; 
 double tau_nonb[3][3];
+double rhoN; /*density number:   rhoN=nion/V  (Å^-3)*/ 
 
 
 int read_config();

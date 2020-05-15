@@ -2,9 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "color_mdff.h"
 #include "config.h"
 #include "constants.h"
 #include "cell.h"
+#include "tools.h"
+#include "io.h"
 
 //-----------------------------------------------------------------------------
 int read_config (char* controlfn) {
@@ -13,11 +16,8 @@ int read_config (char* controlfn) {
 //   int data;
    FILE * fp;
 
-
    fp = fopen (controlfn, "r");
-   
-   if (NULL == fp ) 
-   {
+   if (NULL == fp ) {
        perror("opening input file");
        return (-1);
    }
@@ -37,9 +37,7 @@ int read_config (char* controlfn) {
         } 
    }
     */
-
    fclose(fp);
-   
    return 0;
 }
 
@@ -48,17 +46,18 @@ int read_config (char* controlfn) {
 void alloc_config(){
 
     onenion=1.0/( (double) nion) ;
+    onethirdnion=1.0/( 3.0*(double) nion) ;
     massia= malloc(nion*sizeof *massia );
     invemassia= malloc(nion*sizeof *invemassia );
     atype= malloc(nion*sizeof *atype);
     if (atype==NULL){
-        printf("**atype malloc failure\n");
+        io_node printf("**atype malloc failure\n");
     }
     for (int ia=0;ia<nion;ia++)  {
         atype[ia]=NULL;
         atype[ia]=malloc((MAX_LEN+1)*sizeof(*atype));
         if (atype[ia] == NULL){
-            printf("atype %d malloc failure\n",ia);
+            io_node printf("atype %d malloc failure\n",ia);
         }
     }
     vx= malloc(nion*sizeof(*vx));
@@ -81,7 +80,6 @@ void alloc_config(){
         fx[ia]=0.0;fy[ia]=0.0;fz[ia]=0.0;
         rxs[ia]=0.0;rys[ia]=0.0;rzs[ia]=0.0;
     }
-
     init_config();
 }
 
@@ -99,34 +97,51 @@ void free_config(){
     free(rxs);free(rys);free(rzs);
 }
 
+bool config_input_ok(){
+    
+    //check if sum(natmi) == nion
+//    int sumnatmi=0;
+//    for(int it=0;it<ntype;it++){
+//        sumnatmi+=natmi[it];
+//    }
+    int sumnatmi=sum(natmi,ntype);
+    if ( sumnatmi != nion) {
+        pError("natmi and nions does not correspond\n");
+        printf("%d %d\n",sumnatmi,nion);
+        return false;
+    }
+    return true;
+}
+
 //-----------------------------------------------------------------------------
 void init_config()
 {
-
+    if ( ! config_input_ok() ) {
+        exit(1);
+    }
     int ccs,cc;
-
     itype=malloc(nion*sizeof*itype);
-    //printf("inside init_config %d %d\n",nion,ntype);
     cc=0;
-    for ( int it=0; it <= ntype-1;it++)
-    {
+    for ( int it=0; it <= ntype-1;it++) {
         ccs = cc;
         cc  = cc + natmi[it];
-
-        for ( int ia=ccs;ia<=(cc-1);ia++)
-        {
+        for ( int ia=ccs;ia<=(cc-1);ia++) {
             massia[ia] = mass[it];
             invemassia[ia] = 1.0/mass[it];
             itype[ia]  = it;
         }
-
     }
+    info_config();
 
 }
 //-----------------------------------------------------------------------------
-
 void info_config(){
 
+    if (ionode) {  
+        printf("configname        : %s     \n",configname);
+        printf("number of types   : %d\n",ntype);
+        printf("number of ions    : %d \n",nion);
+    }
     info_cell();
 }
 
