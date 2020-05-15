@@ -4,7 +4,7 @@
 
 void gen_constants()
 {
-    TPI=2.0*PI;
+
     boltz_unit = 8.61734229648141E-05;  // boltzmann constant ( energy in eV ) 
     time_unit  = 98.2269514139276    ;  // unit of time picosecond => angstrom * ( atomicmassunit / eV ) ** 0.5
     press_unit = 0.00624150964712042;    // GPa => internal unit of pressure (eV/A^3)
@@ -25,5 +25,6 @@ void gen_constants()
 void reduced_units()
 {
     boltz_unit = 1.0;
-    time_unit = 1.0;
+    time_unit  = 1.0;
+    press_unit = 1.0;
 }
