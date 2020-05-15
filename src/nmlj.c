@@ -1,15 +1,16 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+#include "math_mdff.h"
 #include "config.h"
 #include "field.h"
 #include "cell.h"
 #include "nmlj.h"
 #include "md.h"
+#include "io.h"
 
-//#define nint(x) ( (x) >=0  ? (int)((x)+0.5) : (int) ((x)-0.5) )
-//#define nint(x) ( (x) >= 0.5  ? (int) ((x)+0.5) : (int) ((x)-0.5) )
-#define nint(x) nearbyint(x)
 
 double addtruncU(int p1 , int p2, double srp, double srq, int trunc){
     if (trunc == 0) {
@@ -46,13 +47,15 @@ void init_nmlj(){
 //    double one13 = (1.0 / 3.0) ;
     double one16 = (1.0 / 6.0) ;
     double two16 = pow(2.0,one16);  
+    strcpy(trunclabel[0],"notrunc");
+    strcpy(trunclabel[1],"linear");
+    strcpy(trunclabel[2],"quadratic");
 
 /*
  * Temp 
 */
     for ( int it=0;it<ntype; it++){
         for ( int jt=0; jt<ntype; jt++){
-            printf("pair potential %d <--> %d\n",it,jt);
             plj[it][jt]=6.0;
             qlj[it][jt]=12.0;
             ptwo[it][jt]=plj[it][jt]*0.5;
@@ -67,7 +70,6 @@ void init_nmlj(){
 //
     for ( int it=0;it<ntype; it++)    {
         for ( int jt=0; jt<ntype; jt++)        {
-            printf("pair potential %d <--> %d",it,jt);
             ppqq[it][jt] = plj[it][jt] * qlj[it][jt];
             // eps / q - p
             epsp[it][jt] = epslj[it][jt] /( qlj [it][jt]- plj[it][jt] );
@@ -75,10 +77,13 @@ void init_nmlj(){
             sigsq[it][jt]= two16 * two16 * sigmalj[it][jt] * sigmalj[it][jt] ;
             // for the virial                                                          
             fc[it][jt] =  (ppqq [it][jt] * epsp [it][jt]) /  sigsq [it][jt];
-            printf("fc : %f sigsq : %f epsp : %f pq : %f\n",fc[it][jt],sigsq[it][jt],epsp[it][jt],ppqq[it][jt]);
 
         }
     }
+
+
+    info_nmlj();
+
 }
 
 void engforce_nmlj_pbc(double *u)
@@ -180,3 +185,20 @@ void engforce_nmlj_pbc(double *u)
 
 }
 
+void info_nmlj(){
+
+    LSEPARATOR;
+    printf("n-m lennard-jones\n");
+    LSEPARATOR;
+    putchar('\n');
+    printf("       eps    /    / sigma* \\ q       / sigma*  \\ p  |\n");
+    printf(" V = ------- |  p | ------- |    - q | -------- |    |\n"); 
+    printf("      q - p   \\    \\   r    /         \\    r    /    /\n"); 
+
+    putchar('\n');
+    putchar('\n');
+    printf("cutoff      = %12.4f \n",cutshortrange);
+    printf("truncation  = %s (%d)\n",trunclabel[trunctype],trunctype);        
+    putchar('\n');
+
+}
