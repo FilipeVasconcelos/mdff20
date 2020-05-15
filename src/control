@@ -1,5 +1,7 @@
+lnmlj
+
 temp 90.0
-npas 5000 
+npas 1000
 nprint 100 
 nequil 1000
 dt 0.001
