@@ -16,6 +16,9 @@ double fc     [NTYPEMAX][NTYPEMAX] ;
 double qtwo    [NTYPEMAX][NTYPEMAX] ;
 double ptwo   [NTYPEMAX][NTYPEMAX] ;
 
+char trunclabel[3][MAX_LEN+1];
+
 void init_nmlj();
+void info_nmlj();
 void engforce_nmlj_pbc();
 #endif
