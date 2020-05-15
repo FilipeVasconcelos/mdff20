@@ -22,4 +22,6 @@ double tau_nonb[3][3];
 int read_config();
 void init_config();
 void alloc_config();
+void free_config();
+void info_config();
 #endif
