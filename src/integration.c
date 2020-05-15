@@ -66,24 +66,6 @@ void prop_leap_frog(){
         vx [ia] = idt * ( urx [ ia ] - rxs [ ia ] )  ;
         vy [ia] = idt * ( ury [ ia ] - rys [ ia ] )  ;
         vz [ia] = idt * ( urz [ ia ] - rzs [ ia ] )  ;
-        /*
-        if (ia == 0) {
-            int kk=ia;
-        printf("(in leap before) %d :\n",kk);
-        printf(" md fx[kk]  = %20.12f\n",fx[kk]);
-        printf(" md fy[kk]  = %20.12f\n",fy[kk]);
-        printf(" md fz[kk]  = %20.12f\n",fz[kk]);
-        printf(" md rxs[kk] = %20.12f\n",rxs[kk]);
-        printf(" md rys[kk] = %20.12f\n",rys[kk]);
-        printf(" md rzs[kk] = %20.12f\n",rzs[kk]);
-        printf(" md rx[kk]  = %20.12f\n",rx[kk]);
-        printf(" md ry[kk]  = %20.12f\n",ry[kk]);
-        printf(" md rz[kk]  = %20.12f\n",rz[kk]);
-        printf(" md vx[kk]  = %20.12f\n",vx[kk]);
-        printf(" md vy[kk]  = %20.12f\n",vy[kk]);
-        printf(" md vz[kk]  = %20.12f\n",vz[kk]);
-        }
-        */
         // updated positions r(t-dt) <= r(t)  and r(t) <= r (t+dt) 
         rxs [ia] = rx  [ia] ;  
         rys [ia] = ry  [ia] ;  
@@ -91,47 +73,9 @@ void prop_leap_frog(){
         rx  [ia] = urx [ia] ;  
         ry  [ia] = ury [ia] ;  
         rz  [ia] = urz [ia] ;  
-
-        /*
-        //if (ia == 0) {
-            int kk=0;
-        printf("(in leap after) %d %d :\n",kk,ia);
-        printf(" md fx[kk]  = %20.12f\n",fx[kk]);
-        printf(" md fy[kk]  = %20.12f\n",fy[kk]);
-        printf(" md fz[kk]  = %20.12f\n",fz[kk]);
-        printf(" md rxs[kk] = %20.12f\n",rxs[kk]);
-        printf(" md rys[kk] = %20.12f\n",rys[kk]);
-        printf(" md rzs[kk] = %20.12f\n",rzs[kk]);
-        printf(" md rx[kk]  = %20.12f\n",rx[kk]);
-        printf(" md ry[kk]  = %20.12f\n",ry[kk]);
-        printf(" md rz[kk]  = %20.12f\n",rz[kk]);
-        printf(" md vx[kk]  = %20.12f\n",vx[kk]);
-        printf(" md vy[kk]  = %20.12f\n",vy[kk]);
-        printf(" md vz[kk]  = %20.12f\n",vz[kk]);
-        //}
-        */
     }
 
     calc_temp ( &tempc, &kin,1) ;
-    //exit(0);
-    //printf("temp :%f kin :%f\n",(*tempc)/boltz_unit,*kin);
-
-    /*
-            int kk=0;
-        printf("(out leap ) %d :\n",kk);
-        printf(" md fx[kk]  = %20.12f\n",fx[kk]);
-        printf(" md fy[kk]  = %20.12f\n",fy[kk]);
-        printf(" md fz[kk]  = %20.12f\n",fz[kk]);
-        printf(" md rxs[kk] = %20.12f\n",rxs[kk]);
-        printf(" md rys[kk] = %20.12f\n",rys[kk]);
-        printf(" md rzs[kk] = %20.12f\n",rzs[kk]);
-        printf(" md rx[kk]  = %20.12f\n",rx[kk]);
-        printf(" md ry[kk]  = %20.12f\n",ry[kk]);
-        printf(" md rz[kk]  = %20.12f\n",rz[kk]);
-        printf(" md vx[kk]  = %20.12f\n",vx[kk]);
-        printf(" md vy[kk]  = %20.12f\n",vy[kk]);
-        printf(" md vz[kk]  = %20.12f\n",vz[kk]);
-        */
     free(urx);
     free(ury);
     free(urz);
