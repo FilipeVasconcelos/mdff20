@@ -7,25 +7,32 @@
 #include "thermo.h"
 
 void prop_velocity_verlet(){
+
     double *fxs, *fys, *fzs;
+
     fxs=malloc(nion*sizeof(*fxs));
     fys=malloc(nion*sizeof(*fys));
     fzs=malloc(nion*sizeof(*fzs));
     double dtsq2 = dt * dt * 0.5L; 
     double dt2 = dt * 0.5L;
+
     for(int ia=0;ia<nion;ia++){
         fxs[ia]=fx[ia];fys[ia]=fy[ia];fzs[ia]=fz[ia];
         rx[ia] += vx[ia] * dt + (fx[ia] * dtsq2 ) * invemassia[ia] ;
         ry[ia] += vy[ia] * dt + (fy[ia] * dtsq2 ) * invemassia[ia] ;
         rz[ia] += vz[ia] * dt + (fz[ia] * dtsq2 ) * invemassia[ia] ;
     }
+// ------------------
     engforce();
+// ------------------
     for(int ia=0;ia<nion;ia++){
         vx [ia] += ( fxs[ia] + fx[ia] ) * dt2 * invemassia[ia];
         vy [ia] += ( fys[ia] + fy[ia] ) * dt2 * invemassia[ia];
         vz [ia] += ( fzs[ia] + fz[ia] ) * dt2 * invemassia[ia];
     }
+    // -------------------------
     // full t+dt kinetic energy 
+    // -------------------------
     double tempi,kin;
     calc_temp(&tempi, &kin,0) ;
     temp_r= tempi             ;
