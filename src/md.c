@@ -44,20 +44,32 @@ int read_md (char * controlfn)
         } 
    }
 
+
+   fclose(fp);
+   
+   return(0);
+}
+
+void init_md(char * controlfn){
+
+    read_md(controlfn);
+    temp           = temp           * boltz_unit ; // temp = kB * T 
+    dt             = dt             * time_unit  ; // angstrom*(atomicmassunit/eV)** 0.5  <= ps
+    tauTberendsen  = tauTberendsen  * time_unit  ;
+    info_md();
+
+}
+
+void info_md(){
     printf("temperature     : %.5f (K) \n", temp);
     printf("dt              : %.5f (ps)\n", dt );
     printf("tauTberendsen   : %.5f (ps)\n", tauTberendsen );
     printf("npas            : %d \n", npas );
     printf("nprint          : %d \n", nprint );
     printf("nequil          : %d \n", nequil );
-    temp           = temp           * boltz_unit ; // temp = kB * T 
-    dt             = dt             * time_unit  ; // angstrom*(atomicmassunit/eV)** 0.5  <= ps
-    tauTberendsen  = tauTberendsen  * time_unit  ;
 
-   fclose(fp);
-   
-   return(0);
 }
+
 
 void run_md()
 {
@@ -82,12 +94,10 @@ void run_md()
 
     for(itime=1; itime<npas+1;itime++)
     {
-        //prop_leap_frog();
         prop_velocity_verlet();
 
         if (itime < nequil) rescale_velocities();
-
-        if (itime%nprint==0 || itime == npas-1 || itime == 1 ) write_thermo();
+        if (itime%nprint==0 || itime == npas ) write_thermo();
     }
 }
 
