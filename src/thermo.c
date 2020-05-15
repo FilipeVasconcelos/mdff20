@@ -16,27 +16,32 @@ void write_thermo(){
     double e_tot=u_lj+e_kin;
 
     if (ionode) {
-    printf("\n");
-    printf("  Thermodynamic information                    \n");
-    printf("  ---------------------------------------------\n");
-    printf("  step                  = %9d\n"            ,itime);
-    printf("  time                  = %19.12e\n"             ,time);
-    printf("  Ekin                  = %19.12e\n"        ,e_kin);
-    printf("  Temp                  = %19.12e\n"       ,temp_r);
-    printf("  Utot                  = %19.12e\n"         ,u_lj);
-    printf("  Pressure              = xxxxxxxxxx           \n");
-    printf("  volume                = %19.12e\n"        ,omega);
-    printf("  a cell                = %19.12e\n"        ,acell);
-    printf("  b cell                = %19.12e\n"        ,bcell);
-    printf("  c cell                = %19.12e\n"        ,ccell);
-    printf("  ---------------------------------------------\n");
-    printf("  Etot                  = %19.12e\n"        ,e_tot);
-    printf("  Htot                  = %19.12e\n"        ,e_tot);
-    printf("\n");
-    printf("\n");
-    printf("non_bonded stress tensor\n");
-    for (int i=0;i<3;i++){
-        printf("%19.12e %19.12e %19.12e\n",tau_nonb[i][0],tau_nonb[i][1],tau_nonb[i][2]);
-    }
+        printf("\n");
+        printf("  Thermodynamic information                    \n");
+        printf("  ---------------------------------------------\n");
+        printf("  step                  = %9d\n"            ,itime);
+        printf("  time                  = %19.12e\n"             ,time);
+        printf("  Ekin                  = %19.12e\n"        ,e_kin);
+        printf("  Temp                  = %19.12e\n"       ,temp_r);
+        printf("  Utot                  = %19.12e\n"         ,u_lj);
+        printf("  Pressure              = xxxxxxxxxx           \n");
+        printf("  volume                = %19.12e\n"        ,omega);
+        printf("  a cell                = %19.12e\n"        ,acell);
+        printf("  b cell                = %19.12e\n"        ,bcell);
+        printf("  c cell                = %19.12e\n"        ,ccell);
+        printf("  ---------------------------------------------\n");
+        printf("  Etot                  = %19.12e\n"        ,e_tot);
+        printf("  Htot                  = %19.12e\n"        ,e_tot);
+        printf("\n");
+        printf("\n");
+        printf("non_bonded stress tensor\n");
+        double iso=0.0;
+        for (int i=0;i<3;i++){
+            printf("%15.8e %15.8e %15.8e\n",tau_nonb[i][0],tau_nonb[i][1],tau_nonb[i][2]);
+            iso+=tau_nonb[i][i];
+        }
+        printf("iso = %15.8e (%15.8e)\n",iso*onethird,iso*onethirdnion);
+        putchar('\n');
+
     }
 }
