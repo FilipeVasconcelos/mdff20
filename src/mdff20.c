@@ -37,7 +37,6 @@ int main(int argc, char *argv[])
     int myrank=0; int numprocs=1;
     init_io();
 #endif
-    
 
     init_rand();
 
@@ -61,6 +60,8 @@ int main(int argc, char *argv[])
     //allocate main quantities when nion is known
     read_posff(psimu_cell);
 
+    info_config();
+
     // atom decomposition
     patom_dec=&atom_dec;
     do_split(nion,numprocs,myrank,patom_dec,"atoms");
@@ -68,15 +69,13 @@ int main(int argc, char *argv[])
     
 //    read_config(controlfn); //needed ?
 
-    //read md parameters 
-    read_md(controlfn);
-    //read field parameters 
-    read_field(controlfn);
-
+    // main md parameters
+    init_md(controlfn);
+    
+    init_field(controlfn);
+    
     //some initialize quantities à regrouper ailleur
-    init_nmlj();
     init_velocities();
-    maxwellboltzmann_velocities();
 
     // main md function
     run_md();
@@ -91,10 +90,7 @@ int main(int argc, char *argv[])
     io_node printf("Elapsed time : %f (s)\n", elapsed_time );
     io_node printf("Date         : %s", Cfinishing_time);
 
-    free(vx);
-    free(vy);
-    free(vz);
-    free(massia);
+    free_config();
     //free(atype); double free corruption ???
     free(Cstarting_time);
     free(Cfinishing_time);
