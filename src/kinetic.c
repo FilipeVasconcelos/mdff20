@@ -6,34 +6,25 @@
 #include "io.h"
 #include "rand.h"
 #include "config.h"
-#include "md.h"
+#include "thermo.h"
 #include "kinetic.h"
+#include "md.h"
 
 void init_velocities()
 {
-    printf("inside init_velocities %d\n",nion);
-    for ( int ia=0; ia < nion; ia++)
-    {
-        vx[ia]=0.0;
-        vy[ia]=0.0;
-        vz[ia]=0.0;
-    }
-
+    maxwellboltzmann_velocities();
 }
+
 void print_velocities()
 {
-    printf("inside print_velocities %d\n",nion);
     for ( int ia=0; ia < nion; ia++)
     {
         printf("%5d %5.3f %5.3f %5.3f\n",ia,vx[ia],vy[ia],vz[ia]);
     }
-    printf("out print_velocities %d\n",nion);
-
 }
 
 void maxwellboltzmann_velocities()
 {
-    printf("inside maxwellboltzmann_velocities %d\n",nion);
     double rtemp;
     double sx=0.0; double sy=0.0; double sz=0.0;
 
@@ -62,7 +53,10 @@ void maxwellboltzmann_velocities()
 
     double temp,ekin;
     calc_temp(&temp, &ekin,0);
-    printf("(after maxwell) temp : %f kin : %f \n",temp,ekin);
+    io_node printf("(after maxwellboltzmann) temp : %f kin : %f \n",temp,ekin);
+    temp_r= temp;
+    e_kin = ekin  ;
+        
 }
 
 void calc_temp(double *temp, double *ekin, int flag)
@@ -90,11 +84,8 @@ void rescale_velocities()
     double T,ekin;
     
     calc_temp(&T,&ekin,0);
-    if ((ionode)&&(itime%nprint==0)) printf("(before rescaling) temp : %f kin : %f \n",T,ekin);
     ekin*=0.5 ;
-    //double lambda = sqrt(1.0+dt/tauTberendsen*(temp/(2.0*ekin/3.0/nion)-1.0));
     double lambda = sqrt(1.0 + (dt / tauTberendsen) * (( temp / T / boltz_unit ) - 1.0 )) ;
-    //printf("lambda %f dt %f tau %f temp %f T %f boltz %f\n",lambda,dt,tauTberendsen,temp/boltz_unit,T/boltz_unit,boltz_unit); 
     //
     for(int ia=0; ia<nion; ia++) {
         vx [ia] *= lambda;
@@ -115,7 +106,7 @@ void rescale_velocities()
     }
 
     calc_temp(&T,&ekin,0);
-//    if (itime%nprint==0) printf("(after rescaling) temp : %f kin : %f lambda %f\n",T,ekin,lambda);
+    if (ionode && itime%nprint==0) printf("(after rescaling)        temp : %f kin : %f lambda %f\n",T,ekin,lambda);
 }
 
 
