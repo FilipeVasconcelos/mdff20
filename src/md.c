@@ -100,6 +100,7 @@ void run_md()
         prop_leap_frog();
     //    prop_velocity_verlet();
 
+// trajectory        printf("rx %16.8e\n",rx[0]);
         if (itime < nequil) rescale_velocities();
         if (itime%nprint==0 || itime == npas ) write_thermo();
     }
