@@ -8,6 +8,7 @@
 #include "integration.h"
 #include "kinetic.h"
 #include "md.h"
+#include "io.h"
 #include "thermo.h"
 
 int read_md (char * controlfn) 
@@ -53,21 +54,23 @@ int read_md (char * controlfn)
 void init_md(char * controlfn){
 
     read_md(controlfn);
+    info_md();
     temp           = temp           * boltz_unit ; // temp = kB * T 
     dt             = dt             * time_unit  ; // angstrom*(atomicmassunit/eV)** 0.5  <= ps
     tauTberendsen  = tauTberendsen  * time_unit  ;
-    info_md();
 
 }
 
 void info_md(){
-    printf("temperature     : %.5f (K) \n", temp);
-    printf("dt              : %.5f (ps)\n", dt );
-    printf("tauTberendsen   : %.5f (ps)\n", tauTberendsen );
-    printf("npas            : %d \n", npas );
-    printf("nprint          : %d \n", nprint );
-    printf("nequil          : %d \n", nequil );
-
+    if (ionode) {
+        printf("temperature     : %.5f (K) \n", temp);
+        printf("dt              : %.5f (ps)\n", dt);
+        printf("tauTberendsen   : %.5f (ps)\n", tauTberendsen);
+        printf("npas            : %d \n", npas );
+        printf("nprint          : %d \n", nprint );
+        printf("nequil          : %d \n", nequil );
+        putchar('\n');
+    }
 }
 
 
@@ -82,19 +85,20 @@ void run_md()
     /*
     t=0
     */
-    /*
+    
     for(int ia=0;ia<nion;ia++) {
             rxs [ia]  = rx [ia] - vx[ia] * dt;
             rys [ia]  = ry [ia] - vy[ia] * dt;
             rzs [ia]  = rz [ia] - vz[ia] * dt;
     }
-    */
+    
     engforce();
     write_thermo();
 
     for(itime=1; itime<npas+1;itime++)
     {
-        prop_velocity_verlet();
+        prop_leap_frog();
+    //    prop_velocity_verlet();
 
         if (itime < nequil) rescale_velocities();
         if (itime%nprint==0 || itime == npas ) write_thermo();
