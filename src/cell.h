@@ -8,7 +8,8 @@ typedef struct CELL {
     double G[3][3];               // metric tensor (A^T A)
     double Anorm[3];              // norm of direct basis vectors
     double Bnorm[3];              // norm of reciprocal basis vectors 
-    double Omega;                 // volume ( direct )
+    double Omega;                 // Ω : volume ( direct )
+    double inveOmega;             // 1/Ω (direct)
     double ROmega;                // volume ( reciprocal )
     double w[3];                  // perpendicular width (direct)
     double ang[3];                // angles ( direct ) 

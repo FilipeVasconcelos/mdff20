@@ -28,12 +28,12 @@ void lattice(CELL * Cell)
     
     
     // volume ( direct )
-    double omega,inveomega;
+    double omega;
     omega = Cell->B[0][0]*Cell->A[0][0] +
             Cell->B[1][0]*Cell->A[1][0] + 
             Cell->B[2][0]*Cell->A[2][0];
     Cell->Omega=omega;
-    inveomega=1.0/omega;
+    Cell->inveOmega=1.0/omega;
 
     // shortest distance between opposite faces                                                                          
     for(int i=0;i<3;i++){
@@ -44,7 +44,7 @@ void lattice(CELL * Cell)
 
     for(int i=0;i<3;i++) {
         for(int j=0;j<3;j++) {
-            Cell->B[i][j]=Cell->B[i][j] *inveomega ;
+            Cell->B[i][j]=Cell->B[i][j] * Cell->inveOmega ;
         }
     }
     // norms (direct and reciprocal)
@@ -184,8 +184,10 @@ void info_cell_(char* label     , double basis[3][3],\
 
 void info_cell(){
 
-    info_cell_("Direct",simu_cell.A,simu_cell.Anorm,simu_cell.w,simu_cell.ang,simu_cell.Omega);
-    info_cell_("Reciprocal",simu_cell.B,simu_cell.Bnorm,simu_cell.rw,simu_cell.rang,simu_cell.ROmega);
+    if (ionode) {
+        info_cell_("Direct",simu_cell.A,simu_cell.Anorm,simu_cell.w,simu_cell.ang,simu_cell.Omega);
+        info_cell_("Reciprocal",simu_cell.B,simu_cell.Bnorm,simu_cell.rw,simu_cell.rang,simu_cell.ROmega);
+    }
 }
 
 
