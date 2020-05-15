@@ -42,10 +42,6 @@ int do_split(int n,int np,int mrank,DEC* dec,char* lab){
         me,dec->label,istartV[me],iendV[me],(iendV[me]-istartV[me] +1));
     }
 
-
-
     return 0; 
-
-
 
 }
