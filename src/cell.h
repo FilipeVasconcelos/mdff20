@@ -10,14 +10,16 @@ typedef struct CELL {
     double Bnorm[3];              // norm of reciprocal basis vectors 
     double Omega;                 // volume ( direct )
     double ROmega;                // volume ( reciprocal )
-    double wa, wb,wc;             // perpendicular width (direct)
-    double alpha, beta, gamma;    // angles ( direct ) 
-    double rwa, rwb, rwc;         // perpendicular width (reciprocal)
-    double ralpha, rbeta, rgamma; // angles ( reciprocal )    
+    double w[3];                  // perpendicular width (direct)
+    double ang[3];                // angles ( direct ) 
+    double rw[3];                 // perpendicular width (reciprocal)
+    double rang[3];               // angles ( reciprocal )    
 } CELL;
 
 
 void lattice(CELL * Cell);
 void kardir (int n, double *vx, double *vy, double *vz , double basis[3][3]);
 void dirkar (int n, double *vx, double *vy, double *vz , double basis[3][3]);
+void info_cell();
+void angles_();
 #endif /* CELL_H */
