@@ -3,16 +3,16 @@
 #include "io.h"
 #include "mpi_mdff.h"
 
-int do_split(int n,int np,int mrank,DEC* dec,char* lab){
+int do_split(int n,int np,int mrank, DEC* dec, char* lab){
 
     int x,y;
     int istartV[np], iendV[np];
     int splitnumberV[np];
-
     int imin=0; int imax=n-1;
     int isteps= (imax-imin)+1;
     x=isteps/np;
     y=isteps%np;
+    
     for (int me=0;me<np;me++) {
         if ((me==0) || (me>y)) {
             splitnumberV[me]=x;
@@ -31,12 +31,10 @@ int do_split(int n,int np,int mrank,DEC* dec,char* lab){
             iendV[me]=istartV[me]+splitnumberV[me]-1;
         }
     }
-
     dec->iaStart=istartV[mrank];
     dec->iaEnd=iendV[mrank]+1;
     dec->dimData=(iendV[mrank] - istartV[mrank] )+1;
     dec->label=lab;
-
     if (ionode) {
         SEPARATOR;
         printf("paralelisation - %s decomposition\n",dec->label);
@@ -47,9 +45,7 @@ int do_split(int n,int np,int mrank,DEC* dec,char* lab){
         }
         putchar('\n');
     }
-
     return 0; 
-
 }
 
 void MPI_Allreduce_sumDouble( double *localSum, int ndim){

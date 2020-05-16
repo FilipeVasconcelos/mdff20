@@ -5,7 +5,7 @@
 #endif
 int myrank, numprocs;
 // Structure atom decomposition parallelism
-struct DEC atomDec, *patomDec;
+struct DEC atomDec;
 
 typedef struct DEC
 {
