@@ -5,12 +5,12 @@ $(info compiling on $(HOST))
 $(info -----------------------------------------------------------------------)
 # installation directory
 INSTALL_DIR=../bin
-$(info instalation dir $(shell readlink -f $(INSTALL_DIR)) )
+$(info installation dir $(shell readlink -f $(INSTALL_DIR)) )
 # List of executable to be built within the package
 EXE= mdff20.x
 
-CC=gcc
-#CC=mpicc
+#CC=gcc
+CC=mpicc
 #CC=clang
 $(info CC  $(shell which $(CC) ))
 
@@ -20,6 +20,7 @@ LDFLAGS = -lm # bibliotheque math
 $(info LDFLAGS   $(LDFLAGS))
 #INC= constants.h rand.h read_posff.h \
     cell.h config.h md.h kinetic.h thermo.h field.h
+
 OBJ=mdff20.o io.o mpi_mdff.o constants.o \
     read_posff.o cell.o config.o\
     nmlj.o integration.o field.o md.o rand.o\
@@ -49,7 +50,6 @@ $(info CPPDEFS  $(CPPDEFS))
 
 mdff20.x: $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
-
 
 install:
 	cp $(EXE) $(INSTALL_DIR)
