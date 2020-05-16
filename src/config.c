@@ -138,10 +138,11 @@ void init_config()
 void info_config(){
 
     if (ionode) {  
-        printf("configname        : %s     \n",configname);
-        printf("number of types   : %d\n",ntype);
-        printf("number of ions    : %d \n",nion);
+        printf("configname                      : %s\n",configname);
+        printf("number of types                 : %d\n",ntype);
+        printf("number of ions                  : %d\n",nion);
+        putchar('\n');
     }
-    info_cell();
+    info_simuCell();
 }
 
