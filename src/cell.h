@@ -1,7 +1,7 @@
 #ifndef CELL_H
 #define CELL_H
 
-struct CELL simuCell,*psimuCell;
+struct CELL simuCell;
 typedef struct CELL {
     double A[3][3];               // direct basis vector 
     double B[3][3];               // reciprocal basis vectors 
