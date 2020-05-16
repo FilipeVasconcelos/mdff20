@@ -12,23 +12,24 @@
 int read_field(char* controlfn)
 {
    char buffer[MAX_LEN+1];
-   double data;
    FILE * fp;
    fp = fopen (controlfn, "r");
    if (NULL == fp )  {
        perror("opening database file");
        return (-1);
    }
-   while ( (EOF != fscanf(fp, "%s %lf\n", buffer,&data)) ||
-           (EOF != fscanf(fp, "%s\n", buffer)) )  {
+   while (EOF != fscanf(fp, "%s\n", buffer)) { 
         if (strcmp(buffer,"cutshortrange") == 0 ) {
-            cutshortrange=data;
+            fscanf(fp,"%lf",&cutshortrange);
         } 
         if (strcmp(buffer,"skindiff") == 0 ) {
-            skindiff=data;
+            fscanf(fp,"%lf",&skindiff);
         } 
+        // mass 
         if (strcmp(buffer,"mass") == 0 ) {
-            mass[0]=data;
+            for(int it=0;it<ntype;it++){
+                fscanf(fp,"%lf",&mass[it]);
+            }
         } 
         if (strcmp(buffer,"lnmlj") == 0 ) {
             lnmlj=true;
@@ -45,27 +46,35 @@ void info_field(){
         totalMass+=mass[it]*natmi[it];
     }
     double rho; /* mass density */
-    rho = totalMass * simu_cell.inveOmega;
+    rho = totalMass * simuCell.inveOmega;
 
     if (ionode){
-        printf("total mass            = %12.4f a.m     \n",totalMass);               
-        printf("density               = %12.4f g/cm^3  \n",rho*rho_unit);
-        printf("density(N)            = %12.4f ions/A^3\n",rhoN); 
+        SEPARATOR;
+        printf("field info\n");
+        LSEPARATOR;
+        printf("mass of types :\n");
+        for(int it=0;it<ntype;it++){
+            printf("%d %s                   = %.5f\n",it,atypei[it],mass[it]);
+        }
+        LSEPARATOR;
+        printf("total mass            = %.5f a.m     \n",totalMass);               
+        printf("density               = %.5f g/cm^3  \n",rho*rho_unit);
+        printf("density(N)            = %.5f ions/A^3\n",rhoN); 
+        putchar('\n');
     }
 
 }
 
 void init_field(char* controlfn){
     read_field(controlfn);
+    info_field();
     init_nmlj(controlfn);
 }
 
 
 void engforce()
 {
-    double ulj;
-    engforce_nmlj_pbc(&ulj);
-    u_lj=ulj;
+    engforce_nmlj_pbc(&u_lj,&vir_lj);
 }
 
 
