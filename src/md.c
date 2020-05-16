@@ -14,7 +14,6 @@
 int read_md (char * controlfn) 
 {
    char buffer[15];
-   double data;
    FILE * fp;
 
    fp = fopen (controlfn, "r");
@@ -24,31 +23,28 @@ int read_md (char * controlfn)
        return (-1);
    }
 
-   while (EOF != fscanf(fp, "%s %lf\n", buffer,&data)) {
+   while (EOF != fscanf(fp, "%s\n", buffer)) {
         if (strcmp(buffer,"dt") == 0 ) {
-            dt=data;
+            fscanf(fp,"%lf",&dt);
         } 
         if (strcmp(buffer,"temp") == 0 ) {
-            temp=data;
+            fscanf(fp,"%lf",&temp);
         } 
         if (strcmp(buffer,"npas") == 0 ) {
-            npas=(int) data;
+            fscanf(fp,"%d",&npas);
         } 
         if (strcmp(buffer,"nprint") == 0 ) {
-            nprint=(int) data;
+            fscanf(fp,"%d",&nprint);
         } 
         if (strcmp(buffer,"nequil") == 0 ) {
-            nequil=(int) data;
+            fscanf(fp,"%d",&nequil);
         } 
         if (strcmp(buffer,"tauTberendsen") == 0 ) {
-            tauTberendsen=data;
+            fscanf(fp,"%lf",&tauTberendsen);
         } 
    }
-
-
    fclose(fp);
-   
-   return(0);
+   return 0;
 }
 
 void init_md(char * controlfn){
@@ -63,12 +59,15 @@ void init_md(char * controlfn){
 
 void info_md(){
     if (ionode) {
-        printf("temperature     : %.5f (K) \n", temp);
-        printf("dt              : %.5f (ps)\n", dt);
-        printf("tauTberendsen   : %.5f (ps)\n", tauTberendsen);
-        printf("npas            : %d \n", npas );
-        printf("nprint          : %d \n", nprint );
-        printf("nequil          : %d \n", nequil );
+        SEPARATOR;
+        printf("md info \n");
+        LSEPARATOR;
+        printf("temperature           = %.5f (K) \n", temp);
+        printf("dt                    = %.5f (ps)\n", dt);
+        printf("tauTberendsen         = %.5f (ps)\n", tauTberendsen);
+        printf("npas                  = %d \n", npas );
+        printf("nprint                = %d \n", nprint );
+        printf("nequil                = %d \n", nequil );
         putchar('\n');
     }
 }
@@ -76,16 +75,7 @@ void info_md(){
 
 void run_md()
 {
-    
-    /*
-    for(int ia=0; ia<nion; ia++) {
-        printf("(in run_md) reading %d %s %lf %lf %lf\n",ia,atype[ia],rx[ia],ry[ia],rz[ia]);
-    }
-*/
-    /*
-    t=0
-    */
-    
+    /* previous step in leap-frog integration */ 
     for(int ia=0;ia<nion;ia++) {
             rxs [ia]  = rx [ia] - vx[ia] * dt;
             rys [ia]  = ry [ia] - vy[ia] * dt;
@@ -93,16 +83,33 @@ void run_md()
     }
     
     engforce();
-    write_thermo();
-
-    for(itime=1; itime<npas+1;itime++)
-    {
-        prop_leap_frog();
-    //    prop_velocity_verlet();
-
-// trajectory        printf("rx %16.8e\n",rx[0]);
-        if (itime < nequil) rescale_velocities();
-        if (itime%nprint==0 || itime == npas ) write_thermo();
+    if(ionode){
+        SEPARATOR;
+        printf("properties at t=0\n");
+        SEPARATOR;
+        putchar('\n');
     }
+    info_thermo(); /* at t=0 */ 
+    if( (ionode) && (npas>0)){
+        SEPARATOR;
+        printf("starting main MD loop\n");
+        SEPARATOR;
+        putchar('\n');
+    }
+
+    /* ----------------------------------------------------*/
+    /*                  MAIN LOOP                          */
+    /* ----------------------------------------------------*/
+    for(itime=1; itime<npas+1;itime++) {
+
+        // integration / propagators
+    //    prop_leap_frog();
+        prop_velocity_verlet();
+
+        // trajectory        printf("rx %16.8e\n",rx[0]);
+        if (itime < nequil) rescale_velocities();
+        if (itime%nprint==0 || itime == npas ) info_thermo();
+    }
+    /* ----------------------------------------------------*/
 }
 
