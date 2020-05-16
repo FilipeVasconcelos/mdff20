@@ -9,7 +9,7 @@
 void info_thermo(){
 
     double iso=0.0;
-    double time = ( (double) itime ) * dt / time_unit;
+    double time = ( (double) istep ) * dt / time_unit;
     double acell=simuCell.Anorm[0];
     double bcell=simuCell.Anorm[1];
     double ccell=simuCell.Anorm[2];
@@ -21,7 +21,7 @@ void info_thermo(){
         printf("\n");
         printf("  Thermodynamic information                    \n" );
         printf("  ---------------------------------------------\n" );
-        printf("  step                  = %9d\n"             ,itime);
+        printf("  step                  = %9d\n"             ,istep);
         printf("  time                  = %19.12e\n"          ,time);
         printf("  Ekin                  = %19.12e\n"         ,e_kin);
         printf("  Temp                  = %19.12e\n"        ,temp_r);
