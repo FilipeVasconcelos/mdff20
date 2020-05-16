@@ -3,6 +3,7 @@
 double e_kin;
 double temp_r;
 double u_lj;
+double vir_lj;
 
-void write_thermo();
+void info_thermo();
 #endif
