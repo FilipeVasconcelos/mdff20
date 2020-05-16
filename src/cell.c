@@ -178,15 +178,14 @@ void info_cell_(char* label     , double basis[3][3],\
         printf("%12.4f",angles[i]);
     }
     printf("\nvolume                 =%12.4f\n",volume);
-    LSEPARATOR;
-    putchar('\n');
 }
 
-void info_cell(){
+void info_simuCell(){
 
     if (ionode) {
-        info_cell_("Direct",simu_cell.A,simu_cell.Anorm,simu_cell.w,simu_cell.ang,simu_cell.Omega);
-        info_cell_("Reciprocal",simu_cell.B,simu_cell.Bnorm,simu_cell.rw,simu_cell.rang,simu_cell.ROmega);
+        info_cell_("Direct",simuCell.A,simuCell.Anorm,simuCell.w,simuCell.ang,simuCell.Omega);
+        info_cell_("Reciprocal",simuCell.B,simuCell.Bnorm,simuCell.rw,simuCell.rang,simuCell.ROmega);
+        LSEPARATOR;
     }
 }
 
