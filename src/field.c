@@ -24,9 +24,6 @@ int read_field(char* controlfn)
         if (strcmp(buffer,"cutshortrange") == 0 ) {
             cutshortrange=data;
         } 
-        if (strcmp(buffer,"trunctype") == 0 ) {
-            trunctype=data;
-        } 
         if (strcmp(buffer,"skindiff") == 0 ) {
             skindiff=data;
         } 
@@ -60,7 +57,7 @@ void info_field(){
 
 void init_field(char* controlfn){
     read_field(controlfn);
-    init_nmlj();
+    init_nmlj(controlfn);
 }
 
 

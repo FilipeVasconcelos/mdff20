@@ -3,6 +3,7 @@
 #include <string.h>
 #include <math.h>
 
+#include "color_mdff.h"
 #include "math_mdff.h"
 #include "config.h"
 #include "field.h"
@@ -23,53 +24,130 @@ void pbc(double *rxij,double *ryij,double *rzij){
     double sxij = *rxij - nint ( *rxij );
     double syij = *ryij - nint ( *ryij );
     double szij = *rzij - nint ( *rzij );
-    //printf("test nint %f %f %f %f %f %f %d %d %d",sxij,syij,szij,*rxij,*ryij,*rzij,nint ( *rxij ),nint ( *ryij ),nint ( *rzij ));
     *rxij = sxij * psimu_cell->A[0][0] + syij * psimu_cell->A[1][0] + szij * psimu_cell->A[2][0];
     *ryij = sxij * psimu_cell->A[0][1] + syij * psimu_cell->A[1][1] + szij * psimu_cell->A[2][1];
     *rzij = sxij * psimu_cell->A[0][2] + syij * psimu_cell->A[1][2] + szij * psimu_cell->A[2][2];
-    //printf(" after : %f %f %f %f\n",*rxij,*ryij,*rzij,psimu_cell->A[0][0]);
 
 }
 
-void read_nmlj(char* controlfn){
+int read_nmlj(char* controlfn){
 
-
+    char buffer[MAX_LEN+1];
+    double data[ntype][ntype];
+    FILE * fp;
+    fp = fopen (controlfn, "r");
+    if (NULL == fp )  {
+       perror("opening database file");
+       return (-1);
+    }
+    while (EOF != fscanf(fp, "%s", buffer)) {
+        // SIGMALJ
+        if (strcmp(buffer,"sigmalj") == 0 ) {
+            for(int it=0;it<ntype;it++){
+                for(int jt=0;jt<ntype;jt++){
+                    if (jt >= it) {
+                        fscanf(fp,"%lf",&data[it][jt]);
+                        sigmalj[it][jt]=data[it][jt];
+                    }
+                }
+            }
+        }
+        // EPSLJ 
+        if (strcmp(buffer,"epslj") == 0 ) {
+            for(int it=0;it<ntype;it++){
+                for(int jt=0;jt<ntype;jt++){
+                    if (jt >= it) {
+                        fscanf(fp,"%lf",&data[it][jt]);
+                        epslj[it][jt]=data[it][jt];
+                    }
+                }
+            }
+        } 
+        // PLJ 
+        if (strcmp(buffer,"plj") == 0 ) {
+            for(int it=0;it<ntype;it++){
+                for(int jt=0;jt<ntype;jt++){
+                    if (jt >= it) {
+                        fscanf(fp,"%lf",&data[it][jt]);
+                        plj[it][jt]=data[it][jt];
+                    }
+                }
+            }
+        } 
+        // QLJ 
+        if (strcmp(buffer,"qlj") == 0 ) {
+            for(int it=0;it<ntype;it++){
+                for(int jt=0;jt<ntype;jt++){
+                    if (jt >= it) {
+                        fscanf(fp,"%lf",&data[it][jt]);
+                        qlj[it][jt]=data[it][jt];
+                    }
+                }
+            }
+        } 
+        //  lsymmetric 
+        if (strcmp(buffer,"lsymmetric") == 0 ) {
+            lsymmetric=true;
+        } 
+        //  trunc 
+        if (strcmp(buffer,"trunc") == 0 ) {
+            fscanf(fp,"%s",buffer);
+            trunctype=-1;
+            for (int k=0;k<3;k++){
+                if (strcmp(buffer,trunclabel[k]) == 0){
+                    trunctype=k;
+                }
+            }
+            if (trunctype<0){
+                pError("trunc not allowed\n");
+                printf("%s\n",buffer);
+                exit(-1);
+            }
+        } 
+    }
+    return 0;
 }
 
-void init_nmlj(){
-    double rcut=cutshortrange;
-    rcutsq=rcut*rcut;
-//    double rcut3=rcutsq*rcut;
-//    double rskin = rcut + skindiff;
-//    double rskinsq = rskin*rskin;
-    
-    double ppqq[ntype][ntype];
-//    double one13 = (1.0 / 3.0) ;
-    double one16 = (1.0 / 6.0) ;
-    double two16 = pow(2.0,one16);  
-    strcpy(trunclabel[0],"notrunc");
-    strcpy(trunclabel[1],"linear");
-    strcpy(trunclabel[2],"quadratic");
+void default_nmlj(){
 
-/*
- * Temp 
-*/
     for ( int it=0;it<ntype; it++){
         for ( int jt=0; jt<ntype; jt++){
             plj[it][jt]=6.0;
             qlj[it][jt]=12.0;
-            ptwo[it][jt]=plj[it][jt]*0.5;
-            qtwo[it][jt]=qlj[it][jt]*0.5;
             sigmalj[it][jt]=3.405;
-            epslj[it][jt]=0.010323576;
-            //sigmalj[it][jt]=1.0;
-            //epslj[it][jt]=1.0;
+            epslj[it][jt]=.010323576;
         }
     }
-//
-//
-    for ( int it=0;it<ntype; it++)    {
-        for ( int jt=0; jt<ntype; jt++)        {
+
+}
+
+
+void init_nmlj(char* controlfn){
+
+    double rcut=cutshortrange;
+    rcutsq=rcut*rcut;
+    double ppqq[ntype][ntype];
+    double one16 = (1.0 / 6.0) ;
+    double two16 = pow(2.0,one16);  
+    strcpy(trunclabel[0],"no");
+    strcpy(trunclabel[1],"linear");
+    strcpy(trunclabel[2],"quadratic");
+
+    default_nmlj();
+
+    //read parameters
+    read_nmlj(controlfn) ;
+
+    for ( int it=0;it<ntype; it++) {
+        for ( int jt=0; jt<ntype; jt++) {
+            // symmetric pot
+            if (jt>=it){
+                plj[jt][it]=plj[it][jt];
+                qlj[jt][it]=qlj[it][jt];
+                sigmalj[jt][it]=sigmalj[it][jt];
+                epslj[jt][it]=epslj[it][jt];
+            }
+            // p*q
             ppqq[it][jt] = plj[it][jt] * qlj[it][jt];
             // eps / q - p
             epsp[it][jt] = epslj[it][jt] /( qlj [it][jt]- plj[it][jt] );
@@ -77,10 +155,11 @@ void init_nmlj(){
             sigsq[it][jt]= two16 * two16 * sigmalj[it][jt] * sigmalj[it][jt] ;
             // for the virial                                                          
             fc[it][jt] =  (ppqq [it][jt] * epsp [it][jt]) /  sigsq [it][jt];
+            ptwo[it][jt]=plj[it][jt]*0.5;
+            qtwo[it][jt]=qlj[it][jt]*0.5;
 
         }
     }
-
 
     info_nmlj();
 
@@ -201,19 +280,29 @@ void info_nmlj(){
         printf("cutoff      = %12.4f \n",cutshortrange);
         printf("truncation  = %s (%d)\n",trunclabel[trunctype],trunctype);        
         putchar('\n');
+        printf("pair interactions\n");
         for(int it=0;it<ntype;it++){
-            for(int jt=0;it<ntype;it++){
-                LSEPARATOR;
-                printf(" %s <--> %s  pair interaction : \n",atypei[it],atypei[jt]);
-                LSEPARATOR;
-                printf("sigma = %16.8e\n",sigmalj[it][jt]);
-                printf("eps   = %16.8e\n",epslj[it][jt]);
-                printf("q     = %16.8e\n",qlj[it][jt]);
-                printf("p     = %16.8e\n",plj[it][jt]);
+            for(int jt=0;jt<ntype;jt++){
+                if( (jt>=it) && (jt==it)){
+                    LSEPARATOR;
+                    printf(" %s <--> %s  \n",atypei[it],atypei[jt]);
+                    LSEPARATOR;
+                    printf("sigma = %16.8e\n",sigmalj[it][jt]);
+                    printf("eps   = %16.8e\n",epslj[it][jt]);
+                    printf("q     = %16.8e\n",qlj[it][jt]);
+                    printf("p     = %16.8e\n",plj[it][jt]);
+                }
+                else if( (jt>it) ){
+                    LSEPARATOR;
+                    printf(" %s <--> %s  \n",atypei[it],atypei[jt]);
+                    LSEPARATOR;
+                    printf("sigma = %16.8e (%-16.8e)\n",sigmalj[it][jt],sigmalj[jt][it]);
+                    printf("eps   = %16.8e (%-16.8e)\n",epslj[it][jt],epslj[jt][it]);
+                    printf("q     = %16.8e (%-16.8e)\n",qlj[it][jt],qlj[jt][it]);
+                    printf("p     = %16.8e (%-16.8e)\n",plj[it][jt],plj[jt][it]);
+                }
             }
         }
         putchar('\n');
-        
     }
-
 }
