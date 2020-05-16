@@ -30,10 +30,7 @@ int read_posff(CELL *Cell)
         return (-1);
     }
     // print out info to stdout
-    if (ionode){
-        printf("reading configuration\n");
-        printf("config from file POSFF\n");
-    }
+    io_node printf("reading configuration from file POSFF\n");
     
     // reading nion number of ions in POSFF 
     fscanf(fp, "%d", &nion);
@@ -64,14 +61,14 @@ int read_posff(CELL *Cell)
     for (int it=0;it<ntype;it++) {
         fscanf(fp,"%s",buffer);
         strcpy(atypei[it],buffer);
-        printf("%5s",atypei[it]);
+        io_node printf("%5s",atypei[it]);
     }
     //natmi : ions per type
-    printf("\n                                 ");
+    io_node printf("\n                                 ");
     for (int it=0;it<ntype;it++) {
         fscanf(fp,"%d",&data);
         natmi[it]=data;
-        printf("%5d",natmi[it]);
+        io_node printf("%5d",natmi[it]);
     }
     io_node putchar('\n');
     //can be call only when nion and ntype 
@@ -87,7 +84,6 @@ int read_posff(CELL *Cell)
         strcpy(atype[ia],buffer);
         rx[ia]=f1;ry[ia]=f2;rz[ia]=f3;
     }
-
     if ((strcmp(cpos,"Direct") == 0 ) || (strcmp(cpos,"D") == 0 )) {
         io_node printf("\natomic positions in Direct coordinates\n");
         dirkar(nion, rx, ry, rz , Cell->A);
