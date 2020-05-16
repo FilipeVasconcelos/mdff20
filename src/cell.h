@@ -1,7 +1,7 @@
 #ifndef CELL_H
 #define CELL_H
 
-struct CELL simu_cell,*psimu_cell;
+struct CELL simuCell,*psimuCell;
 typedef struct CELL {
     double A[3][3];               // direct basis vector 
     double B[3][3];               // reciprocal basis vectors 
@@ -21,6 +21,6 @@ typedef struct CELL {
 void lattice(CELL * Cell);
 void kardir (int n, double *vx, double *vy, double *vz , double basis[3][3]);
 void dirkar (int n, double *vx, double *vy, double *vz , double basis[3][3]);
-void info_cell();
+void info_simuCell();
 void angles_();
 #endif /* CELL_H */
