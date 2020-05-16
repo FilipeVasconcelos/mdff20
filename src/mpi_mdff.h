@@ -1,5 +1,11 @@
+#ifndef MPI_MDFF_H
+#define MPI_MDFF_H
+#ifdef MPI
+#include <mpi.h>
+#endif
+int myrank, numprocs;
 // Structure atom decomposition parallelism
-struct DEC atom_dec, * patom_dec;
+struct DEC atomDec, *patomDec;
 
 typedef struct DEC
 {
@@ -10,3 +16,5 @@ typedef struct DEC
 }DEC ;
 
 int do_split(int n,int np,int mrank,DEC* dec,char* lab);
+void MPI_Allreduce_sumDouble( double *localSum, int ndim);
+#endif

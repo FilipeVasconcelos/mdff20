@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "io.h"
 #include "mpi_mdff.h"
 
@@ -32,14 +33,16 @@ int do_split(int n,int np,int mrank,DEC* dec,char* lab){
     }
 
     dec->iaStart=istartV[mrank];
-    dec->iaEnd=iendV[mrank];
+    dec->iaEnd=iendV[mrank]+1;
     dec->dimData=(iendV[mrank] - istartV[mrank] )+1;
     dec->label=lab;
 
     if (ionode) {
+        SEPARATOR;
         printf("paralelisation - %s decomposition\n",dec->label);
+        LSEPARATOR;
         for (int me=0;me<np;me++){
-            printf("rank = %d %s %d to %d load : %d \n",\
+            printf("rank = %d %s from %4d to %4d load : %d \n",\
             me,dec->label,istartV[me],iendV[me],(iendV[me]-istartV[me] +1));
         }
         putchar('\n');
@@ -48,3 +51,34 @@ int do_split(int n,int np,int mrank,DEC* dec,char* lab){
     return 0; 
 
 }
+
+void MPI_Allreduce_sumDouble( double *localSum, int ndim){
+    if (ndim ==1 ) {
+        double globalSum;
+#ifdef MPI
+        MPI_Allreduce(localSum, &globalSum, ndim, MPI_DOUBLE, MPI_SUM ,MPI_COMM_WORLD);
+#else
+        globalSum=*localSum;
+#endif
+        *localSum=globalSum;
+    }
+    else
+    {
+        double *globalSum=malloc(ndim*sizeof(*globalSum));
+#ifdef MPI
+        MPI_Allreduce(localSum, globalSum, ndim, MPI_DOUBLE, MPI_SUM ,MPI_COMM_WORLD);
+#else
+        for (int i=0;i<ndim;i++){globalSum[i]=localSum[i];}
+#endif
+        for (int i=0;i<ndim;i++){localSum[i]=globalSum[i];}
+        free(globalSum);
+    }
+}
+
+
+//void MPI_Allreduce_sumArrayDouble( double *localSum, double *globalSum, int ndim ) {
+//    MPI_Allreduce(localsum,globalSum,)
+//}
+
+
+
