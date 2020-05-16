@@ -45,50 +45,39 @@ void maxwellboltzmann_velocities()
     sx*=onenion;
     sy*=onenion;
     sz*=onenion;
-
     for ( int ia=0; ia < nion; ia++ )
     {   
         vx [ia] -= sx;
         vy [ia] -= sy;
         vz [ia] -= sz;
     }
-
     double temp,ekin;
     calc_temp(&temp, &ekin,0);
     io_node printf("(after maxwellboltzmann) temp : %f kin : %f \n",temp,ekin);
     temp_r= temp;
     e_kin = ekin  ;
-        
 }
 
 void calc_temp(double *temp, double *ekin, int flag)
 {
     double l = 3.0 * ((double) nion);
     double kin;
-
     kin = 0.0;
     for (int ia=0; ia< nion; ia++)
     {
         kin += ( vx[ia]*vx[ia] + vy[ia]*vy[ia] + vz[ia]*vz[ia] ) * massia[ia] ;
-    //    printf("(in calc_temp %d %f %f %f %f %f\n",ia,kin, vx[ia], vy[ia], vz[ia],massia[ia]);
     }
     (*ekin)=(kin*0.5);
     (*temp)= (2.0 * kin) / ( l * boltz_unit );
-//    printf("out calc_temp\n");
-//    if (flag) exit(0);
-    
-
 }
 
 void rescale_velocities()
 {
     double sx=0.0; double sy=0.0; double sz=0.0;
     double T,ekin;
-    
     calc_temp(&T,&ekin,0);
     ekin*=0.5 ;
     double lambda = sqrt(1.0 + (dt / tauTberendsen) * (( temp / T / boltz_unit ) - 1.0 )) ;
-    //
     for(int ia=0; ia<nion; ia++) {
         vx [ia] *= lambda;
         vy [ia] *= lambda;
@@ -97,7 +86,6 @@ void rescale_velocities()
         sy += vy [ia] ;
         sz += vz [ia] ;
     }
-    
     sx*=onenion;
     sy*=onenion;
     sz*=onenion;
@@ -108,7 +96,5 @@ void rescale_velocities()
     }
 
     calc_temp(&T,&ekin,0);
-    if (ionode && itime%nprint==0) printf("(after rescaling)        temp : %f kin : %f lambda %f\n",T,ekin,lambda);
+    //if (ionode && itime%nprint==0) printf("(after rescaling)        temp : %f kin : %f lambda %f\n",T,ekin,lambda);
 }
-
-
