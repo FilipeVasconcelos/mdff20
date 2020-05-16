@@ -24,16 +24,15 @@ void pbc(double *rxij,double *ryij,double *rzij){
     double sxij = *rxij - nint ( *rxij );
     double syij = *ryij - nint ( *ryij );
     double szij = *rzij - nint ( *rzij );
-    *rxij = sxij * psimu_cell->A[0][0] + syij * psimu_cell->A[1][0] + szij * psimu_cell->A[2][0];
-    *ryij = sxij * psimu_cell->A[0][1] + syij * psimu_cell->A[1][1] + szij * psimu_cell->A[2][1];
-    *rzij = sxij * psimu_cell->A[0][2] + syij * psimu_cell->A[1][2] + szij * psimu_cell->A[2][2];
+    *rxij = sxij * simuCell.A[0][0] + syij * simuCell.A[1][0] + szij * simuCell.A[2][0];
+    *ryij = sxij * simuCell.A[0][1] + syij * simuCell.A[1][1] + szij * simuCell.A[2][1];
+    *rzij = sxij * simuCell.A[0][2] + syij * simuCell.A[1][2] + szij * simuCell.A[2][2];
 
 }
 
 int read_nmlj(char* controlfn){
 
     char buffer[MAX_LEN+1];
-    double data[ntype][ntype];
     FILE * fp;
     fp = fopen (controlfn, "r");
     if (NULL == fp )  {
@@ -46,8 +45,7 @@ int read_nmlj(char* controlfn){
             for(int it=0;it<ntype;it++){
                 for(int jt=0;jt<ntype;jt++){
                     if (jt >= it) {
-                        fscanf(fp,"%lf",&data[it][jt]);
-                        sigmalj[it][jt]=data[it][jt];
+                        fscanf(fp,"%lf",&sigmalj[it][jt]);
                     }
                 }
             }
@@ -57,8 +55,7 @@ int read_nmlj(char* controlfn){
             for(int it=0;it<ntype;it++){
                 for(int jt=0;jt<ntype;jt++){
                     if (jt >= it) {
-                        fscanf(fp,"%lf",&data[it][jt]);
-                        epslj[it][jt]=data[it][jt];
+                        fscanf(fp,"%lf",&epslj[it][jt]);
                     }
                 }
             }
@@ -68,8 +65,7 @@ int read_nmlj(char* controlfn){
             for(int it=0;it<ntype;it++){
                 for(int jt=0;jt<ntype;jt++){
                     if (jt >= it) {
-                        fscanf(fp,"%lf",&data[it][jt]);
-                        plj[it][jt]=data[it][jt];
+                        fscanf(fp,"%lf",&plj[it][jt]);
                     }
                 }
             }
@@ -79,8 +75,7 @@ int read_nmlj(char* controlfn){
             for(int it=0;it<ntype;it++){
                 for(int jt=0;jt<ntype;jt++){
                     if (jt >= it) {
-                        fscanf(fp,"%lf",&data[it][jt]);
-                        qlj[it][jt]=data[it][jt];
+                        fscanf(fp,"%lf",&qlj[it][jt]);
                     }
                 }
             }
@@ -165,17 +160,19 @@ void init_nmlj(char* controlfn){
 
 }
 
-void engforce_nmlj_pbc(double *u)
+void engforce_nmlj_pbc(double *u, double *vir)
 {
     double rxi,ryi,rzi;
     double rxij,ryij,rzij;
     double fxij,fyij,fzij;
     double rijsq;
-    double wij,vir;
+    double wij;
     double sr2,srp,srq;
 
     int p1,p2;
     *u=0;
+    *vir=0;
+
     for(int ia=0;ia<nion;ia++){
         fx[ia]=0.0;fy[ia]=0.0;fz[ia]=0.0;
     }
@@ -187,14 +184,10 @@ void engforce_nmlj_pbc(double *u)
     /*************************************** 
             cartesian to direct                    
      ***************************************/
-//    printf("before kardir %f %f\n",ry[100],psimu_cell->B[0][0]);
-    kardir ( nion , rx , ry , rz , psimu_cell->B ) ;
-//    printf("after kardir %f %f\n",ry[100],psimu_cell->B[0][0]);
+    kardir ( nion , rx , ry , rz , simuCell.B ) ;
 
-//    printf("inside engforce_nmlj_pbc %d\n",nion);
     
-    //printf("%d %d\n",patom_dec->iaStart,patom_dec->iaEnd);
-    for(int ia=patom_dec->iaStart;ia<patom_dec->iaEnd;ia++) {
+    for(int ia=atomDec.iaStart;ia<atomDec.iaEnd;ia++) {
         rxi = rx[ia];
         ryi = ry[ia];
         rzi = rz[ia];
@@ -212,21 +205,17 @@ void engforce_nmlj_pbc(double *u)
                 p1 = itype[ia];
                 p2 = itype[ja];
     
-                    //printf("%d %d %f %f %f %f %d %d %f %f %f\n",ia,ja,rijsq,rcutsq,cutshortrange,*u,p1,p2,srp,srq,sr2);
                 if ( rijsq < rcutsq ) {
                     sr2 = sigsq[p1][p2] / rijsq;
                     srp = pow(sr2,ptwo[p1][p2]);
                     srq = pow(sr2,qtwo[p1][p2]);
                     *u+=addtruncU(p1,p2,srp,srq,0);
-    //                printf("%d %d %f %f %f %f %d %d %f %f %f %f %f\n",ia,ja,rijsq,rcutsq,cutshortrange,*u,p1,p2,srp,srq,sr2,ptwo[p1][p2],qtwo[p1][p2]);
-    //                if (ia == 2) exit(0);
-		
                     wij = fc[p1][p2] * (srq-srp) * sr2;
                     fxij = wij * rxij;
                     fyij = wij * ryij;
                     fzij = wij * rzij;
                     // virial;
-                    vir = vir + wij * rijsq;
+                    *vir += wij * rijsq;
                     // forces
 		    fx[ia] += fxij;
                     fy[ia] += fyij;
@@ -248,25 +237,33 @@ void engforce_nmlj_pbc(double *u)
             }
         }
     }
-    double coeff=1./(psimu_cell->Omega*press_unit);
+    double coeff=1./(simuCell.Omega*press_unit);
     for (int i=0;i<3;i++){
         for(int j=0;j<3;j++){
             tau_nonb[i][j] *= coeff;
         }
     }
+    MPI_Allreduce_sumDouble(u,1);
+    MPI_Allreduce_sumDouble(vir,1);
+    MPI_Allreduce_sumDouble(fx,nion);
+    MPI_Allreduce_sumDouble(fy,nion);
+    MPI_Allreduce_sumDouble(fz,nion);
+    MPI_Allreduce_sumDouble(tau_nonb[0],3);
+    MPI_Allreduce_sumDouble(tau_nonb[1],3);
+    MPI_Allreduce_sumDouble(tau_nonb[2],3);
 
     /*************************************** 
             direct to cartesian                   
      ***************************************/
-    dirkar ( nion , rx , ry , rz , psimu_cell->A ) ;
-
-    //if (itime%nprint==0) printf("u = %f\n",*u);
+    dirkar ( nion , rx , ry , rz , simuCell.A ) ;
 
 }
 
 void info_nmlj(){
 
     if (ionode) {
+        SEPARATOR;
+        printf("nmlj field info\n");
         LSEPARATOR;
         printf("n-m lennard-jones\n");
         LSEPARATOR;
@@ -277,9 +274,9 @@ void info_nmlj(){
     
         putchar('\n');
         putchar('\n');
-        printf("cutoff      = %12.4f \n",cutshortrange);
+        printf("cutoff      = %-6.2f \n",cutshortrange);
         printf("truncation  = %s (%d)\n",trunclabel[trunctype],trunctype);        
-        putchar('\n');
+        LSEPARATOR;
         printf("pair interactions\n");
         for(int it=0;it<ntype;it++){
             for(int jt=0;jt<ntype;jt++){
@@ -304,5 +301,5 @@ void info_nmlj(){
             }
         }
         putchar('\n');
-    }
+    } /* ionode */
 }
