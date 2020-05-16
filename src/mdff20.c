@@ -21,24 +21,23 @@
 
 int main(int argc, char *argv[])
 {
-    time_t starting_time, finishing_time;
-    clock_t t1=clock();
-    char* Cstarting_time, *Cfinishing_time;
-    
-    starting_time = time(NULL);
-    Cstarting_time=strdup(asctime(localtime(&starting_time)));
+    time_t startingDate, finishingDate;
+    char *pstartingDate, *pfinishingDate;
+    startingDate = time(NULL);
+    pstartingDate=strdup(asctime(localtime(&startingDate)));
 
 #ifdef MPI
     MPI_Init(NULL,NULL);
+    double startingTime, finishingTime; 
+    startingTime = MPI_Wtime(); 
     init_io();
-    int myrank,numprocs;
     MPI_Comm_rank(MPI_COMM_WORLD,&myrank);
     MPI_Comm_size(MPI_COMM_WORLD,&numprocs);
 #else
-    int myrank=0; int numprocs=1;
+    clock_t startingTime=clock();
+    myrank=0;numprocs=1;
     init_io();
 #endif
-
     // init random number generator (velocities)
     init_rand();
     // main constants of the code
@@ -52,19 +51,18 @@ int main(int argc, char *argv[])
     controlfn=argv[1];
 
     // header output à la MDFF 
-    headerstdout(Cstarting_time,numprocs);
-
+    headerstdout(pstartingDate,numprocs);
 
     //à mettre ailleur
-    psimu_cell=&simu_cell;
+    psimuCell=&simuCell;
 
     //read configuration from file POSFF
     //allocate main quantities when nion is known
-    read_posff(psimu_cell);
+    read_posff(psimuCell);
 
     // atom decomposition
-    patom_dec=&atom_dec;
-    do_split(nion,numprocs,myrank,patom_dec,"atoms");
+    patomDec=&atomDec;
+    do_split(nion,numprocs,myrank,patomDec,"atoms");
     
 //    read_config(controlfn); //needed ?
 
@@ -74,30 +72,32 @@ int main(int argc, char *argv[])
     init_field(controlfn);
     
     //some initialize quantities à regrouper ailleur
-    init_velocities();
+    //init_velocities();
 
     // main md function
     run_md();
-
-
-
-    //
-    double elapsed_time=((double) clock()-t1)/CLOCKS_PER_SEC;
-    printf("\n");
-    SEPARATOR;
-    finishing_time = time(NULL);
-    Cfinishing_time=strdup(asctime(localtime(&finishing_time)));
     
-    io_node printf("Elapsed time : %f (s)\n", elapsed_time );
-    io_node printf("Date         : %s", Cfinishing_time);
+    
+    finishingDate = time(NULL);
+    pfinishingDate=strdup(asctime(localtime(&finishingDate)));
 
+    if (ionode) {
+        printf("\n");
+        SEPARATOR;
+#ifdef MPI
+        finishingTime = MPI_Wtime();
+        double elapsedTime=finishingTime-startingTime; 
+#else
+        double elapsedTime=((double) clock()-startingTime)/CLOCKS_PER_SEC;
+#endif
+        printf("Elapsed time : %5.3f (s)\n", elapsedTime );
+        printf("Date         : %s", pfinishingDate);
+    }
     free_config();
-    free(Cstarting_time);
-    free(Cfinishing_time);
-
+    free(pstartingDate);
+    free(pfinishingDate);
 #ifdef MPI
     MPI_Finalize();
 #endif
-
     return EXIT_SUCCESS;
 }
