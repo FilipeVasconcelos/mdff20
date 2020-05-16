@@ -48,39 +48,33 @@ int main(int argc, char *argv[])
         io_node printf("Usage : ./mdff20 <filename>\n");
         exit(0);
     }
+    //main control file
     controlfn=argv[1];
 
     // header output à la MDFF 
     headerstdout(pstartingDate,numprocs);
 
-    //à mettre ailleur
-    psimuCell=&simuCell;
-
     //read configuration from file POSFF
     //allocate main quantities when nion is known
-    read_posff(psimuCell);
+    read_posff();
 
-    // atom decomposition
-    patomDec=&atomDec;
-    do_split(nion,numprocs,myrank,patomDec,"atoms");
+    // parallelization atom decomposition
+    do_split(nion,numprocs,myrank,&atomDec,"atoms");
     
-//    read_config(controlfn); //needed ?
-
     // main md parameters
     init_md(controlfn);
-    
+    // main field parameters
     init_field(controlfn);
     
-    //some initialize quantities à regrouper ailleur
     //init_velocities();
 
     // main md function
     run_md();
+   
     
-    
+    /* ------------------------------------- */ 
     finishingDate = time(NULL);
     pfinishingDate=strdup(asctime(localtime(&finishingDate)));
-
     if (ionode) {
         printf("\n");
         SEPARATOR;
