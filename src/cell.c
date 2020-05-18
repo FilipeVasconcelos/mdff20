@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include "cell.h"
+#include "timing.h"
 #include "constants.h"
 #include "tools.h"
 #include "io.h"
@@ -34,6 +35,7 @@ void lattice(CELL * Cell)
             Cell->B[2][0]*Cell->A[2][0];
     Cell->Omega=omega;
     Cell->inveOmega=1.0/omega;
+    Cell->inveOmegaU=1.0/(omega*press_unit);
 
     // shortest distance between opposite faces                                                                          
     for(int i=0;i<3;i++){
@@ -118,6 +120,7 @@ void angles_(double *ang,double basis[3][3], double norm[3]){
 
 void kardir (int n, double *vx, double *vy, double *vz , double basis[3][3])
 {
+    statime(4);
     double v1, v2, v3;
     for (int i=0;i<n;i++)
     {
@@ -130,10 +133,14 @@ void kardir (int n, double *vx, double *vy, double *vz , double basis[3][3])
         vz[i]=v3;
 //        printf(" %f\n",vx[i]);
     }
+    statime(5);
+    mestime(&dirkardirCPUtime,5,4);
+
 }
 
 void dirkar(int n, double *vx, double *vy, double *vz , double basis[3][3])
 {
+    statime(4);
     double v1, v2, v3;
     for (int i=0;i<n;i++)
     {
@@ -144,7 +151,8 @@ void dirkar(int n, double *vx, double *vy, double *vz , double basis[3][3])
         vy[i]=v2;
         vz[i]=v3;
     }
-
+    statime(5);
+    mestime(&dirkardirCPUtime,5,4);
 }
 
 
