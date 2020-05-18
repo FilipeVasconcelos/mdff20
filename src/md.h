@@ -6,7 +6,7 @@ int           nprint;
 int           nequil;
 double            dt;
 double tauTberendsen;
-int            itime;
+int            istep; /* current step */
 
 int read_md(char* controlfn);
 void init_md(char* controlfn);

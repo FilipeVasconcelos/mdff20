@@ -10,6 +10,7 @@
 #include "md.h"
 #include "io.h"
 #include "thermo.h"
+#include "timing.h"
 
 int read_md (char * controlfn) 
 {
@@ -100,15 +101,23 @@ void run_md()
     /* ----------------------------------------------------*/
     /*                  MAIN LOOP                          */
     /* ----------------------------------------------------*/
-    for(itime=1; itime<npas+1;itime++) {
-
+    statime(0);
+    for(istep=1; istep < npas+1; istep++) {
+        
         // integration / propagators
-    //    prop_leap_frog();
+        //prop_leap_frog();
         prop_velocity_verlet();
+        
+        if (istep < nequil) rescale_velocities();
+        
+        if (istep % nprint==0 || istep == npas ) {
+            statime(1);
+            info_thermo();
+            mestime(&mdstepCPUtime,1,0);
+            writime("MD",istep,1,0);
+            statime(0);
+        }
 
-        // trajectory        printf("rx %16.8e\n",rx[0]);
-        if (itime < nequil) rescale_velocities();
-        if (itime%nprint==0 || itime == npas ) info_thermo();
     }
     /* ----------------------------------------------------*/
 }
