@@ -7,6 +7,7 @@
 #include "math_mdff.h"
 #include "config.h"
 #include "field.h"
+#include "timing.h"
 #include "cell.h"
 #include "nmlj.h"
 #include "md.h"
@@ -27,7 +28,6 @@ void pbc(double *rxij,double *ryij,double *rzij){
     *rxij = sxij * simuCell.A[0][0] + syij * simuCell.A[1][0] + szij * simuCell.A[2][0];
     *ryij = sxij * simuCell.A[0][1] + syij * simuCell.A[1][1] + szij * simuCell.A[2][1];
     *rzij = sxij * simuCell.A[0][2] + syij * simuCell.A[1][2] + szij * simuCell.A[2][2];
-
 }
 
 int read_nmlj(char* controlfn){
@@ -104,7 +104,6 @@ int read_nmlj(char* controlfn){
 }
 
 void default_nmlj(){
-
     for ( int it=0;it<ntype; it++){
         for ( int jt=0; jt<ntype; jt++){
             plj[it][jt]=6.0;
@@ -113,7 +112,6 @@ void default_nmlj(){
             epslj[it][jt]=.010323576;
         }
     }
-
 }
 
 
@@ -152,12 +150,9 @@ void init_nmlj(char* controlfn){
             fc[it][jt] =  (ppqq [it][jt] * epsp [it][jt]) /  sigsq [it][jt];
             ptwo[it][jt]=plj[it][jt]*0.5;
             qtwo[it][jt]=qlj[it][jt]*0.5;
-
         }
     }
-
     info_nmlj();
-
 }
 
 void engforce_nmlj_pbc(double *u, double *vir)
@@ -169,7 +164,7 @@ void engforce_nmlj_pbc(double *u, double *vir)
     double wij;
     double sr2,srp,srq;
 
-    int p1,p2;
+    int p1,p2,jb,je;
     *u=0;
     *vir=0;
 
@@ -177,7 +172,7 @@ void engforce_nmlj_pbc(double *u, double *vir)
         fx[ia]=0.0;fy[ia]=0.0;fz[ia]=0.0;
     }
     for (int i=0;i<3;i++){
-        for(int j=0;j<3;j++){
+        for(int j=i;j<3;j++){
             tau_nonb[i][j]=0.0;
         }
     }
@@ -186,26 +181,22 @@ void engforce_nmlj_pbc(double *u, double *vir)
      ***************************************/
     kardir ( nion , rx , ry , rz , simuCell.B ) ;
 
-    
     for(int ia=atomDec.iaStart;ia<atomDec.iaEnd;ia++) {
         rxi = rx[ia];
         ryi = ry[ia];
         rzi = rz[ia];
-
-        int jb = 0;
-        int je = nion;
+        jb = 0;
+        je = nion;
         for (int ja=jb;ja<je;ja++) {
             if ( ja > ia ) {
                 rxij = rxi - rx[ja];
                 ryij = ryi - ry[ja];
                 rzij = rzi - rz[ja];
                 pbc(&rxij,&ryij,&rzij);
-    //            printf("%f %f %f\n",rxij,ryij,rzij);      
                 rijsq = rxij * rxij + ryij * ryij + rzij * rzij;
-                p1 = itype[ia];
-                p2 = itype[ja];
-    
                 if ( rijsq < rcutsq ) {
+                    p1 = itype[ia];
+                    p2 = itype[ja];
                     sr2 = sigsq[p1][p2] / rijsq;
                     srp = pow(sr2,ptwo[p1][p2]);
                     srq = pow(sr2,qtwo[p1][p2]);
@@ -223,26 +214,25 @@ void engforce_nmlj_pbc(double *u, double *vir)
                     fx[ja] -= fxij;
                     fy[ja] -= fyij;
                     fz[ja] -= fzij;
-                    // stress tensor
+                    // stress tensor (symmetric!)
                     tau_nonb[0][0] += (rxij*fxij + rxij*fxij)*0.5;
                     tau_nonb[0][1] += (rxij*fyij + ryij*fxij)*0.5;
                     tau_nonb[0][2] += (rxij*fzij + rzij*fxij)*0.5;
-                    tau_nonb[1][0] += (ryij*fxij + rxij*fyij)*0.5;
                     tau_nonb[1][1] += (ryij*fyij + ryij*fyij)*0.5;
                     tau_nonb[1][2] += (ryij*fzij + rzij*fyij)*0.5;
-                    tau_nonb[2][0] += (rzij*fxij + rxij*fzij)*0.5;
-                    tau_nonb[2][1] += (rzij*fyij + ryij*fzij)*0.5;
                     tau_nonb[2][2] += (rzij*fzij + rzij*fzij)*0.5;
                 }
             }
         }
     }
-    double coeff=1./(simuCell.Omega*press_unit);
     for (int i=0;i<3;i++){
-        for(int j=0;j<3;j++){
-            tau_nonb[i][j] *= coeff;
+        for(int j=i;j<3;j++){
+            tau_nonb[i][j] *= simuCell.inveOmegaU;
+            tau_nonb[j][i]=tau_nonb[i][j];
         }
     }
+    *vir/=3.0;
+    statime(8);
     MPI_Allreduce_sumDouble(u,1);
     MPI_Allreduce_sumDouble(vir,1);
     MPI_Allreduce_sumDouble(fx,nion);
@@ -251,8 +241,9 @@ void engforce_nmlj_pbc(double *u, double *vir)
     MPI_Allreduce_sumDouble(tau_nonb[0],3);
     MPI_Allreduce_sumDouble(tau_nonb[1],3);
     MPI_Allreduce_sumDouble(tau_nonb[2],3);
+    statime(9);
+    mestime(&COMMCPUtime,9,8);
 
-    *vir/=3.0;
 
     /*************************************** 
             direct to cartesian                   
