@@ -7,6 +7,7 @@
 #ifdef MPI
 #include <mpi.h>
 #endif
+#include "color_mdff.h"
 #include "constants.h"
 #include "cell.h"
 #include "rand.h"
@@ -17,7 +18,7 @@
 #include "kinetic.h"
 #include "md.h"
 #include "io.h"
-
+#include "timing.h"
 
 int main(int argc, char *argv[])
 {
@@ -45,7 +46,7 @@ int main(int argc, char *argv[])
 
     if(argc < 2)
     {
-        io_node printf("Usage : ./mdff20 <filename>\n");
+        io_node printf(BLU"Usage :"RES" ./mdff20.x <filename>\n");
         exit(0);
     }
     //main control file
@@ -71,8 +72,8 @@ int main(int argc, char *argv[])
     // main md function
     run_md();
    
-    
     /* ------------------------------------- */ 
+    info_timing();
     finishingDate = time(NULL);
     pfinishingDate=strdup(asctime(localtime(&finishingDate)));
     if (ionode) {
