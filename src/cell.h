@@ -10,6 +10,7 @@ typedef struct CELL {
     double Bnorm[3];              // norm of reciprocal basis vectors 
     double Omega;                 // Ω : volume ( direct )
     double inveOmega;             // 1/Ω (direct)
+    double inveOmegaU;            // 1/Ω (direct) in press_unit
     double ROmega;                // volume ( reciprocal )
     double w[3];                  // perpendicular width (direct)
     double ang[3];                // angles ( direct ) 
