@@ -252,6 +252,8 @@ void engforce_nmlj_pbc(double *u, double *vir)
     MPI_Allreduce_sumDouble(tau_nonb[1],3);
     MPI_Allreduce_sumDouble(tau_nonb[2],3);
 
+    *vir/=3.0;
+
     /*************************************** 
             direct to cartesian                   
      ***************************************/
