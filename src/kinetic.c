@@ -96,5 +96,5 @@ void rescale_velocities()
     }
 
     calc_temp(&T,&ekin,0);
-    //if (ionode && itime%nprint==0) printf("(after rescaling)        temp : %f kin : %f lambda %f\n",T,ekin,lambda);
+    //if (ionode && istep%nprint==0) printf("(after rescaling)        temp : %f kin : %f lambda %f\n",T,ekin,lambda);
 }
