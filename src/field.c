@@ -7,6 +7,8 @@
 #include "field.h"
 #include "nmlj.h"
 #include "cell.h"
+#include "timing.h"
+#include "md.h"
 #include "io.h"
 
 int read_field(char* controlfn)
@@ -74,7 +76,10 @@ void init_field(char* controlfn){
 
 void engforce()
 {
+    statime(2);
     engforce_nmlj_pbc(&u_lj,&vir_lj);
+    statime(3);
+    mestime(&engforceCPUtime,3,2);
 }
 
 

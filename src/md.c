@@ -101,7 +101,7 @@ void run_md()
     /* ----------------------------------------------------*/
     /*                  MAIN LOOP                          */
     /* ----------------------------------------------------*/
-    statime(0);
+    statime(0); /* md */
     for(istep=1; istep < npas+1; istep++) {
         
         // integration / propagators
