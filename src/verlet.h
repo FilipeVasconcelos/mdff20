@@ -1,14 +1,19 @@
-#define VNLMAX 2000
+#define VNLMAX 500
 
-struct VERLETL verlet_nb;
+
+double *xvl,*yvl,*zvl; /* last positions when verlet list was updated */  
+int updatevl;
+
+struct VERLETL *verlet_nb;
+
 typedef struct VERLETL
 {
     int *list,*point; 
     double cut;
     char* label;
-}; VERLETL
+} VERLETL;
 
-void allocate_verletlist(VERLETL data);
-void free_verletlist(VERLETL data);
+VERLETL* allocate_verletlist(char* label);
+void free_verletlist(char* label);
 void gen_pbc_verletlist();
 void check_verletlist();
