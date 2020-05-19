@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/utsname.h>
 #include <time.h>
 #ifdef MPI
@@ -36,8 +37,6 @@ void headerstdout(char *starting_time, int numprocs){
     printf("by user    : %s\n",username);
     printf("host       : %s %s %s\n",hostname.nodename,hostname.sysname,hostname.machine);
     printf("Date       : %s", starting_time);
-    SEPARATOR;
-
     }
 }
 
@@ -58,4 +57,20 @@ void init_io(){
 
 }
 
-
+int check_FTstring(char* label,char buffer[MAX_LEN+1] ){
+    int check=-1;
+    for (int k=0;k<8;k++){
+        if (strcmp(buffer,allowed_Tstring[k]) == 0){
+            check=1;
+        }
+        if (strcmp(buffer,allowed_Fstring[k]) == 0){
+            check=0;
+        }
+    }
+    if (check<0){
+        pError("value not allowed in input file\n");
+        printf("%s %s\n",label,buffer);
+        exit(-1);
+    }
+    return check;
+}
