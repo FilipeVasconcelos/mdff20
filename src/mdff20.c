@@ -9,6 +9,7 @@
 #endif
 #include "color_mdff.h"
 #include "constants.h"
+#include "global.h"
 #include "cell.h"
 #include "rand.h"
 #include "read_posff.h"
@@ -16,6 +17,7 @@
 #include "field.h"
 #include "nmlj.h"
 #include "kinetic.h"
+#include "verlet.h"
 #include "md.h"
 #include "io.h"
 #include "timing.h"
@@ -47,7 +49,7 @@ int main(int argc, char *argv[])
     if(argc < 2)
     {
         io_node printf(BLU"Usage :"RES" ./mdff20.x <filename>\n");
-        exit(0);
+        exit(-1);
     }
     //main control file
     controlfn=argv[1];
@@ -58,10 +60,14 @@ int main(int argc, char *argv[])
     //read configuration from file POSFF
     //allocate main quantities when nion is known
     read_posff();
+    init_global(controlfn);
 
     // parallelization atom decomposition
     do_split(nion,numprocs,myrank,&atomDec,"atoms");
-    
+
+    // verlet list
+    if (lverletL) gen_pbc_verletlist();
+
     // main md parameters
     init_md(controlfn);
     // main field parameters
@@ -91,6 +97,7 @@ int main(int argc, char *argv[])
     free_config();
     free(pstartingDate);
     free(pfinishingDate);
+    if (lverletL) free_verletlist("vnlnb");
 #ifdef MPI
     MPI_Finalize();
 #endif
