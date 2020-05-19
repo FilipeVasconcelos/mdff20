@@ -9,8 +9,10 @@
 #include "kinetic.h"
 #include "md.h"
 #include "io.h"
+#include "global.h"
 #include "thermo.h"
 #include "timing.h"
+#include "verlet.h"
 
 int read_md (char * controlfn) 
 {
@@ -107,15 +109,18 @@ void run_md()
         // integration / propagators
         //prop_leap_frog();
         prop_velocity_verlet();
-        
+
+        if (lverletL) check_verletlist();
         if (istep < nequil) rescale_velocities();
-        
+       
+         
         if (istep % nprint==0 || istep == npas ) {
             statime(1);
             info_thermo();
             mestime(&mdstepCPUtime,1,0);
             writime("MD",istep,1,0);
             statime(0);
+            io_node printf("update verlet list %d step %d\n",updatevl,istep);
         }
 
     }
