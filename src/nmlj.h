@@ -1,7 +1,7 @@
 #ifndef NMLJ_H
 #define NMLJ_H
 #define NTYPEMAX 16
-
+#include <stdbool.h>
 bool   lsymmetric                   ;
 double qlj     [NTYPEMAX][NTYPEMAX] ;
 double plj     [NTYPEMAX][NTYPEMAX] ;
@@ -16,10 +16,11 @@ double fc      [NTYPEMAX][NTYPEMAX] ;
 double qtwo    [NTYPEMAX][NTYPEMAX] ;
 double ptwo    [NTYPEMAX][NTYPEMAX] ;
 
-int  trunctype                         ;  
+int  trunctype                      ;  
 char trunclabel[3][MAX_LEN+1]       ;
 
+/* function prototypes */
 void init_nmlj()                    ;
 void info_nmlj()                    ;
-void engforce_nmlj_pbc();
+void engforce_nmlj_pbc()            ;
 #endif
