@@ -1,4 +1,4 @@
-#include<stdio.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "constants.h"
@@ -21,12 +21,6 @@ int read_field(char* controlfn)
        return (-1);
    }
    while (EOF != fscanf(fp, "%s\n", buffer)) { 
-        if (strcmp(buffer,"cutshortrange") == 0 ) {
-            fscanf(fp,"%lf",&cutshortrange);
-        } 
-        if (strcmp(buffer,"skindiff") == 0 ) {
-            fscanf(fp,"%lf",&skindiff);
-        } 
         // mass 
         if (strcmp(buffer,"mass") == 0 ) {
             for(int it=0;it<ntype;it++){
@@ -34,7 +28,8 @@ int read_field(char* controlfn)
             }
         } 
         if (strcmp(buffer,"lnmlj") == 0 ) {
-            lnmlj=true;
+            fscanf(fp,"%s",buffer);
+            lnmlj=check_FTstring("lnmlj",buffer)?true:false; 
         } 
    }
    fclose(fp);
@@ -77,7 +72,7 @@ void init_field(char* controlfn){
 void engforce()
 {
     statime(2);
-    engforce_nmlj_pbc(&u_lj,&vir_lj);
+    if (lnmlj) engforce_nmlj_pbc(&u_lj,&vir_lj);
     statime(3);
     mestime(&engforceCPUtime,3,2);
 }
