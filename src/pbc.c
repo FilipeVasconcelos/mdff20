@@ -2,6 +2,7 @@
 #include <math.h>
 #include "math_mdff.h"
 
+//minimum image convention
 void pbc(double *rxij,double *ryij,double *rzij){
     double sxij = *rxij - nint ( *rxij );
     double syij = *ryij - nint ( *ryij );

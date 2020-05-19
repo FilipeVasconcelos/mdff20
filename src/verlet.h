@@ -1,3 +1,5 @@
+#ifndef VERLET_H
+#define VERLET_H
 #define VNLMAX 500
 
 
@@ -17,3 +19,4 @@ VERLETL* allocate_verletlist(char* label);
 void free_verletlist(char* label);
 void gen_pbc_verletlist();
 void check_verletlist();
+#endif
