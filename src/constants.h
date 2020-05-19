@@ -39,6 +39,9 @@ density       :  atomic mass unit / angstrom^3
 1/4piepsilon0 : eV  * angstrom / atomiccharge **2 == 1.0
 */
 
+char allowed_Tstring[8][MAX_LEN+1];
+char allowed_Fstring[8][MAX_LEN+1];
+
 
 double radian  ; /* 180/pi */
 double onethird; /* 1/3    */

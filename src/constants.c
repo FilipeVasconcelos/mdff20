@@ -1,5 +1,6 @@
-#include<stdlib.h>
-#include<stdio.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include "constants.h"
 
 void gen_constants()
@@ -20,6 +21,22 @@ void gen_constants()
         natmi[it]=0;
     }
 
+    strcpy(allowed_Fstring[0],"no");
+    strcpy(allowed_Fstring[1],"No");
+    strcpy(allowed_Fstring[2],"n");
+    strcpy(allowed_Fstring[3],"N");
+    strcpy(allowed_Fstring[4],"F");
+    strcpy(allowed_Fstring[5],"f");
+    strcpy(allowed_Fstring[6],"False");
+    strcpy(allowed_Fstring[7],"false");
+    strcpy(allowed_Tstring[0],"yes");
+    strcpy(allowed_Tstring[1],"Yes");
+    strcpy(allowed_Tstring[2],"y");
+    strcpy(allowed_Tstring[3],"Y");
+    strcpy(allowed_Tstring[4],"T");
+    strcpy(allowed_Tstring[5],"t");
+    strcpy(allowed_Tstring[6],"True");
+    strcpy(allowed_Tstring[7],"true");
 }
 
 
