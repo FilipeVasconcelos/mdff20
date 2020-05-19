@@ -1,10 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <math.h>
-
 #include "color_mdff.h"
-#include "math_mdff.h"
 #include "config.h"
 #include "field.h"
 #include "timing.h"
@@ -12,6 +11,9 @@
 #include "nmlj.h"
 #include "md.h"
 #include "io.h"
+#include "pbc.h"
+#include "global.h"
+#include "verlet.h"
 
 
 double addtruncU(int p1 , int p2, double srp, double srq, int trunc){
@@ -19,15 +21,6 @@ double addtruncU(int p1 , int p2, double srp, double srq, int trunc){
         return epsp[p1][p2] * ( plj[p1][p2] * srq - qlj[p1][p2] * srp ) ;
     }
     return 0.0;
-}
-
-void pbc(double *rxij,double *ryij,double *rzij){
-    double sxij = *rxij - nint ( *rxij );
-    double syij = *ryij - nint ( *ryij );
-    double szij = *rzij - nint ( *rzij );
-    *rxij = sxij * simuCell.A[0][0] + syij * simuCell.A[1][0] + szij * simuCell.A[2][0];
-    *ryij = sxij * simuCell.A[0][1] + syij * simuCell.A[1][1] + szij * simuCell.A[2][1];
-    *rzij = sxij * simuCell.A[0][2] + syij * simuCell.A[1][2] + szij * simuCell.A[2][2];
 }
 
 int read_nmlj(char* controlfn){
@@ -164,7 +157,7 @@ void engforce_nmlj_pbc(double *u, double *vir)
     double wij;
     double sr2,srp,srq;
 
-    int p1,p2,jb,je;
+    int p1,p2,jb,je,ja;
     *u=0;
     *vir=0;
 
@@ -185,10 +178,23 @@ void engforce_nmlj_pbc(double *u, double *vir)
         rxi = rx[ia];
         ryi = ry[ia];
         rzi = rz[ia];
-        jb = 0;
-        je = nion;
-        for (int ja=jb;ja<je;ja++) {
-            if ( ja > ia ) {
+        if (lverletL) {
+            jb=verlet_nb->point[ia];
+            je=verlet_nb->point[ia+1];
+        }
+        else{
+            jb = 0;
+            je = nion;
+        }
+        for (int j1=jb;j1<je;j1++) {
+            if (lverletL){ 
+                ja=verlet_nb->list[j1];
+            }
+            else{
+                ja=j1;
+            }
+            if ( (( ja > ia ) && ! lverletL ) || 
+                 (( ja !=ia ) && lverletL) )  {
                 rxij = rxi - rx[ja];
                 ryij = ryi - ry[ja];
                 rzij = rzi - rz[ja];
