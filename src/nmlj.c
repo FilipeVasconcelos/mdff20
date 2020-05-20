@@ -14,6 +14,7 @@
 #include "pbc.h"
 #include "global.h"
 #include "verlet.h"
+#include <omp.h>
 
 
 double addtruncU(int p1 , int p2, double srp, double srq, int trunc){
@@ -173,8 +174,11 @@ void engforce_nmlj_pbc(double *u, double *vir)
             cartesian to direct                    
      ***************************************/
     kardir ( nion , rx , ry , rz , simuCell.B ) ;
-
-    for(int ia=atomDec.iaStart;ia<atomDec.iaEnd;ia++) {
+    static double uu = *u;
+    static double mpfx[nion] = *fx;
+    //for(int ia=atomDec.iaStart;ia<atomDec.iaEnd;ia++) {
+    #pragma omp parallel for reduction(+:uu) reduction(+:mpfx)   
+    for(int ia=0;ia<nion;ia++) {
         rxi = rx[ia];
         ryi = ry[ia];
         rzi = rz[ia];
@@ -206,7 +210,7 @@ void engforce_nmlj_pbc(double *u, double *vir)
                     sr2 = sigsq[p1][p2] / rijsq;
                     srp = pow(sr2,ptwo[p1][p2]);
                     srq = pow(sr2,qtwo[p1][p2]);
-                    *u+=addtruncU(p1,p2,srp,srq,0);
+                    uu+=addtruncU(p1,p2,srp,srq,0);
                     wij = fc[p1][p2] * (srq-srp) * sr2;
                     fxij = wij * rxij;
                     fyij = wij * ryij;
@@ -238,6 +242,8 @@ void engforce_nmlj_pbc(double *u, double *vir)
         }
     }
     *vir/=3.0;
+    *u=uu;
+#ifdef MPI 
     statime(8);
     MPI_Allreduce_sumDouble(u,1);
     MPI_Allreduce_sumDouble(vir,1);
@@ -249,7 +255,7 @@ void engforce_nmlj_pbc(double *u, double *vir)
     MPI_Allreduce_sumDouble(tau_nonb[2],3);
     statime(9);
     mestime(&COMMCPUtime,9,8);
-
+#endif
 
     /*************************************** 
             direct to cartesian                   
