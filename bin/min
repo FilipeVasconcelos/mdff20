@@ -1,0 +1,20 @@
+#!/bin/bash
+cella=20.0
+cellc=20.0
+dc=0.5
+cut=8.5
+for((i=0;i<40;i++))
+do
+    cella=$(echo ${cella}+${dc} | bc -l)
+    cellc=20.0
+    for((j=0;j<40;j++))
+    do
+        cellc=$(echo ${cellc}+${dc} | bc -l)
+        sed -e s/__CELLA__/${cella}/g -e s/__CELLC__/${cellc}/g temp_hcp.py > to.py
+        sed -e s/__CUT__/${cut}/g temp.s > to.s
+        python3 to.py > log
+        echo ${cella} ${cellc} $(mdff20.x to.s | grep U_lj)
+    done
+    echo 
+    echo
+done
