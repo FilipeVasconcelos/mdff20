@@ -1,10 +1,20 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
-#define NTYPEMAX 16
+
 #define MAX_LEN 80
+#define NTYPEMAX 16
 #define LOWERCASE 97
+
 #define PI        3.1415926535897932385  /* pi  */
 #define TPI       6.2831853071795864770  /* 2pi */ 
+#define ff "%15.8f " 
+#define ee "%15.8e " 
+#define FF "%19.12f " 
+#define EE "%19.12e " 
+#define ff3 "%15.8f %15.8f %15.8f " 
+#define ee3 "%15.8e %15.8e %15.8e " 
+#define FF3 "%19.12f %19.12f %19.12f " 
+#define EE3 "%19.12e %19.12e %19.12e " 
 
 /*
 --------------------------------------------------
@@ -39,9 +49,7 @@ density       :  atomic mass unit / angstrom^3
 1/4piepsilon0 : eV  * angstrom / atomiccharge **2 == 1.0
 */
 
-char allowed_Tstring[8][MAX_LEN+1];
-char allowed_Fstring[8][MAX_LEN+1];
-
+char allwd_FT_str[16][MAX_LEN+1];
 
 double radian  ; /* 180/pi */
 double onethird; /* 1/3    */
@@ -51,9 +59,6 @@ double time_unit ;  /* unit of time picosecond => angstrom * ( atomicmassunit / 
 double press_unit;  /* GPa                     => internal unit of pressure ( eV / angstrom**3) */
 double rho_unit  ;  /* g/cm^3                  => internal unit of density (atomicmassunit/angstrom^3)*/
 
-double mass   [NTYPEMAX];
-int    natmi  [NTYPEMAX];
-char*  atypei [NTYPEMAX];
 
 void gen_constants();
 #endif
