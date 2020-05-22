@@ -3,6 +3,7 @@
 #include <string.h>
 #include "constants.h"
 
+/******************************************************************************/
 void gen_constants()
 {
 
@@ -14,32 +15,24 @@ void gen_constants()
     radian   = 180. / PI;     
     onethird = 1./3.0;
 
-    for (int it=0;it<NTYPEMAX;it++)
-    {
-        atypei[it] = malloc((MAX_LEN+1)*sizeof (char*));
-        mass[it]=1.0;
-        natmi[it]=0;
-    }
-
-    strcpy(allowed_Fstring[0],"no");
-    strcpy(allowed_Fstring[1],"No");
-    strcpy(allowed_Fstring[2],"n");
-    strcpy(allowed_Fstring[3],"N");
-    strcpy(allowed_Fstring[4],"F");
-    strcpy(allowed_Fstring[5],"f");
-    strcpy(allowed_Fstring[6],"False");
-    strcpy(allowed_Fstring[7],"false");
-    strcpy(allowed_Tstring[0],"yes");
-    strcpy(allowed_Tstring[1],"Yes");
-    strcpy(allowed_Tstring[2],"y");
-    strcpy(allowed_Tstring[3],"Y");
-    strcpy(allowed_Tstring[4],"T");
-    strcpy(allowed_Tstring[5],"t");
-    strcpy(allowed_Tstring[6],"True");
-    strcpy(allowed_Tstring[7],"true");
+    strcpy(allwd_FT_str[0 ],"yes");
+    strcpy(allwd_FT_str[1 ],"no");
+    strcpy(allwd_FT_str[2 ],"y");
+    strcpy(allwd_FT_str[3 ],"n");
+    strcpy(allwd_FT_str[4 ],"Y");
+    strcpy(allwd_FT_str[5 ],"N");
+    strcpy(allwd_FT_str[6 ],"Yes");
+    strcpy(allwd_FT_str[7 ],"No");
+    strcpy(allwd_FT_str[8 ],"true");
+    strcpy(allwd_FT_str[9 ],"false");
+    strcpy(allwd_FT_str[10],"t");
+    strcpy(allwd_FT_str[11],"f");
+    strcpy(allwd_FT_str[12],"T");
+    strcpy(allwd_FT_str[13],"F");
+    strcpy(allwd_FT_str[14],"True");
+    strcpy(allwd_FT_str[15],"False");
 }
-
-
+/******************************************************************************/
 void reduced_units()
 {
     boltz_unit = 1.0;
