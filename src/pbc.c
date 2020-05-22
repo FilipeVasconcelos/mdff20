@@ -11,3 +11,11 @@ void pbc(double *rxij,double *ryij,double *rzij){
     *ryij = sxij * simuCell.A[0][1] + syij * simuCell.A[1][1] + szij * simuCell.A[2][1];
     *rzij = sxij * simuCell.A[0][2] + syij * simuCell.A[1][2] + szij * simuCell.A[2][2];
 }
+
+void replace_pbc(int nion, double *rxij,double *ryij,double *rzij){
+    for(int ia=0;ia<nion;ia++){
+        rxij[ia] -= nint (rxij[ia]);
+        ryij[ia] -= nint (ryij[ia]);
+        rzij[ia] -= nint (rzij[ia]);
+    }
+}
