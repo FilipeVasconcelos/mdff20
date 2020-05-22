@@ -10,6 +10,7 @@
 #include "timing.h"
 #include "md.h"
 #include "io.h"
+#include "tools.h"
 
 int read_field(char* controlfn)
 {
@@ -21,15 +22,15 @@ int read_field(char* controlfn)
        return (-1);
    }
    while (EOF != fscanf(fp, "%s\n", buffer)) { 
-        // mass 
-        if (strcmp(buffer,"mass") == 0 ) {
+        // massit 
+        if (strcmp(buffer,"massit") == 0 ) {
             for(int it=0;it<ntype;it++){
-                fscanf(fp,"%lf",&mass[it]);
+                fscanf(fp,"%lf",&massit[it]);
             }
         } 
         if (strcmp(buffer,"lnmlj") == 0 ) {
             fscanf(fp,"%s",buffer);
-            lnmlj=check_FTstring("lnmlj",buffer)?true:false; 
+            lnmlj=check_boolstring("lnmlj",buffer); 
         } 
    }
    fclose(fp);
@@ -40,7 +41,7 @@ void info_field(){
 
     double totalMass=0.0;
     for(int it=0;it<ntype;it++){
-        totalMass+=mass[it]*natmi[it];
+        totalMass+=massit[it]*nionit[it];
     }
     double rho; /* mass density */
     rho = totalMass * simuCell.inveOmega;
@@ -51,7 +52,7 @@ void info_field(){
         LSEPARATOR;
         printf("mass of types :\n");
         for(int it=0;it<ntype;it++){
-            printf("%d %s                   = %.5f\n",it,atypei[it],mass[it]);
+            printf("%d %s                   = %.5f\n",it,atypit[it],massit[it]);
         }
         LSEPARATOR;
         printf("total mass            = %.5f a.m     \n",totalMass);               
@@ -65,7 +66,7 @@ void info_field(){
 void init_field(char* controlfn){
     read_field(controlfn);
     info_field();
-    init_nmlj(controlfn);
+    if (lnmlj) init_nmlj(controlfn);
 }
 
 
