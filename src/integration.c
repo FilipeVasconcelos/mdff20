@@ -5,11 +5,12 @@
 #include "kinetic.h"
 #include "field.h"
 #include "thermo.h"
+#include "timing.h"
 
 void prop_velocity_verlet(){
 
+    statime(12);
     double *fxs, *fys, *fzs;
-
     fxs=malloc(nion*sizeof(*fxs));
     fys=malloc(nion*sizeof(*fys));
     fzs=malloc(nion*sizeof(*fzs));
@@ -22,9 +23,12 @@ void prop_velocity_verlet(){
         ry[ia] += vy[ia] * dt + (fy[ia] * dtsq2 ) * invemassia[ia] ;
         rz[ia] += vz[ia] * dt + (fz[ia] * dtsq2 ) * invemassia[ia] ;
     }
+    statime(13);
+    mestime(&propagatorCPUtime,13,12);
 // ------------------
     engforce();
 // ------------------
+    statime(12);
     for(int ia=0;ia<nion;ia++){
         vx [ia] += ( fxs[ia] + fx[ia] ) * dt2 * invemassia[ia];
         vy [ia] += ( fys[ia] + fy[ia] ) * dt2 * invemassia[ia];
@@ -40,21 +44,23 @@ void prop_velocity_verlet(){
     free(fxs);
     free(fys);
     free(fzs);
+    statime(13);
+    mestime(&propagatorCPUtime,13,12);
 }
 
 
 void prop_leap_frog(){
+    
+    engforce();
+
+    statime(12);
     double dtsq = dt * dt ;
     double *urx, *ury, *urz;
-    double tempc,kin ;
     double idt = 0.5 / dt ;
 
     urx=malloc(nion*sizeof(*urx));
     ury=malloc(nion*sizeof(*ury));
     urz=malloc(nion*sizeof(*urz));
-
-    double u=0;
-    engforce(&u);
    
     for (int ia=0; ia < nion ; ia++)    { 
         // r(t+dt) = 2 r(t) - r (t-dt) + f(t)/m dt*dt 
@@ -74,10 +80,51 @@ void prop_leap_frog(){
         ry  [ia] = ury [ia] ;  
         rz  [ia] = urz [ia] ;  
     }
-
-    calc_temp ( &tempc, &kin,1) ;
+    // -------------------------
+    // full t+dt kinetic energy 
+    // -------------------------
+    double tempi,kin;
+    calc_temp ( &tempi, &kin,0) ;
+    temp_r= tempi             ;
+    e_kin = kin               ;
     free(urx);
     free(ury);
     free(urz);
+    statime(13);
+    mestime(&propagatorCPUtime,13,12);
 
 }
+
+void prop_agate(int step){
+
+    statime(12);
+    /* ==========================================================
+       leap-frog algorithm set the first leap value for r(t-dt) 
+       if first steps are equilibrated with a velocity-verlet
+      ==========================================================*/
+/*    if ( lleapequi && istep >= nequil ) {
+        egrator = 0;
+        lleapequi = false;
+        for(int ia=0;ia<nion;ia++) {
+            rxs [ia]  = rx [ia] - vx[ia] * dt;
+            rys [ia]  = ry [ia] - vy[ia] * dt;
+            rzs [ia]  = rz [ia] - vz[ia] * dt;
+        }
+        printf("  switch to leap-frog %d\n",egrator);    
+    }
+    */
+    statime(13);
+    mestime(&propagatorCPUtime,13,12);
+
+    switch (egrator)
+    {
+        case 0: /* nve-lf */
+            prop_leap_frog();
+            break;
+        case 1: /* nve-vv */
+            prop_velocity_verlet();
+            break;
+    }
+}
+
+
