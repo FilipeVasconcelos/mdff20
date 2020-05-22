@@ -1,19 +1,21 @@
 # ------------
 #   field
 # ------------
-lnmlj
+lnmlj true
+lverletL true 
 cutshortrange 8.5 
-trunc no
-skindiff .1
-mass 39.95
-epslj .010323576 .010323576 .010323576 .010323576 .010323576 .010323576 .010323576 .010323576 .010323576 .010323576
-sigmalj 3.405 3.405 3.405 3.405 3.405 3.405 3.405 3.405 3.405 3.405 
+trunc no 
+skindiff .2
+massit 39.95
+epslj .010323576
+sigmalj 3.405
 # ------------
 #    md  
 # ------------
-temp 90.0
-npas 10000 
-nprint 1000 
-nequil 1000
+integrator nve-vv
+temp 94.0
+npas  100000
+nprint 1000
+nequil 100000
 dt .001
 tauTberendsen .001

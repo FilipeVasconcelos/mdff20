@@ -51,5 +51,5 @@ int check_string(char* label,char buffer[MAX_LEN+1], char allwd[][MAX_LEN+1], in
 /******************************************************************************/
 /* return true if index is even  */
 int check_boolstring(char* label,char buffer[MAX_LEN+1]){
-    return check_string(label,buffer,allwd_FT_str,16) %2 ==0;
+    return check_string(label,buffer,allwd_FT_str,16) %2==0;
 }

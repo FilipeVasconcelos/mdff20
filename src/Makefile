@@ -14,16 +14,17 @@ CC=gcc
 #CC=clang
 $(info CC  $(shell which $(CC) ))
 
-CFLAGS=-O3 -msse4 -mavx2 -Wall
+#CFLAGS=-O3 -msse4 -mavx2 -Wall -ffast-math -fopenmp
+CFLAGS=-O2 -msse4 -mavx2 -ffast-math -fopenmp
 $(info CFLAGS   $(CFLAGS))
-#LDFLAGS = -lm -fopenmp # bibliotheque math 
-LDFLAGS = -lm 
+LDFLAGS = -lm -fopenmp # bibliotheque math 
+#LDFLAGS = -lm 
 $(info LDFLAGS   $(LDFLAGS))
 #INC= constants.h rand.h read_posff.h \
     cell.h config.h md.h kinetic.h thermo.h field.h
 
 OBJ=mdff20.o io.o mpi_mdff.o timing.o constants.o \
-    global.o pbc.o verlet.o read_posff.o cell.o config.o\
+    global.o pbc.o verlet.o config.o cell.o \
     nmlj.o integration.o field.o md.o rand.o\
     cell.o thermo.o tools.o kinetic.o
 
@@ -40,7 +41,7 @@ $(info branch   $(BRANCH))
 ifeq ($(CC),mpicc)
     CPPDEFS=-DMPI -DHOST="$(HOST)" -DBRANCH="$(BRANCH)" 
 else
-    CPPDEFS=-DHOST="$(HOST)" -DBRANCH="$(BRANCH)"
+    CPPDEFS=-DOMP -DHOST="$(HOST)" -DBRANCH="$(BRANCH)"
 endif
 #CPPDEFS+=-DDEBUG
 $(info CPPDEFS  $(CPPDEFS))

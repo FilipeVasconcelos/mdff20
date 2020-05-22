@@ -2,23 +2,26 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <omp.h>
 #include "config.h"
 #include "verlet.h"
 #include "field.h"
 #include "io.h"
+#include "md.h"
 #include "cell.h"
 #include "pbc.h"
 #include "global.h"
+#include "timing.h"
 
+/*******************************************************************************/
 VERLETL *allocate_verletlist(char* label){
-    printf("allocate verletlist\n");
-    VERLETL *vlist=malloc(sizeof(*vlist)+ sizeof(nion*VNLMAX*sizeof(int))+ sizeof((nion+1)*sizeof(int)));
+    printf("allocate Verlet List\n");
+    VERLETL *vlist=malloc(sizeof(*vlist));
     vlist->list=malloc(nion*VNLMAX*sizeof(*(vlist->list)));
     vlist->point=malloc((nion+1)*sizeof(*(vlist->point)));
     vlist->label=label;
     for(int k=0;k<nion*VNLMAX;k++){
         vlist->list[k]=0;
-    //    printf("%d %d\n",k,vlist->list[k]);
     }
     // not the best place to do that
     xvl= malloc(nion*sizeof(*xvl));
@@ -27,6 +30,7 @@ VERLETL *allocate_verletlist(char* label){
     updatevl = 0;
     return vlist;
 }
+/*******************************************************************************/
 void free_verletlist(char* label){
     free(verlet_nb->list);
     free(verlet_nb->point);
@@ -35,26 +39,19 @@ void free_verletlist(char* label){
     free(yvl);    
     free(zvl);    
 }
-
+/*******************************************************************************/
 void gen_pbc_verletlist(){
 
-    double rskinsq_nb=verlet_nb->cut + skindiff;
-    rskinsq_nb*=rskinsq_nb;
+    double rskinsq_nb=verlet_nb->cut*verlet_nb->cut;
     double rxi,ryi,rzi;
     double rxij,ryij,rzij;
     double rijsq;
     int icount_nb,k_nb;
 
-    //printf("inside gen_pbc_verletlist %s\n",verlet_nb->label);
     for(int k=0;k<nion*VNLMAX;k++){verlet_nb->list[k]=0; }
     for(int k=0;k<nion;k++) { verlet_nb->point[k]=0; }
-    /*************************************** 
-            cartesian to direct                    
-     ***************************************/
-    kardir ( nion , rx , ry , rz , simuCell.B ) ;
-
+   
     icount_nb=0;
-    //printf("%d %d\n",atomDec.iaStart,atomDec.iaEnd);
     for(int ia=atomDec.iaStart;ia<atomDec.iaEnd;ia++) {
         rxi = rx[ia];
         ryi = ry[ia];
@@ -69,12 +66,11 @@ void gen_pbc_verletlist(){
                 pbc(&rxij,&ryij,&rzij);
                 rijsq = rxij * rxij + ryij * ryij + rzij * rzij;
                 if (rijsq<=rskinsq_nb){
-                //printf("ia %d ja %d %f %f\n",ia,ja,rijsq,rskinsq_nb);
                     verlet_nb->list[icount_nb]=ja;
                     icount_nb+=1;
                     k_nb+=1;
                     if ( (icount_nb < 0) || (icount_nb>=VNLMAX*nion)) {
-                        pError("out of bound in gen_verletlist");
+                        pError("out of bound in gen_verletlist\n");
                     }
                 }
             }
@@ -82,13 +78,12 @@ void gen_pbc_verletlist(){
         verlet_nb->point[ia]=icount_nb-k_nb;
     }
     verlet_nb->point[atomDec.iaEnd]=icount_nb;
-    /*************************************** 
-            direct to cartesian                   
-     ***************************************/
-    dirkar ( nion , rx , ry , rz , simuCell.A ) ;
-    //for(int k=0;k<nion*VNLMAX;k++){printf("verlet list %d %d\n",k,verlet_nb->list[k]); }
-    //for(int k=0;k<nion;k++) {printf("verlet point %d %d\n",k,verlet_nb->point[k]); }
+#ifdef DEBUG
+    for(int k=0;k<10;k++){printf("verlet list %d %d\n",k,verlet_nb->list[k]); }
+    for(int k=0;k<10;k++) {printf("verlet point %d %d\n",k,verlet_nb->point[k]); }
+#endif
 }
+/*******************************************************************************/
 void check_verletlist(){
 
     double drneimax=0.0,drneimax2=0.0,drnei;
@@ -97,6 +92,8 @@ void check_verletlist(){
             cartesian to direct                    
      ***************************************/
     kardir ( nion , rx , ry , rz , simuCell.B ) ;
+
+    statime(10);
     for(int ia=0;ia<nion;ia++){
         rxvl=rx[ia]-xvl[ia];
         ryvl=ry[ia]-yvl[ia];
@@ -108,10 +105,9 @@ void check_verletlist(){
             drneimax=drnei;
         }
         else if ( drnei > drneimax2) {
-            drneimax2=drnei;
+                drneimax2=drnei;
         }
     }
-
     if ( drneimax + drneimax2 > skindiff ) 
     {
         updatevl+=1;
@@ -123,9 +119,15 @@ void check_verletlist(){
             zvl[ia]=rz[ia];
         }
     }
+    if (updatevl>1){
+        io_pnode printf("  update verlet list : %d/%d (%.2f%%) \n",
+                           updatevl,istep,((double)updatevl/istep)*100.0);
+    }
+    statime(11);
+    mestime(&verletLCPUtime,11,10);
     /*************************************** 
-            direct to cartesian                   
-     ***************************************/
+        direct to cartesian                   
+    ***************************************/
     dirkar ( nion , rx , ry , rz , simuCell.A ) ;
 
 }
