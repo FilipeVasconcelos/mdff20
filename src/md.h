@@ -1,13 +1,26 @@
 #ifndef MD_H
 #define MD_H
-double          temp;
-int             npas;
-int           nprint;
-int           nequil;
-double            dt;
-double tauTberendsen;
-int            istep; /* current step */
+/* ****************************************************************************/
+/*                              global parameters                             */
+/* ****************************************************************************/
+int                   istep; /* current step */
+int                    npas;
+int                  nprint;
+int                  nequil;
+double                 temp;
+double                   dt;
+double        tauTberendsen;
+int                 egrator; /* int version of */
 
+#define ALLWD_INTEGRATOR_STR 2
+char allwd_integrator_str[ALLWD_INTEGRATOR_STR][MAX_LEN+1];
+
+#include <stdbool.h>
+bool             lleapequi; /* true if integrator == nve-lf and nequil > 0 */
+
+/* ****************************************************************************/
+/*                                prototypes                                  */
+/* ****************************************************************************/
 int read_md(char* controlfn);
 void init_md(char* controlfn);
 void info_md();

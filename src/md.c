@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "constants.h"
 #include "config.h"
@@ -9,11 +10,15 @@
 #include "kinetic.h"
 #include "md.h"
 #include "io.h"
+#include "tools.h"
 #include "global.h"
 #include "thermo.h"
 #include "timing.h"
 #include "verlet.h"
 
+//#define DEBUG_MD
+
+/******************************************************************************/
 int read_md (char * controlfn) 
 {
    char buffer[15];
@@ -27,6 +32,10 @@ int read_md (char * controlfn)
    }
 
    while (EOF != fscanf(fp, "%s\n", buffer)) {
+        if (strcmp(buffer,"integrator") == 0 ) {
+            fscanf(fp,"%s",buffer);
+            egrator=check_string("integrator",buffer,allwd_integrator_str,ALLWD_INTEGRATOR_STR); 
+        } 
         if (strcmp(buffer,"dt") == 0 ) {
             fscanf(fp,"%lf",&dt);
         } 
@@ -50,16 +59,26 @@ int read_md (char * controlfn)
    return 0;
 }
 
+/******************************************************************************/
 void init_md(char * controlfn){
 
+    egrator=1; /* default nve-vv */
+    strcpy(allwd_integrator_str[0 ],"nve-lf");
+    strcpy(allwd_integrator_str[1 ],"nve-vv");
     read_md(controlfn);
     info_md();
     temp           = temp           * boltz_unit ; // temp = kB * T 
     dt             = dt             * time_unit  ; // angstrom*(atomicmassunit/eV)** 0.5  <= ps
     tauTberendsen  = tauTberendsen  * time_unit  ;
+    if (egrator == 0 && nequil >0 ){
+        lleapequi=true;
+        egrator=1; /* switch to nve-vv */ 
+    }
+
 
 }
 
+/******************************************************************************/
 void info_md(){
     if (ionode) {
         SEPARATOR;
@@ -76,15 +95,11 @@ void info_md(){
 }
 
 
+/******************************************************************************/
 void run_md()
 {
-    /* previous step in leap-frog integration */ 
-    for(int ia=0;ia<nion;ia++) {
-            rxs [ia]  = rx [ia] - vx[ia] * dt;
-            rys [ia]  = ry [ia] - vy[ia] * dt;
-            rzs [ia]  = rz [ia] - vz[ia] * dt;
-    }
-    
+    io_node printf("in run_md\n");
+    io_node printf("after previous step (leap-frog)\n"); 
     engforce();
     if(ionode){
         SEPARATOR;
@@ -93,6 +108,10 @@ void run_md()
         putchar('\n');
     }
     info_thermo(); /* at t=0 */ 
+#ifdef DEBUG
+    sample_config(0);
+#endif 
+
     if( (ionode) && (npas>0)){
         SEPARATOR;
         printf("starting main MD loop\n");
@@ -107,23 +126,26 @@ void run_md()
     for(istep=1; istep < npas+1; istep++) {
         
         // integration / propagators
-        //prop_leap_frog();
-        prop_velocity_verlet();
+        prop_agate();
 
-        if (lverletL) check_verletlist();
+#ifdef DEBUG_MD
+    sample_config(0);
+#endif 
         if (istep < nequil) rescale_velocities();
-       
          
-        if (istep % nprint==0 || istep == npas ) {
+        if ( iopnode(istep,npas,nprint) ) {
             statime(1);
             info_thermo();
             mestime(&mdstepCPUtime,1,0);
             writime("MD",istep,1,0);
             statime(0);
-            io_node printf("update verlet list %d step %d\n",updatevl,istep);
         }
-
+        if (lverletL) check_verletlist();
     }
     /* ----------------------------------------------------*/
+
+    write_config();
+
+
 }
 
