@@ -2,6 +2,7 @@ bin/mdff20.x
 bin/POSFF
 bin/__pycache__/
 
+src/CONTFF
 src/POSFF
 src/*.o
 src/control.s
