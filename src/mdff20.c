@@ -7,12 +7,14 @@
 #ifdef MPI
 #include <mpi.h>
 #endif
+#ifdef OMP 
+#include <omp.h>
+#endif
 #include "color_mdff.h"
 #include "constants.h"
 #include "global.h"
 #include "cell.h"
 #include "rand.h"
-#include "read_posff.h"
 #include "config.h"
 #include "field.h"
 #include "nmlj.h"
@@ -36,6 +38,11 @@ int main(int argc, char *argv[])
     init_io();
     MPI_Comm_rank(MPI_COMM_WORLD,&myrank);
     MPI_Comm_size(MPI_COMM_WORLD,&numprocs);
+#elif OMP
+    double startingTime,finishingTime;
+    startingTime = omp_get_wtime();
+    myrank=0;numprocs=1;
+    init_io();
 #else
     clock_t startingTime=clock();
     myrank=0;numprocs=1;
@@ -59,14 +66,14 @@ int main(int argc, char *argv[])
 
     //read configuration from file POSFF
     //allocate main quantities when nion is known
-    read_posff();
+    read_config();
     init_global(controlfn);
 
     // parallelization atom decomposition
     do_split(nion,numprocs,myrank,&atomDec,"atoms");
 
     // verlet list
-    if (lverletL) gen_pbc_verletlist();
+    if (lverletL) check_verletlist();
 
     // main md parameters
     init_md(controlfn);
@@ -87,6 +94,9 @@ int main(int argc, char *argv[])
         SEPARATOR;
 #ifdef MPI
         finishingTime = MPI_Wtime();
+        double elapsedTime=finishingTime-startingTime; 
+#elif OMP
+        finishingTime = omp_get_wtime();
         double elapsedTime=finishingTime-startingTime; 
 #else
         double elapsedTime=((double) clock()-startingTime)/CLOCKS_PER_SEC;
