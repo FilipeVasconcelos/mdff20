@@ -8,6 +8,8 @@
 #include "tools.h"
 #include "io.h"
 
+
+/******************************************************************************/
 void lattice(CELL * Cell)
 {
     Cell->G[0][0] = Cell->A[0][0]*Cell->A[0][0] + 
@@ -88,11 +90,15 @@ void lattice(CELL * Cell)
     */
 }
 
+/******************************************************************************/
 void angles_(double *ang,double basis[3][3], double norm[3]){
-    ang[0] = basis[0][2] * basis[0][1] + basis[1][2] * basis[1][1] + basis[2][2] * basis[2][1];
-    ang[1] = basis[0][0] * basis[0][2] + basis[1][0] * basis[1][0] + basis[2][0] * basis[2][2];
-    ang[2] = basis[0][0] * basis[0][1] + basis[1][0] * basis[1][1] + basis[2][0] * basis[2][1];
 
+    ang[0]=0.0;ang[1]=0.0;ang[2]=0.0;
+    for(int i=0;i<3;i++){
+        ang[0] += basis[i][2] * basis[i][1]; 
+        ang[1] += basis[i][0] * basis[i][2];
+        ang[2] += basis[i][0] * basis[i][1];
+    }
     ang[0] /= ( norm[2] * norm[1] );
     ang[1] /= ( norm[0] * norm[2] );
     ang[2] /= ( norm[0] * norm[1] );
@@ -100,9 +106,7 @@ void angles_(double *ang,double basis[3][3], double norm[3]){
     for(int i=0;i<3;i++){
         ang[i] = acos ( ang[i] ) * radian;
     }
-
 }
-
 
 /*******************************************************************************
  \brief
@@ -138,6 +142,7 @@ void kardir (int n, double *vx, double *vy, double *vz , double basis[3][3])
 
 }
 
+/******************************************************************************/
 void dirkar(int n, double *vx, double *vy, double *vz , double basis[3][3])
 {
     statime(4);
@@ -188,6 +193,7 @@ void info_cell_(char* label     , double basis[3][3],\
     printf("\nvolume                 =%12.4f\n",volume);
 }
 
+/******************************************************************************/
 void info_simuCell(){
 
     if (ionode) {
