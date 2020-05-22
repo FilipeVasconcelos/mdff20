@@ -8,39 +8,17 @@
 #include "cell.h"
 #include "tools.h"
 #include "io.h"
+#include "pbc.h"
 
-//-----------------------------------------------------------------------------
-int read_config (char* controlfn) {
 
-//   char buffer[10];
-//   int data;
-   FILE * fp;
-
-   fp = fopen (controlfn, "r");
-   if (NULL == fp ) {
-       perror("opening input file");
-       return (-1);
-   }
-   /*
-   while (EOF != fscanf(fp, "%s %d\n", buffer,&data))
-   {
-       if (strcmp(buffer,"nion") == 0 )
-       {
-           nion=data;
-           printf("number of ions  : %d\n", nion );
-       } 
-
-        if (strcmp(buffer,"type") == 0 )
-        {
-            ntype=data;
-            printf("number of types : %d\n",ntype );
-        } 
-   }
-    */
-   fclose(fp);
-   return 0;
+void pre_alloc_config(){
+    for (int it=0;it<NTYPEMAX;it++)
+    {
+        atypit[it]= malloc((MAX_LEN+1)*sizeof (char*));
+        massit[it]= 1.0;
+        nionit[it]= 0;
+    }
 }
-
 
 //-----------------------------------------------------------------------------
 void alloc_config(){
@@ -49,14 +27,14 @@ void alloc_config(){
     onethirdnion=1.0/( 3.0*(double) nion) ;
     massia= malloc(nion*sizeof *massia );
     invemassia= malloc(nion*sizeof *invemassia );
-    atype= malloc(nion*sizeof *atype);
-    if (atype==NULL){
+    atypia= malloc(nion*sizeof *atypia);
+    if (atypia==NULL){
         io_node printf("**atype malloc failure\n");
     }
     for (int ia=0;ia<nion;ia++)  {
-        atype[ia]=NULL;
-        atype[ia]=malloc((MAX_LEN+1)*sizeof(*atype));
-        if (atype[ia] == NULL){
+        atypia[ia]=NULL;
+        atypia[ia]=malloc((MAX_LEN+1)*sizeof(*atypia));
+        if (atypia[ia] == NULL){
             io_node printf("atype %d malloc failure\n",ia);
         }
     }
@@ -85,29 +63,28 @@ void alloc_config(){
 
 //-----------------------------------------------------------------------------
 void free_config(){
+    for (int it=0;it<ntype;it++)  {
+        free(atypit[it]);
+    }
     free(massia);
     free(invemassia);
     for (int ia=0;ia<nion;ia++)  {
-        free(atype[ia]);
+        free(atypia[ia]);
     }
-    free(atype);
+    free(atypia);
     free(rx);free(ry);free(rz);
     free(vx);free(vy);free(vz);
     free(fx);free(fy);free(fz);
     free(rxs);free(rys);free(rzs);
 }
 
+//-----------------------------------------------------------------------------
 bool config_input_ok(){
     
-    //check if sum(natmi) == nion
-//    int sumnatmi=0;
-//    for(int it=0;it<ntype;it++){
-//        sumnatmi+=natmi[it];
-//    }
-    int sumnatmi=sum(natmi,ntype);
-    if ( sumnatmi != nion) {
-        pError("natmi and nions does not correspond\n");
-        printf("%d %d\n",sumnatmi,nion);
+    int sumnionit=sum(nionit,ntype);
+    if ( sumnionit != nion) {
+        pError("nionit and nion does not correspond\n");
+        printf("%d %d\n",sumnionit,nion);
         return false;
     }
     return true;
@@ -120,15 +97,15 @@ void init_config()
         exit(1);
     }
     int ccs,cc;
-    itype=malloc(nion*sizeof*itype);
+    typia=malloc(nion*sizeof*typia);
     cc=0;
     for ( int it=0; it <= ntype-1;it++) {
         ccs = cc;
-        cc  = cc + natmi[it];
+        cc  = cc + nionit[it];
         for ( int ia=ccs;ia<=(cc-1);ia++) {
-            massia[ia] = mass[it];
-            invemassia[ia] = 1.0/mass[it];
-            itype[ia]  = it;
+            massia[ia] = massit[it];
+            invemassia[ia] = 1.0/massit[it];
+            typia[ia]  = it;
         }
     }
     info_config();
@@ -145,4 +122,177 @@ void info_config(){
     }
     info_simuCell();
 }
+
+//-----------------------------------------------------------------------------
+void sample_config(int key){
+    if (key==0){ /* first 10 ions */
+        if (ionode ) {
+            LSEPARATOR;
+            printf("              Configuration sample (first 10)\n");
+            LSEPARATOR;
+            printf("   ia atype              rx              vx              fz\n");
+            for (int ia=0;ia<10;ia++){
+                printf("%5d %5s "ee3"\n",ia,atypia[ia],rx[ia],vx[ia],fx[ia]);
+            }
+            LSEPARATOR;
+        }
+
+    }
+
+}
+
+/*-----------------------------------------------------------------------------*/
+/*
+256
+generated_by_gen_cubic.py
+     20.99386800      0.00000000      0.00000000
+      0.00000000     20.99386800      0.00000000
+      0.00000000      0.00000000     20.99386800
+1
+A
+256
+Direct
+A 0.0 0.0 0.0
+...
+B 0.5 0.5 0.5 
+*/
+int write_config(){
+
+    double *xxx, *yyy, *zzz;
+    xxx= malloc(nion*sizeof(*xxx));
+    yyy= malloc(nion*sizeof(*yyy));
+    zzz= malloc(nion*sizeof(*zzz));
+    for(int ia=0;ia<nion;ia++){
+        xxx[ia]=rx[ia];yyy[ia]=ry[ia];zzz[ia]=rz[ia];
+    }
+
+    /***************************************/ 
+    /* Periodic Boundaries Conditions      */
+    /***************************************/ 
+    kardir ( nion , xxx , yyy , zzz , simuCell.B ) ;
+    replace_pbc(nion,xxx,yyy,zzz);
+
+    FILE * fp;
+    fp = fopen ("CONTFF", "w");
+    if (NULL == fp) {
+        perror("opening input file");
+        return -1;
+    }
+    fprintf(fp,"%d\n",nion); 
+    fprintf(fp,"%s\n",configname); 
+    for(int i=0;i<3;i++){
+        for(int j=0;j<3;j++){
+            fprintf(fp,FF,simuCell.A[i][j]);
+        }
+        fprintf(fp,"\n");
+    }
+    fprintf(fp,"%d\n",ntype);
+    for(int it=0;it<ntype;it++){
+        fprintf(fp,"%s",atypit[it]);
+    }
+    fprintf(fp,"\n");
+    for(int it=0;it<ntype;it++){
+        fprintf(fp,"%d",nionit[it]);
+    }
+    fprintf(fp,"\n");
+    fprintf(fp,"Direct\n");
+    for(int ia=0;ia<nion;ia++){
+        fprintf(fp,"%s ",atypia[ia]);
+        fprintf(fp,EE3,xxx[ia],yyy[ia],zzz[ia]);
+        fprintf(fp,"\n");
+    }
+    fclose(fp);
+    /*************************************** 
+            direct to cartesian                   
+     ***************************************/
+    dirkar ( nion , rx , ry , rz , simuCell.A ) ;
+    return 0;
+    free(xxx);free(yyy);free(zzz);
+}
+/*-----------------------------------------------------------------------------*/
+int read_config()
+{
+
+    pre_alloc_config();
+
+    char cpos[MAX_LEN+1];
+    FILE * fp;
+
+    fp = fopen ("POSFF","r");
+
+    if (NULL == fp ) {
+        perror("opening database file\n");
+#ifdef MPI
+        MPI_Finalize();
+#endif
+        return (-1);
+    }
+    // print out info to stdout
+    io_node printf("reading configuration from file POSFF\n");
+    
+    // reading nion number of ions in POSFF 
+    fscanf(fp, "%d", &nion);
+    // reading config name
+    fscanf(fp, "%s", configname);
+    // reading cell parameters
+    for(int i=0;i<3;i++){
+        for(int j=0;j<3;j++){
+            fscanf(fp, "%lf",&simuCell.A[i][j]);
+        }
+    }
+    lattice(&simuCell);
+    rhoN=(double)nion * simuCell.inveOmega;
+
+    // ------------------
+    // type informations 
+    // ------------------
+    //ntype : number of types in POSFF
+    fscanf(fp, "%d", &ntype); //ntype
+
+    //atypit : types char 
+    io_node printf("found type information on POSFF");
+    for (int it=0;it<ntype;it++) {
+        fscanf(fp,"%s",atypit[it]);
+        io_node printf("%5s",atypit[it]);
+    }
+    //nionit : ions per type
+    io_node printf("\n                                 ");
+    for (int it=0;it<ntype;it++) {
+        fscanf(fp,"%d",&nionit[it]);
+        io_node printf("%5d",nionit[it]);
+    }
+    io_node putchar('\n');
+    //can be call only when nion and ntype 
+    //are known and  natmi,atypei readed
+    alloc_config();
+
+    // Direct or Cartesian
+    fscanf(fp, "%s", cpos);
+    //strcpy(cpos,buffer);
+
+    // reading positions of ions 
+    for (int ia=0;ia<nion;ia++) {
+        fscanf(fp,"%s %lf %lf %lf",atypia[ia],&rx[ia],&ry[ia],&rz[ia]);
+    }
+    // if position are in direct coordinates => cartesian coordinates
+    if ((strcmp(cpos,"Direct") == 0 ) || (strcmp(cpos,"D") == 0 )) {
+        io_node printf("\natomic positions in Direct coordinates\n");
+        dirkar(nion, rx, ry, rz , simuCell.A);
+    }
+    else{
+        io_node printf("\natomic positions in Cartesian coordinates\n");
+    }
+    io_node putchar('\n');
+
+    //closing POSFF
+    if (fclose(fp))     { 
+       io_node printf("error closing file."); 
+#ifdef MPI
+        MPI_Finalize();
+#endif
+       return -1; 
+    }
+    return 0;
+}
+
 
