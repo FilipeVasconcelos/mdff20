@@ -7,6 +7,7 @@
 #include "global.h"
 #include "io.h"
 #include "verlet.h"
+#include "tools.h"
 
 int read_global(char* controlfn)
 {
@@ -20,7 +21,7 @@ int read_global(char* controlfn)
    while (EOF != fscanf(fp, "%s\n", buffer)) { 
         if (strcmp(buffer,"lverletL") == 0 ) {
             fscanf(fp,"%s",buffer);
-            lverletL=check_FTstring("lverletL",buffer)?true:false; 
+            lverletL=check_boolstring("lverletL",buffer); 
         } 
         if (strcmp(buffer,"cutshortrange") == 0 ) {
             fscanf(fp,"%lf",&cutshortrange);
@@ -50,8 +51,7 @@ void init_global(char* controlfn){
     info_global();
     if (lverletL) { 
         verlet_nb=allocate_verletlist("vnlnb");
-        verlet_nb->cut=cutshortrange; 
-        printf("test %d\n",verlet_nb->point[0]);
+        verlet_nb->cut=cutshortrange+skindiff; 
     }
 }
 
