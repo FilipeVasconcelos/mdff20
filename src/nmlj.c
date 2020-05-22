@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <math.h>
+#include <omp.h>
 #include "color_mdff.h"
 #include "config.h"
 #include "field.h"
@@ -16,7 +17,8 @@
 #include "verlet.h"
 #include <omp.h>
 
-
+//#define DEBUG_NMLJ_
+/******************************************************************************/
 double addtruncU(int p1 , int p2, double srp, double srq, int trunc){
     if (trunc == 0) {
         return epsp[p1][p2] * ( plj[p1][p2] * srq - qlj[p1][p2] * srp ) ;
@@ -24,6 +26,7 @@ double addtruncU(int p1 , int p2, double srp, double srq, int trunc){
     return 0.0;
 }
 
+/******************************************************************************/
 int read_nmlj(char* controlfn){
 
     char buffer[MAX_LEN+1];
@@ -97,6 +100,7 @@ int read_nmlj(char* controlfn){
     return 0;
 }
 
+/******************************************************************************/
 void default_nmlj(){
     for ( int it=0;it<ntype; it++){
         for ( int jt=0; jt<ntype; jt++){
@@ -109,6 +113,7 @@ void default_nmlj(){
 }
 
 
+/******************************************************************************/
 void init_nmlj(char* controlfn){
 
     double rcut=cutshortrange;
@@ -158,9 +163,10 @@ void engforce_nmlj_pbc(double *u, double *vir)
     double wij;
     double sr2,srp,srq;
 
-    int p1,p2,jb,je,ja;
-    *u=0;
-    *vir=0;
+    int p1,p2;
+    double uu =0.0;
+    double vv =0.0;
+    int ia,j1,ja,jb,je;
 
     for(int ia=0;ia<nion;ia++){
         fx[ia]=0.0;fy[ia]=0.0;fz[ia]=0.0;
@@ -174,63 +180,71 @@ void engforce_nmlj_pbc(double *u, double *vir)
             cartesian to direct                    
      ***************************************/
     kardir ( nion , rx , ry , rz , simuCell.B ) ;
-    static double uu = *u;
-    static double mpfx[nion] = *fx;
-    //for(int ia=atomDec.iaStart;ia<atomDec.iaEnd;ia++) {
-    #pragma omp parallel for reduction(+:uu) reduction(+:mpfx)   
-    for(int ia=0;ia<nion;ia++) {
-        rxi = rx[ia];
-        ryi = ry[ia];
-        rzi = rz[ia];
-        if (lverletL) {
-            jb=verlet_nb->point[ia];
-            je=verlet_nb->point[ia+1];
-        }
-        else{
-            jb = 0;
-            je = nion;
-        }
-        for (int j1=jb;j1<je;j1++) {
-            if (lverletL){ 
-                ja=verlet_nb->list[j1];
+
+    int counttest=0;
+
+    #pragma omp parallel shared(rcutsq,rx,ry,rz,vx,vy,vz,fx,fy,fz,sigsq,ptwo,qtwo,typia,tau_nonb,epsp,plj,qlj) \
+                         private(ia,j1,jb,je,ja,rxi,ryi,rzi,rxij,ryij,rzij,rijsq,p1,p2,sr2,srp,srq,wij,fxij,fyij,fzij) 
+    {
+        #pragma omp for reduction (+:uu,vv,tau_nonb) schedule(dynamic,16) 
+        for(ia=atomDec.iaStart;ia<atomDec.iaEnd;ia++) {
+            rxi = rx[ia];
+            ryi = ry[ia];
+            rzi = rz[ia];
+            if (lverletL) {
+                jb=verlet_nb->point[ia];
+                je=verlet_nb->point[ia+1];
             }
             else{
-                ja=j1;
+                jb = 0;
+                je = nion;
             }
-            if ( (( ja > ia ) && ! lverletL ) || 
-                 (( ja !=ia ) && lverletL) )  {
-                rxij = rxi - rx[ja];
-                ryij = ryi - ry[ja];
-                rzij = rzi - rz[ja];
-                pbc(&rxij,&ryij,&rzij);
-                rijsq = rxij * rxij + ryij * ryij + rzij * rzij;
-                if ( rijsq < rcutsq ) {
-                    p1 = itype[ia];
-                    p2 = itype[ja];
-                    sr2 = sigsq[p1][p2] / rijsq;
-                    srp = pow(sr2,ptwo[p1][p2]);
-                    srq = pow(sr2,qtwo[p1][p2]);
-                    uu+=addtruncU(p1,p2,srp,srq,0);
-                    wij = fc[p1][p2] * (srq-srp) * sr2;
-                    fxij = wij * rxij;
-                    fyij = wij * ryij;
-                    fzij = wij * rzij;
-                    // virial;
-                    *vir += wij * rijsq;
-                    // forces
-		    fx[ia] += fxij;
-                    fy[ia] += fyij;
-                    fz[ia] += fzij;
-                    fx[ja] -= fxij;
-                    fy[ja] -= fyij;
-                    fz[ja] -= fzij;
-                    // stress tensor (symmetric!)
-                    tau_nonb[0][0] += (rxij*fxij + rxij*fxij)*0.5;
-                    tau_nonb[0][1] += (rxij*fyij + ryij*fxij)*0.5;
-                    tau_nonb[0][2] += (rxij*fzij + rzij*fxij)*0.5;
-                    tau_nonb[1][1] += (ryij*fyij + ryij*fyij)*0.5;
-                    tau_nonb[1][2] += (ryij*fzij + rzij*fyij)*0.5;
-                    tau_nonb[2][2] += (rzij*fzij + rzij*fzij)*0.5;
+            for (j1=jb;j1<je;j1++) {
+                if (lverletL){ 
+                    ja=verlet_nb->list[j1];
+                }
+                else{
+                    ja=j1;
+                }
+                if ( (( ja > ia ) && !lverletL ) || 
+                     (( ja !=ia ) && lverletL) )  {
+#ifdef DEBUG_NMLJ
+                    io_node printf("in nmlj main loop %d %d %d %d\n",ia,ja,jb,je);
+#endif
+                    counttest+=1;
+                    rxij = rxi - rx[ja];
+                    ryij = ryi - ry[ja];
+                    rzij = rzi - rz[ja];
+                    pbc(&rxij,&ryij,&rzij);
+                    rijsq = rxij * rxij + ryij * ryij + rzij * rzij;
+                    if ( rijsq < rcutsq ) {
+                        p1 = typia[ia];
+                        p2 = typia[ja];
+                        sr2 = sigsq[p1][p2] / rijsq;
+                        srp = pow(sr2,ptwo[p1][p2]);
+                        srq = pow(sr2,qtwo[p1][p2]);
+                        uu+=addtruncU(p1,p2,srp,srq,0);
+                        wij = fc[p1][p2] * (srq-srp) * sr2;
+                        fxij = wij * rxij;
+                        fyij = wij * ryij;
+                        fzij = wij * rzij;
+                        // virial;
+                        vv += wij * rijsq;
+                        // forces
+           	        fx[ia] += fxij;
+                        fy[ia] += fyij;
+                        fz[ia] += fzij;
+                        fx[ja] -= fxij;
+                        fy[ja] -= fyij;
+                        fz[ja] -= fzij;
+                        // stress tensor (symmetric!)
+                        tau_nonb[0][0] += (rxij*fxij + rxij*fxij)*0.5;
+                        tau_nonb[0][1] += (rxij*fyij + ryij*fxij)*0.5;
+                        tau_nonb[0][2] += (rxij*fzij + rzij*fxij)*0.5;
+                        tau_nonb[1][1] += (ryij*fyij + ryij*fyij)*0.5;
+                        tau_nonb[1][2] += (ryij*fzij + rzij*fyij)*0.5;
+                        tau_nonb[2][2] += (rzij*fzij + rzij*fzij)*0.5;
+                    }
                 }
             }
         }
@@ -241,8 +255,8 @@ void engforce_nmlj_pbc(double *u, double *vir)
             tau_nonb[j][i]=tau_nonb[i][j];
         }
     }
-    *vir/=3.0;
     *u=uu;
+    *vir=vv/3.0;
 #ifdef MPI 
     statime(8);
     MPI_Allreduce_sumDouble(u,1);
@@ -256,14 +270,17 @@ void engforce_nmlj_pbc(double *u, double *vir)
     statime(9);
     mestime(&COMMCPUtime,9,8);
 #endif
-
     /*************************************** 
             direct to cartesian                   
      ***************************************/
     dirkar ( nion , rx , ry , rz , simuCell.A ) ;
+#ifdef DEBUG_NMLJ_
+    io_node printf("exiting nmlj engforce count pairs %d %d\n",counttest,(nion*(nion-1))/2);
+#endif
 
 }
 
+/******************************************************************************/
 void info_nmlj(){
 
     if (ionode) {
@@ -287,7 +304,7 @@ void info_nmlj(){
             for(int jt=0;jt<ntype;jt++){
                 if( (jt>=it) && (jt==it)){
                     LSEPARATOR;
-                    printf(" %s <--> %s  \n",atypei[it],atypei[jt]);
+                    printf(" %s <--> %s  \n",atypit[it],atypit[jt]);
                     LSEPARATOR;
                     printf("sigma = %16.8e\n",sigmalj[it][jt]);
                     printf("eps   = %16.8e\n",epslj[it][jt]);
@@ -296,7 +313,7 @@ void info_nmlj(){
                 }
                 else if( (jt>it) ){
                     LSEPARATOR;
-                    printf(" %s <--> %s  \n",atypei[it],atypei[jt]);
+                    printf(" %s <--> %s  \n",atypit[it],atypit[jt]);
                     LSEPARATOR;
                     printf("sigma = %16.8e (%-16.8e)\n",sigmalj[it][jt],sigmalj[jt][it]);
                     printf("eps   = %16.8e (%-16.8e)\n",epslj[it][jt],epslj[jt][it]);
