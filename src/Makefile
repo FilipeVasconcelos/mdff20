@@ -9,8 +9,8 @@ $(info installation dir $(shell readlink -f $(INSTALL_DIR)) )
 # List of executable to be built within the package
 EXE= mdff20.x
 
-CC=gcc
-#CC=mpicc
+#CC=gcc
+CC=mpicc
 #CC=clang
 $(info CC  $(shell which $(CC) ))
 
@@ -39,7 +39,7 @@ $(info branch   $(BRANCH))
 #   possible debug/timing 
 # --------------------------------------------------------------------------- 
 ifeq ($(CC),mpicc)
-    CPPDEFS=-DMPI -DHOST="$(HOST)" -DBRANCH="$(BRANCH)" 
+    CPPDEFS=-DMPI -DOMP -DHOST="$(HOST)" -DBRANCH="$(BRANCH)" 
 else
     CPPDEFS=-DOMP -DHOST="$(HOST)" -DBRANCH="$(BRANCH)"
 endif
