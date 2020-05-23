@@ -120,8 +120,8 @@ void check_verletlist(){
         }
     }
     if (updatevl>1){
-        io_pnode printf("  update verlet list : %d/%d (%.2f%%) \n",
-                           updatevl,istep,((double)updatevl/istep)*100.0);
+        io_pnode printf("  update verlet list : %d/%d T = %f\n",
+                           updatevl,istep,((double)istep/updatevl));
     }
     statime(11);
     mestime(&verletLCPUtime,11,10);
