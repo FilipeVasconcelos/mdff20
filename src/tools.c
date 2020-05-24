@@ -3,6 +3,7 @@
 #include <string.h>
 #include "constants.h"
 #include "io.h"
+#include "config.h"
 
 /*******************************************************************************
  EXPRO
@@ -53,3 +54,31 @@ int check_string(char* label,char buffer[MAX_LEN+1], char allwd[][MAX_LEN+1], in
 int check_boolstring(char* label,char buffer[MAX_LEN+1]){
     return check_string(label,buffer,allwd_FT_str,16) %2==0;
 }
+
+/* center of mass by type (e.g comit)*/
+void com(double *ax,double *ay,double *az, int n, double comit[n][3]){
+
+    for(int it=0;it<ntype+1;it++){
+        for(int k=0;k<3;k++){
+            comit[it][k]=0.0;
+        }
+    }
+    int it;
+    for (int ia=0;ia<nion;ia++){
+        it=typia[ia];
+        comit[it][0]+=ax[ia];
+        comit[it][1]+=ay[ia];
+        comit[it][2]+=az[ia];
+        comit[ntype][0]+=ax[ia];
+        comit[ntype][1]+=ay[ia];
+        comit[ntype][2]+=az[ia];
+        printf("ia %d %15.8e %15.8e %15.8e %15.8e\n",ia,ax[ia],ay[ia],az[ia],comit[ntype][2]);
+    }
+    for(int it=0;it<ntype+1;it++){
+        for(int k=0;k<3;k++){
+            comit[it][k]*=invenionit[it];
+            printf("it %d k %d inve %f %15.8e\n",it,k,invenionit[it],comit[it][k]);
+        }
+    }
+}
+

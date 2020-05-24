@@ -4,12 +4,13 @@
 /*                              global parameters                             */
 /* ****************************************************************************/
 int                   istep; /* current step */
-int                    npas;
-int                  nprint;
-int                  nequil;
-double                 temp;
-double                   dt;
-double        tauTberendsen;
+int                    npas; /* number of md steps */
+int                  nprint; /* stdout printing period */
+int                  fprint; /* osziff printing period */
+int                  nequil; /* equilibration period (rescaling) */
+double                 temp; /* temperature */
+double                   dt; /* time step */  
+double        tauTberendsen; /* Berendsen thermostat period */
 int                 egrator; /* int version of */
 
 #define ALLWD_INTEGRATOR_STR 2

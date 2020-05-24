@@ -5,7 +5,7 @@ lnmlj true
 lverletL true 
 cutshortrange 8.5 
 trunc no 
-skindiff .2
+skindiff  1.5 
 massit 39.95
 epslj .010323576
 sigmalj 3.405
@@ -13,9 +13,10 @@ sigmalj 3.405
 #    md  
 # ------------
 integrator nve-vv
-temp 94.0
-npas  100000
+temp 500.0
+npas 0 
 nprint 1000
-nequil 100000
+fprint 100
+nequil 50000
 dt .001
 tauTberendsen .001

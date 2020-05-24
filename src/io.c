@@ -55,12 +55,14 @@ void init_io(){
     else{
         ionode = false;
     }
+    oszcall=0;
 }
 
 /******************************************************************************/
 int iopnode(int step,int npas,int nprint){
-//    printf("step : %d %d %d %d\n",step,npas,nprint,step%nprint==0);
     return ( (step % nprint==0 || step == npas ) && (step > 0) );
 }
+
+
 
 

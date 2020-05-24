@@ -15,7 +15,7 @@ CC=mpicc
 $(info CC  $(shell which $(CC) ))
 
 #CFLAGS=-O3 -msse4 -mavx2 -Wall -ffast-math -fopenmp
-CFLAGS=-O2 -msse4 -mavx2 -ffast-math -fopenmp
+CFLAGS=-O3 -msse4 -mavx2 -ffast-math -fopenmp
 $(info CFLAGS   $(CFLAGS))
 LDFLAGS = -lm -fopenmp # bibliotheque math 
 #LDFLAGS = -lm 
@@ -54,7 +54,7 @@ $(info CPPDEFS  $(CPPDEFS))
 mdff20.x: $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-install:
+install: mdff20.x
 	cp $(EXE) $(INSTALL_DIR)
 
 clean:

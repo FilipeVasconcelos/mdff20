@@ -23,6 +23,10 @@ int read_global(char* controlfn)
             fscanf(fp,"%s",buffer);
             lverletL=check_boolstring("lverletL",buffer); 
         } 
+        if (strcmp(buffer,"lstatic") == 0 ) {
+            fscanf(fp,"%s",buffer);
+            lstatic=check_boolstring("lstatic",buffer); 
+        } 
         if (strcmp(buffer,"cutshortrange") == 0 ) {
             fscanf(fp,"%lf",&cutshortrange);
         } 
@@ -47,6 +51,9 @@ void info_global(){
 }
 
 void init_global(char* controlfn){
+    /* default values */
+    skindiff=0.15;
+    
     read_global(controlfn);
     info_global();
     if (lverletL) { 

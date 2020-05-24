@@ -10,6 +10,7 @@
 #include "io.h"
 #include "pbc.h"
 
+#include "kinetic.h"
 
 void pre_alloc_config(){
     for (int it=0;it<NTYPEMAX;it++)
@@ -58,7 +59,6 @@ void alloc_config(){
         fx[ia]=0.0;fy[ia]=0.0;fz[ia]=0.0;
         rxs[ia]=0.0;rys[ia]=0.0;rzs[ia]=0.0;
     }
-    init_config();
 }
 
 //-----------------------------------------------------------------------------
@@ -100,6 +100,7 @@ void init_config()
     typia=malloc(nion*sizeof*typia);
     cc=0;
     for ( int it=0; it <= ntype-1;it++) {
+        invenionit[it]=1./nionit[it];
         ccs = cc;
         cc  = cc + nionit[it];
         for ( int ia=ccs;ia<=(cc-1);ia++) {
@@ -108,6 +109,8 @@ void init_config()
             typia[ia]  = it;
         }
     }
+    nionit[ntype]=nion;
+    invenionit[ntype]=1./nionit[ntype];
     info_config();
 
 }
@@ -116,8 +119,8 @@ void info_config(){
 
     if (ionode) {  
         printf("configname                      : %s\n",configname);
-        printf("number of types                 : %d\n",ntype);
-        printf("number of ions                  : %d\n",nion);
+        printf("number of types  (ntype)        : %d\n",ntype);
+        printf("number of ions   (nion)         : %d\n",nion);
         putchar('\n');
     }
     info_simuCell();
@@ -130,9 +133,17 @@ void sample_config(int key){
             LSEPARATOR;
             printf("              Configuration sample (first 10)\n");
             LSEPARATOR;
-            printf("   ia atype              rx              vx              fz\n");
-            for (int ia=0;ia<10;ia++){
+            printf("   ia atype              rx              vx              fx\n");
+            for (int ia=0;ia<4;ia++){
                 printf("%5d %5s "ee3"\n",ia,atypia[ia],rx[ia],vx[ia],fx[ia]);
+            }
+            printf("   ia atype              ry              vy              fy\n");
+            for (int ia=4;ia<8;ia++){
+                printf("%5d %5s "ee3"\n",ia,atypia[ia],ry[ia],vy[ia],fy[ia]);
+            }
+            printf("   ia atype              rz              vz              fz\n");
+            for (int ia=4;ia<8;ia++){
+                printf("%5d %5s "ee3"\n",ia,atypia[ia],rz[ia],vz[ia],fz[ia]);
             }
             LSEPARATOR;
         }
@@ -171,6 +182,7 @@ int write_config(){
     /***************************************/ 
     kardir ( nion , xxx , yyy , zzz , simuCell.B ) ;
     replace_pbc(nion,xxx,yyy,zzz);
+    dirkar ( nion , xxx , yyy , zzz , simuCell.A ) ;
 
     FILE * fp;
     fp = fopen ("CONTFF", "w");
@@ -195,17 +207,15 @@ int write_config(){
         fprintf(fp,"%d",nionit[it]);
     }
     fprintf(fp,"\n");
-    fprintf(fp,"Direct\n");
+    fprintf(fp,"Cartesian\n");
     for(int ia=0;ia<nion;ia++){
         fprintf(fp,"%s ",atypia[ia]);
         fprintf(fp,EE3,xxx[ia],yyy[ia],zzz[ia]);
+        fprintf(fp,EE3,vx[ia],vy[ia],vz[ia]);
+        fprintf(fp,EE3,fx[ia],fy[ia],fz[ia]);
         fprintf(fp,"\n");
     }
     fclose(fp);
-    /*************************************** 
-            direct to cartesian                   
-     ***************************************/
-    dirkar ( nion , rx , ry , rz , simuCell.A ) ;
     return 0;
     free(xxx);free(yyy);free(zzz);
 }
@@ -221,11 +231,11 @@ int read_config()
     fp = fopen ("POSFF","r");
 
     if (NULL == fp ) {
-        perror("opening database file\n");
+        pError("POSFF not found\n");
 #ifdef MPI
         MPI_Finalize();
 #endif
-        return (-1);
+        exit(-1);
     }
     // print out info to stdout
     io_node printf("reading configuration from file POSFF\n");
@@ -273,6 +283,8 @@ int read_config()
     // reading positions of ions 
     for (int ia=0;ia<nion;ia++) {
         fscanf(fp,"%s %lf %lf %lf",atypia[ia],&rx[ia],&ry[ia],&rz[ia]);
+        //fscanf(fp,"%lf %lf %lf",&vx[ia],&vy[ia],&vz[ia]);
+        //fscanf(fp,"%lf %lf %lf",&fx[ia],&fy[ia],&fz[ia]);
     }
     // if position are in direct coordinates => cartesian coordinates
     if ((strcmp(cpos,"Direct") == 0 ) || (strcmp(cpos,"D") == 0 )) {
@@ -292,6 +304,11 @@ int read_config()
 #endif
        return -1; 
     }
+
+    kardir(nion,rx,ry,rz,simuCell.B);
+    replace_pbc(nion,rx,ry,rz); 
+    dirkar(nion,rx,ry,rz,simuCell.A);
+
     return 0;
 }
 

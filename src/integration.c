@@ -14,8 +14,8 @@ void prop_velocity_verlet(){
     fxs=malloc(nion*sizeof(*fxs));
     fys=malloc(nion*sizeof(*fys));
     fzs=malloc(nion*sizeof(*fzs));
-    double dtsq2 = dt * dt * 0.5L; 
-    double dt2 = dt * 0.5L;
+    double dtsq2 = dt * dt * 0.5; 
+    double dt2 = dt * 0.5;
 
     for(int ia=0;ia<nion;ia++){
         fxs[ia]=fx[ia];fys[ia]=fy[ia];fzs[ia]=fz[ia];
@@ -125,6 +125,7 @@ void prop_agate(int step){
             prop_velocity_verlet();
             break;
     }
+
 }
 
 

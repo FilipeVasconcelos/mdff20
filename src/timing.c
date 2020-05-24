@@ -10,10 +10,9 @@
 #include "io.h"
 
 void statime(int x){
-#ifdef MPI
+#if defined(MPI) && !defined(OMP)
     ttt[x]=MPI_Wtime();
-#elif OMP
-//    printf("omp_get_wtime\n");
+#elif defined(OMP)
     ttt[x]=omp_get_wtime();
 #else
     ttt[x]=clock();

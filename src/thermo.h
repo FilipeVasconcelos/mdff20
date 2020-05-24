@@ -3,7 +3,9 @@
 double e_kin;
 double temp_r;
 double u_lj;
-double vir_lj;
+double u_coul;
+double pvir_lj;
+double pvir_coul;
 
 void info_thermo();
 #endif

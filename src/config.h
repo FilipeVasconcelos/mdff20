@@ -5,26 +5,27 @@
 /* ****************************************************************************/
 /*                              global parameters                             */
 /* ****************************************************************************/
-int                    nion; 
-double              onenion; /* 1/nion     */
-double         onethirdnion; /* 1/(3*nion) */
-int                   ntype;
-double    massit [NTYPEMAX];
-int       nionit [NTYPEMAX];
-char*     atypit [NTYPEMAX];
+int                     nion; 
+double               onenion; /* 1/nion     */
+double          onethirdnion; /* 1/(3*nion) */
+int                    ntype;
+double     massit [NTYPEMAX];
+int        nionit [NTYPEMAX+1]; /* last one is nion */
+double invenionit [NTYPEMAX+1]; /* 1/nionit */
+char*      atypit [NTYPEMAX];
 
-char  configname[MAX_LEN+1];
+char   configname[MAX_LEN+1];
 
-double          *rx,*ry,*rz;  
-double          *vx,*vy,*vz;  
-double          *fx,*fy,*fz;  
-double       *rxs,*rys,*rzs;  
-double              *massia;  
-double          *invemassia;  
-char               **atypia;  
-int                  *typia; 
-double       tau_nonb[3][3];
-double                 rhoN; /*density number:   rhoN=nion/V  (Å^-3)*/ 
+double           *rx,*ry,*rz;  
+double           *vx,*vy,*vz;  
+double           *fx,*fy,*fz;  
+double        *rxs,*rys,*rzs;  
+double               *massia;  
+double           *invemassia;  
+char                **atypia;  
+int                   *typia; 
+double        tau_nonb[3][3];
+double                  rhoN; /*density number:   rhoN=nion/V  (Å^-3)*/ 
 
 /* ****************************************************************************/
 /*                                prototypes                                  */

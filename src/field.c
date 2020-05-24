@@ -64,6 +64,7 @@ void info_field(){
 }
 
 void init_field(char* controlfn){
+    
     read_field(controlfn);
     info_field();
     if (lnmlj) init_nmlj(controlfn);
@@ -73,7 +74,7 @@ void init_field(char* controlfn){
 void engforce()
 {
     statime(2);
-    if (lnmlj) engforce_nmlj_pbc(&u_lj,&vir_lj);
+    if (lnmlj) engforce_nmlj_pbc(&u_lj,&pvir_lj);
     statime(3);
     mestime(&engforceCPUtime,3,2);
 }

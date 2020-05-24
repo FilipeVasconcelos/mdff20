@@ -23,6 +23,7 @@
 #include "md.h"
 #include "io.h"
 #include "timing.h"
+#include "thermo.h"
 
 int main(int argc, char *argv[])
 {
@@ -49,7 +50,7 @@ int main(int argc, char *argv[])
     init_io();
 #endif
     // init random number generator (velocities)
-    init_rand();
+    init_rand(startingDate);
     // main constants of the code
     gen_constants();
 
@@ -79,11 +80,27 @@ int main(int argc, char *argv[])
     init_md(controlfn);
     // main field parameters
     init_field(controlfn);
-    
-    //init_velocities();
+    init_config();
 
-    // main md function
-    run_md();
+    if (!lstatic) {
+        //lets give ions some velocities
+        init_velocities();
+        // main md function
+        run_md();
+    }
+    else {
+        calc_temp(&temp_r,&e_kin,0);
+        io_node printf("static properties\n");
+        /* energie, force and pressure */
+        engforce();
+        if(ionode){
+            SEPARATOR;
+            printf("properties at t=0\n");
+            SEPARATOR;
+            putchar('\n');
+        }
+        info_thermo(0,NULL); 
+    }
    
     /* ------------------------------------- */ 
     info_timing();

@@ -21,7 +21,7 @@
 /******************************************************************************/
 int read_md (char * controlfn) 
 {
-   char buffer[15];
+   char buffer[MAX_LEN+1];
    FILE * fp;
 
    fp = fopen (controlfn, "r");
@@ -48,6 +48,9 @@ int read_md (char * controlfn)
         if (strcmp(buffer,"nprint") == 0 ) {
             fscanf(fp,"%d",&nprint);
         } 
+        if (strcmp(buffer,"fprint") == 0 ) {
+            fscanf(fp,"%d",&fprint);
+        } 
         if (strcmp(buffer,"nequil") == 0 ) {
             fscanf(fp,"%d",&nequil);
         } 
@@ -61,12 +64,16 @@ int read_md (char * controlfn)
 
 /******************************************************************************/
 void init_md(char * controlfn){
-
-    egrator=1; /* default nve-vv */
+    /* gen allowed input strings for integrator */
     strcpy(allwd_integrator_str[0 ],"nve-lf");
     strcpy(allwd_integrator_str[1 ],"nve-vv");
+
+    /* default values */
+    egrator=1; /* nve-vv */
     read_md(controlfn);
-    info_md();
+    /* tauTberendsen == dt => simple velocity rescale */ 
+    if ( (nequil > 0 ) && (tauTberendsen==0.0)) tauTberendsen=dt;
+
     temp           = temp           * boltz_unit ; // temp = kB * T 
     dt             = dt             * time_unit  ; // angstrom*(atomicmassunit/eV)** 0.5  <= ps
     tauTberendsen  = tauTberendsen  * time_unit  ;
@@ -75,6 +82,7 @@ void init_md(char * controlfn){
         egrator=1; /* switch to nve-vv */ 
     }
 
+    info_md();
 
 }
 
@@ -84,9 +92,9 @@ void info_md(){
         SEPARATOR;
         printf("md info \n");
         LSEPARATOR;
-        printf("temperature           = %.5f (K) \n", temp);
-        printf("dt                    = %.5f (ps)\n", dt);
-        printf("tauTberendsen         = %.5f (ps)\n", tauTberendsen);
+        printf("temperature           = %.5f (K) \n", temp/boltz_unit);
+        printf("dt                    = %.5f (ps)\n", dt/time_unit);
+        printf("tauTberendsen         = %.5f (ps)\n", tauTberendsen/time_unit);
         printf("npas                  = %d \n", npas );
         printf("nprint                = %d \n", nprint );
         printf("nequil                = %d \n", nequil );
@@ -98,6 +106,9 @@ void info_md(){
 /******************************************************************************/
 void run_md()
 {
+
+    calc_temp(&temp_r,&e_kin,0);
+
     io_node printf("in run_md\n");
     io_node printf("after previous step (leap-frog)\n"); 
     engforce();
@@ -107,8 +118,10 @@ void run_md()
         SEPARATOR;
         putchar('\n');
     }
-    info_thermo(); /* at t=0 */ 
-#ifdef DEBUG
+
+    info_thermo(0,NULL); /* at t=0 */ 
+
+#ifdef DEBUG_MD
     sample_config(0);
 #endif 
 
@@ -119,33 +132,55 @@ void run_md()
         putchar('\n');
     }
 
+    FILE *fpOSZIFF;
+    fpOSZIFF = fopen ("OSZIFF", "w");
+    if (NULL == fpOSZIFF ) {
+        perror("opening database file");
+        exit(-1);
+    }
+
     /* ----------------------------------------------------*/
     /*                  MAIN LOOP                          */
     /* ----------------------------------------------------*/
     statime(0); /* md */
     for(istep=1; istep < npas+1; istep++) {
-        
-        // integration / propagators
-        prop_agate();
 
 #ifdef DEBUG_MD
     sample_config(0);
 #endif 
-        if (istep < nequil) rescale_velocities();
-         
+        /* --------------------------------- */
+        /*     integration / propagators     */
+        /* --------------------------------- */
+        prop_agate();
+        /* --------------------------------- */
+        /*     check_verlet_list             */
+        /* --------------------------------- */
+        if (lverletL) check_verletlist();
+        /* --------------------------------- */
+        /*     rescale velocities in "NVE"   */
+        /* --------------------------------- */
+        if (istep < nequil) rescale_velocities(1);
+        /* --------------------------------- */
+        /*          stdout info              */
+        /* --------------------------------- */
         if ( iopnode(istep,npas,nprint) ) {
+            // md step timing info
             statime(1);
-            info_thermo();
             mestime(&mdstepCPUtime,1,0);
             writime("MD",istep,1,0);
             statime(0);
+            // md step thermodynamic info
+            info_thermo(0,NULL); /*STDOUT*/
         }
-        if (lverletL) check_verletlist();
+        /* --------------------------------- */
+        /*          OSZIFF info              */
+        /* --------------------------------- */
+        if ( iopnode(istep,npas,fprint) ) {
+            info_thermo(1,fpOSZIFF);   /*OSZIFF*/
+        }
     }
     /* ----------------------------------------------------*/
-
     write_config();
-
-
+    fclose(fpOSZIFF);
 }
 
