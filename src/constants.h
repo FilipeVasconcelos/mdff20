@@ -56,6 +56,7 @@ char allwd_FT_str[16][MAX_LEN+1];
 
 double radian  ; /* 180/pi */
 double onethird; /* 1/3    */
+double piroot  ;
 
 double boltz_unit;  /* boltzmann constant ( energy in eV) */
 double time_unit ;  /* unit of time picosecond => angstrom * ( atomicmassunit / eV ) ** 0.5 */

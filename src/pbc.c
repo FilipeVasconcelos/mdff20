@@ -2,6 +2,7 @@
 #include <math.h>
 #include "math_mdff.h"
 
+/******************************************************************************/
 //minimum image convention
 void pbc(double *rxij,double *ryij,double *rzij){
     double sxij = *rxij - nint(*rxij);
@@ -12,6 +13,7 @@ void pbc(double *rxij,double *ryij,double *rzij){
     *rzij = sxij * simuCell.A[0][2] + syij * simuCell.A[1][2] + szij * simuCell.A[2][2];
 }
 
+/******************************************************************************/
 void replace_pbc(int nion, double *rxij,double *ryij,double *rzij){
     for(int ia=0;ia<nion;ia++){
         rxij[ia] -= nint (rxij[ia]);

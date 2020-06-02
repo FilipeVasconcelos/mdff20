@@ -13,6 +13,7 @@
 #include "io.h"
 #include "tools.h"
 
+/******************************************************************************/
 int read_field(char* controlfn)
 {
    char buffer[MAX_LEN+1];
@@ -55,12 +56,16 @@ int read_field(char* controlfn)
                 fscanf(fp,"%lf",&quadit[it]);
             }
         } 
+        if (strcmp(buffer,"alphaES") == 0 ) {
+            fscanf(fp,"%lf",&alphaES);
+        } 
 
    }
    fclose(fp);
    return(0);
 }
 
+/******************************************************************************/
 void info_field(){
 
     double totalMass=0.0;
@@ -87,14 +92,18 @@ void info_field(){
 
 }
 
+/******************************************************************************/
 void init_field(char* controlfn){
     
     read_field(controlfn);
+    if (lnmlj) {
+        lnonbonded=true;
+    }
     info_field();
     if (lnmlj) init_nmlj(controlfn);
 }
 
-
+/******************************************************************************/
 void engforce()
 {
     statime(2);
@@ -106,7 +115,7 @@ void engforce()
 
 
     if (lcoul) {
-        multipole_ewald_sum();
+        multipole_ES(qia,dipia,quadia);
     }
 
 

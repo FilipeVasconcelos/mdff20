@@ -3,6 +3,7 @@
 #include "io.h"
 #include "mpi_mdff.h"
 
+/******************************************************************************/
 int do_split(int n,int np,int mrank, DEC* dec, char* lab){
 
     int x,y;
@@ -48,6 +49,7 @@ int do_split(int n,int np,int mrank, DEC* dec, char* lab){
     return 0; 
 }
 
+/******************************************************************************/
 void MPI_Allreduce_sumDouble( double *localSum, int ndim){
     if (ndim ==1 ) {
         double globalSum;

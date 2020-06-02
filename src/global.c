@@ -9,6 +9,7 @@
 #include "verlet.h"
 #include "tools.h"
 
+/******************************************************************************/
 int read_global(char* controlfn)
 {
    char buffer[MAX_LEN+1];
@@ -44,6 +45,7 @@ int read_global(char* controlfn)
    return(0);
 }
 
+/******************************************************************************/
 void info_global(){
     if (ionode){
         SEPARATOR;
@@ -56,6 +58,7 @@ void info_global(){
     }
 }
 
+/******************************************************************************/
 void init_global(char* controlfn){
     /* default values */
     skindiff=0.15;

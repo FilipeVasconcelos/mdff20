@@ -6,6 +6,7 @@
 #include "config.h"
 #include "cell.h"
 
+/******************************************************************************/
 void info_thermo(int key, FILE* fp){
 
     double iso=0.0;

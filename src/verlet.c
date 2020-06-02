@@ -35,6 +35,11 @@ void free_verletlist(char* label){
     free(verlet_nb->list);
     free(verlet_nb->point);
     free(verlet_nb);
+    if (lcoul) {
+        free(verlet_coul->list);
+        free(verlet_coul->point);
+        free(verlet_coul);
+    }
     free(xvl);    
     free(yvl);    
     free(zvl);    
@@ -43,20 +48,30 @@ void free_verletlist(char* label){
 void gen_pbc_verletlist(){
 
     double rskinsq_nb=verlet_nb->cut*verlet_nb->cut;
+    double rskinsq_coul=verlet_coul->cut*verlet_coul->cut;
     double rxi,ryi,rzi;
     double rxij,ryij,rzij;
     double rijsq;
     int icount_nb,k_nb;
+    int icount_coul,k_coul;
 
-    for(int k=0;k<nion*VNLMAX;k++){verlet_nb->list[k]=0; }
-    for(int k=0;k<nion;k++) { verlet_nb->point[k]=0; }
+    for(int k=0;k<nion*VNLMAX;k++){
+        verlet_nb->list[k]=0; 
+        verlet_coul->list[k]=0; 
+    }
+    for(int k=0;k<nion;k++) { 
+        verlet_nb->point[k]=0; 
+        verlet_coul->point[k]=0; 
+    }
    
     icount_nb=0;
+    icount_coul=0;
     for(int ia=atomDec.iaStart;ia<atomDec.iaEnd;ia++) {
         rxi = rx[ia];
         ryi = ry[ia];
         rzi = rz[ia];
         k_nb=0;
+        k_coul=0;
         for(int ja=0;ja<nion;ja++){
             if( ((ia>ja) && ((ia+ja)%2==0)) ||
                 ((ia<ja) && ((ia+ja)%2!=0)) ) {
@@ -65,7 +80,8 @@ void gen_pbc_verletlist(){
                 rzij = rzi - rz[ja];
                 pbc(&rxij,&ryij,&rzij);
                 rijsq = rxij * rxij + ryij * ryij + rzij * rzij;
-                if (rijsq<=rskinsq_nb){
+                // non bonded sphere 
+                if ( lnonbonded && rijsq<=rskinsq_nb){
                     verlet_nb->list[icount_nb]=ja;
                     icount_nb+=1;
                     k_nb+=1;
@@ -73,11 +89,22 @@ void gen_pbc_verletlist(){
                         pError("out of bound in gen_verletlist\n");
                     }
                 }
+                // coulomb sphere 
+                if ( lcoul && rijsq<=rskinsq_coul){
+                    verlet_coul->list[icount_coul]=ja;
+                    icount_coul+=1;
+                    k_coul+=1;
+                    if ( (icount_coul < 0) || (icount_coul>=VNLMAX*nion)) {
+                        pError("out of bound in gen_verletlist\n");
+                    }
+                }
             }
         }
         verlet_nb->point[ia]=icount_nb-k_nb;
+        verlet_coul->point[ia]=icount_coul-k_coul;
     }
     verlet_nb->point[atomDec.iaEnd]=icount_nb;
+    verlet_coul->point[atomDec.iaEnd]=icount_coul;
 #ifdef DEBUG
     for(int k=0;k<10;k++){printf("verlet list %d %d\n",k,verlet_nb->list[k]); }
     for(int k=0;k<10;k++) {printf("verlet point %d %d\n",k,verlet_nb->point[k]); }

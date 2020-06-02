@@ -5,15 +5,18 @@
   
 #include "constants.h"
 
+/******************************************************************************/
 void init_rand(time_t t) {
     srand((unsigned) time(&t));
 }
 
+/******************************************************************************/
 double randD() {
     return (double) rand()/(double)(RAND_MAX); 
 } 
   
 
+/******************************************************************************/
 double box_muller(double mean, double sigma) {
     
     double C,U,V,R;

@@ -1,10 +1,11 @@
 #ifndef FIELD_H
 #define FIELD_H
 #include <stdbool.h>
-bool lnmlj;
-bool lcoul;
+bool lnonbonded;
+bool      lnmlj;
+bool      lcoul;
 
-
+double alphaES;
 
 
 

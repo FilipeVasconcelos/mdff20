@@ -25,6 +25,7 @@
 #include "timing.h"
 #include "thermo.h"
 
+/******************************************************************************/
 int main(int argc, char *argv[])
 {
     time_t startingDate, finishingDate;

@@ -12,7 +12,8 @@ void gen_constants()
     rho_unit   = 1.660538782         ;
 
     radian     = 180. / PI           ;     
-    onethird   = 1.   / 3.0           ;
+    onethird   = 1.   / 3.0          ;
+    piroot     = sqrt(PI)            ;
 
     strcpy(allwd_FT_str[0 ],"yes");
     strcpy(allwd_FT_str[1 ],"no");

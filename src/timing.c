@@ -9,6 +9,7 @@
 #include "timing.h"
 #include "io.h"
 
+/******************************************************************************/
 void statime(int x){
 #if defined(MPI) && !defined(OMP)
     ttt[x]=MPI_Wtime();
@@ -18,9 +19,11 @@ void statime(int x){
     ttt[x]=clock();
 #endif
 }
+/******************************************************************************/
 void mestime(double *whole,int from,int to){
     *whole+=ttt[from]-ttt[to];
 }
+/******************************************************************************/
 void writime(char* label,int step,int from,int to){
 #if defined(MPI) || defined(OMP)
     io_node printf("  step : %-6d  %-6s cpu time : %8.3f (s)\n",step,label,ttt[from]-ttt[to]);
@@ -28,6 +31,7 @@ void writime(char* label,int step,int from,int to){
     io_node printf("  step : %-6d  %-6s cpu time : %8.3f (s)\n",step,label,(((double)ttt[from]-ttt[to])/CLOCKS_PER_SEC));
 #endif
 }
+/******************************************************************************/
 void writimewhole(char* label, double whole){
 #if defined(MPI) || defined(OMP)
     printf("  %-20s  : %12.3f\n",label,whole);
@@ -36,6 +40,7 @@ void writimewhole(char* label, double whole){
 #endif
 }
 
+/******************************************************************************/
 void info_timing(){
 
     if (ionode){
