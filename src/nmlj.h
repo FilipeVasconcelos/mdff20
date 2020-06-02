@@ -29,5 +29,5 @@ double ptail                        ; /* long range correction to pressure */
 /* function prototypes */
 void init_nmlj()                    ;
 void info_nmlj()                    ;
-void engforce_nmlj_pbc()            ;
+void engforce_nmlj_pbc(double *u, double *pvir, double tau[3][3])            ;
 #endif

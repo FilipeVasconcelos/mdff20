@@ -34,7 +34,7 @@ int read_md (char * controlfn)
    while (EOF != fscanf(fp, "%s\n", buffer)) {
         if (strcmp(buffer,"integrator") == 0 ) {
             fscanf(fp,"%s",buffer);
-            egrator=check_string("integrator",buffer,allwd_integrator_str,ALLWD_INTEGRATOR_STR); 
+            egrator=check_string("integrator",buffer,allwd_integrator,ALLWD_INTEGRATOR_STR); 
         } 
         if (strcmp(buffer,"dt") == 0 ) {
             fscanf(fp,"%lf",&dt);
@@ -57,6 +57,21 @@ int read_md (char * controlfn)
         if (strcmp(buffer,"tauTberendsen") == 0 ) {
             fscanf(fp,"%lf",&tauTberendsen);
         } 
+        if (strcmp(buffer,"nhc_n") == 0 ) {
+            fscanf(fp,"%d",&nhc_n);
+        } 
+        if (strcmp(buffer,"nhc_mults") == 0 ) {
+            fscanf(fp,"%d",&nhc_mults);
+        } 
+        if (strcmp(buffer,"nhc_yosh_order") == 0 ) {
+            fscanf(fp,"%d",&nhc_yosh_order);
+        } 
+        if (strcmp(buffer,"timesca_thermo") == 0 ) {
+            fscanf(fp,"%lf",&timesca_thermo);
+        } 
+        if (strcmp(buffer,"timesca_baro") == 0 ) {
+            fscanf(fp,"%lf",&timesca_baro);
+        } 
    }
    fclose(fp);
    return 0;
@@ -65,25 +80,55 @@ int read_md (char * controlfn)
 /******************************************************************************/
 void init_md(char * controlfn){
     /* gen allowed input strings for integrator */
-    strcpy(allwd_integrator_str[0 ],"nve-lf");
-    strcpy(allwd_integrator_str[1 ],"nve-vv");
+    strcpy(allwd_integrator[0],"nve-lf");
+    strcpy(allwd_integrator[1],"nve-vv");
+    strcpy(allwd_integrator[2],"nvt-nhcn");
+    /* gen allowed input int for yosh param 1,3,5,7,9*/
+    for (int i =0;i<ALLWD_YOSH_PARAM;i++){
+        yosh_allowed[i]=2*i+1;
+    }
+    /* gen allowed rescale integrator */
+    allwd_rescale_integrator[0]=1; /*nve-vv*/
+
 
     /* default values */
     egrator=1; /* nve-vv */
     read_md(controlfn);
+    //printf("integrator%d\n",egrator);
+    //exit(-1);
     /* tauTberendsen == dt => simple velocity rescale */ 
     if ( (nequil > 0 ) && (tauTberendsen==0.0)) tauTberendsen=dt;
 
     temp           = temp           * boltz_unit ; // temp = kB * T 
     dt             = dt             * time_unit  ; // angstrom*(atomicmassunit/eV)** 0.5  <= ps
     tauTberendsen  = tauTberendsen  * time_unit  ;
+    timesca_thermo = timesca_thermo * time_unit  ;
     if (egrator == 0 && nequil >0 ){
         lleapequi=true;
         egrator=1; /* switch to nve-vv */ 
     }
+    rescale_allowed=false;
+    for (int i =0;i<ALLWD_RESCALE_INTEGRATOR;i++){
+        if ( egrator == allwd_rescale_integrator[i] ) rescale_allowed=true; 
+    }
 
+    alloc_md();
     info_md();
 
+}
+
+void alloc_md(){
+    if (egrator == 2 ){
+        vxi=malloc(nhc_n*sizeof(*vxi));
+        xi=malloc(nhc_n*sizeof(*xi));
+    }
+}
+
+void free_md(){
+    if (egrator == 2 ){
+        free(vxi);
+        free(xi);
+    }
 }
 
 /******************************************************************************/
@@ -92,6 +137,7 @@ void info_md(){
         SEPARATOR;
         printf("md info \n");
         LSEPARATOR;
+        printf("integrator            = %s\n", allwd_integrator[egrator]);
         printf("temperature           = %.5f (K) \n", temp/boltz_unit);
         printf("dt                    = %.5f (ps)\n", dt/time_unit);
         printf("tauTberendsen         = %.5f (ps)\n", tauTberendsen/time_unit);
@@ -107,7 +153,9 @@ void info_md(){
 void run_md()
 {
 
-    calc_temp(&temp_r,&e_kin,0);
+    e_kin=calc_kin();
+    printf("ekin %f\n",e_kin);
+    sample_config(0);
 
     io_node printf("in run_md\n");
     io_node printf("after previous step (leap-frog)\n"); 
@@ -131,11 +179,10 @@ void run_md()
         SEPARATOR;
         putchar('\n');
     }
-
     FILE *fpOSZIFF;
     fpOSZIFF = fopen ("OSZIFF", "w");
     if (NULL == fpOSZIFF ) {
-        perror("opening database file");
+        perror("openning OSZIFF");
         exit(-1);
     }
 
@@ -159,7 +206,7 @@ void run_md()
         /* --------------------------------- */
         /*     rescale velocities in "NVE"   */
         /* --------------------------------- */
-        if (istep < nequil) rescale_velocities(1);
+        //if (rescale_allowed && istep < nequil) rescale_velocities(1);
         /* --------------------------------- */
         /*          stdout info              */
         /* --------------------------------- */

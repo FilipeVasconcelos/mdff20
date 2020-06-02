@@ -30,6 +30,12 @@ int read_global(char* controlfn)
         if (strcmp(buffer,"cutshortrange") == 0 ) {
             fscanf(fp,"%lf",&cutshortrange);
         } 
+        if (strcmp(buffer,"cutlongrange") == 0 ) {
+            fscanf(fp,"%lf",&cutshortrange);
+        } 
+        if (strcmp(buffer,"Fposff") == 0 ) {
+            fscanf(fp,"%d",&Fposff);
+        } 
         if (strcmp(buffer,"skindiff") == 0 ) {
             fscanf(fp,"%lf",&skindiff);
         } 
@@ -56,10 +62,6 @@ void init_global(char* controlfn){
     
     read_global(controlfn);
     info_global();
-    if (lverletL) { 
-        verlet_nb=allocate_verletlist("vnlnb");
-        verlet_nb->cut=cutshortrange+skindiff; 
-    }
 }
 
 

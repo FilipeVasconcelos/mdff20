@@ -7,6 +7,7 @@ double *xvl,*yvl,*zvl; /* last positions when verlet list was updated */
 int updatevl;
 
 struct VERLETL *verlet_nb;
+struct VERLETL *verlet_coul;
 
 typedef struct VERLETL
 {

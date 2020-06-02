@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     init_io();
 #endif
     // init random number generator (velocities)
-    init_rand(startingDate);
+    //init_rand(startingDate);
     // main constants of the code
     gen_constants();
 
@@ -65,10 +65,10 @@ int main(int argc, char *argv[])
     // header output à la MDFF 
     headerstdout(pstartingDate,numprocs);
 
+    init_global(controlfn);
     //read configuration from file POSFF
     //allocate main quantities when nion is known
     read_config();
-    init_global(controlfn);
 
     // parallelization atom decomposition
     do_split(nion,numprocs,myrank,&atomDec,"atoms");
@@ -89,7 +89,8 @@ int main(int argc, char *argv[])
         run_md();
     }
     else {
-        calc_temp(&temp_r,&e_kin,0);
+        double tempi;
+        e_kin=calc_kin();
         io_node printf("static properties\n");
         /* energie, force and pressure */
         engforce();
@@ -122,9 +123,9 @@ int main(int argc, char *argv[])
         printf("Date         : %s", pfinishingDate);
     }
     free_config();
+    free_md();
     free(pstartingDate);
     free(pfinishingDate);
-    if (lverletL) free_verletlist("vnlnb");
 #ifdef MPI
     MPI_Finalize();
 #endif

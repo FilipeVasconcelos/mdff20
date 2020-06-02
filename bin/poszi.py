@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 # ===============================================================
-# date       : 30 nov 2016 
-# author     : fmv
-# description: This script generate gnuplot plots from input OSZIFF file
+# version mdff    : 30 nov 2016 
+# version mdff20  : avril 2020
+# author          : fmv
+# description     : This script generate gnuplot plots from input OSZIFF file
 # ===============================================================
 
 import matplotlib.pyplot as plt
@@ -125,6 +126,8 @@ def main_parser():
             help="averaging on last <l> points")
     parser.add_argument("-v", "--volume",dest="lvolume",action="store_true",default=False,
             help="plot volume data")
+    parser.add_argument("-p", "--pressure",dest="lpress",action="store_true",default=False,
+            help="plot pressure data")
 
     args = parser.parse_args()
 
@@ -146,6 +149,7 @@ if __name__ == '__main__':
     args = main_parser()
 
     input_file=args.input_file
+    lpress=args.lpress
     lvolume=args.lvolume
 
     alldata=read_OSZIFF(input_file)
@@ -165,4 +169,5 @@ if __name__ == '__main__':
         plot_quant2(alldata,name_quant,average,[2,12],title='Total Energy MD',l=last_points)
         plot_quant(alldata,name_quant,average,4,title='Potential Energy MD',l=last_points)
         plot_quant(alldata,name_quant,average,7,title='Temperature MD',l=last_points)
+        if (lpress): plot_quant(alldata,name_quant,average,8,title='Pressure',l=last_points)
         if (lvolume): plot_quant(alldata,name_quant,average,11,title='Volume MD',l=last_points)

@@ -72,12 +72,12 @@ void com(double *ax,double *ay,double *az, int n, double comit[n][3]){
         comit[ntype][0]+=ax[ia];
         comit[ntype][1]+=ay[ia];
         comit[ntype][2]+=az[ia];
-        printf("ia %d %15.8e %15.8e %15.8e %15.8e\n",ia,ax[ia],ay[ia],az[ia],comit[ntype][2]);
+    //    printf("ia %d %15.8e %15.8e %15.8e %15.8e\n",ia,ax[ia],ay[ia],az[ia],comit[ntype][2]);
     }
     for(int it=0;it<ntype+1;it++){
         for(int k=0;k<3;k++){
             comit[it][k]*=invenionit[it];
-            printf("it %d k %d inve %f %15.8e\n",it,k,invenionit[it],comit[it][k]);
+        //    printf("it %d k %d inve %f %15.8e\n",it,k,invenionit[it],comit[it][k]);
         }
     }
 }

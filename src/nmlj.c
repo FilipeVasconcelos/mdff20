@@ -25,7 +25,6 @@ double addtruncU(int p1 , int p2, double srp, double srq){
         return epsqp[p1][p2] * ( plj[p1][p2] * srq - qlj[p1][p2] * srp ) ;
     }
     if (trunctype == 1) {
-        printf("trunc %d "ee"\n",trunctype,uc[p1][p2]);
         return epsqp[p1][p2] * ( plj[p1][p2] * srq - qlj[p1][p2] * srp ) - uc[p1][p2];
     }
     return 0.0;
@@ -251,7 +250,7 @@ void init_nmlj(char* controlfn){
 
 /******************************************************************************/
 /******************************************************************************/
-void engforce_nmlj_pbc(double *u, double *pvir)
+void engforce_nmlj_pbc(double *u, double *pvir, double tau[3][3])
 {
     double rxi,ryi,rzi;
     double rxij,ryij,rzij;
@@ -263,6 +262,7 @@ void engforce_nmlj_pbc(double *u, double *pvir)
     int p1,p2;
     double uu =0.0;
     double pvv =0.0;
+    double ttau[3][3];
     int ia,j1,ja,jb,je;
 
     for(int ia=0;ia<nion;ia++){
@@ -270,7 +270,7 @@ void engforce_nmlj_pbc(double *u, double *pvir)
     }
     for (int i=0;i<3;i++){
         for(int j=i;j<3;j++){
-            tau_nonb[i][j]=0.0;
+            tau[i][j]=0.0;
         }
     }
     /*************************************** 
@@ -280,10 +280,10 @@ void engforce_nmlj_pbc(double *u, double *pvir)
 
     int counttest=0;
 
-    #pragma omp parallel shared(rcutsq,rx,ry,rz,vx,vy,vz,fx,fy,fz,sigsq,ptwo,qtwo,typia,tau_nonb,epsqp,plj,qlj,uc) \
+    #pragma omp parallel shared(rcutsq,rx,ry,rz,vx,vy,vz,fx,fy,fz,sigsq,ptwo,qtwo,typia,epsqp,plj,qlj,uc) \
                          private(ia,j1,jb,je,ja,rxi,ryi,rzi,rxij,ryij,rzij,rijsq,p1,p2,sr2,srp,srq,wij,fxij,fyij,fzij) 
     {
-        #pragma omp for reduction (+:uu,pvv,tau_nonb,fx[:nion],fy[:nion],fz[:nion]) schedule(dynamic,32) 
+        #pragma omp for reduction (+:uu,pvv,ttau,fx[:nion],fy[:nion],fz[:nion]) schedule(dynamic,16) 
         for(ia=atomDec.iaStart;ia<atomDec.iaEnd;ia++) {
             rxi = rx[ia];
             ryi = ry[ia];
@@ -307,8 +307,8 @@ void engforce_nmlj_pbc(double *u, double *pvir)
                      (( ja !=ia ) && lverletL) )  {
 #ifdef DEBUG_NMLJ
                     io_node printf("in nmlj main loop %d %d %d %d\n",ia,ja,jb,je);
-#endif
                     counttest+=1;
+#endif
                     rxij = rxi - rx[ja];
                     ryij = ryi - ry[ja];
                     rzij = rzi - rz[ja];
@@ -320,7 +320,7 @@ void engforce_nmlj_pbc(double *u, double *pvir)
                         sr2 = sigsq[p1][p2] / rijsq;
                         srp = pow(sr2,ptwo[p1][p2]);
                         srq = pow(sr2,qtwo[p1][p2]);
-                        uu+=addtruncU(p1,p2,srp,srq);
+                        uu += addtruncU(p1,p2,srp,srq);
                         wij = fc[p1][p2] * (srq-srp) * sr2;
                         fxij = wij * rxij;
                         fyij = wij * ryij;
@@ -335,12 +335,12 @@ void engforce_nmlj_pbc(double *u, double *pvir)
                         fy[ja] += -fyij;
                         fz[ja] += -fzij;
                         // stress tensor (symmetric!)
-                        tau_nonb[0][0] += (rxij*fxij + rxij*fxij)*0.5;
-                        tau_nonb[0][1] += (rxij*fyij + ryij*fxij)*0.5;
-                        tau_nonb[0][2] += (rxij*fzij + rzij*fxij)*0.5;
-                        tau_nonb[1][1] += (ryij*fyij + ryij*fyij)*0.5;
-                        tau_nonb[1][2] += (ryij*fzij + rzij*fyij)*0.5;
-                        tau_nonb[2][2] += (rzij*fzij + rzij*fzij)*0.5;
+                        ttau[0][0] += (rxij*fxij + rxij*fxij)*0.5;
+                        ttau[0][1] += (rxij*fyij + ryij*fxij)*0.5;
+                        ttau[0][2] += (rxij*fzij + rzij*fxij)*0.5;
+                        ttau[1][1] += (ryij*fyij + ryij*fyij)*0.5;
+                        ttau[1][2] += (ryij*fzij + rzij*fyij)*0.5;
+                        ttau[2][2] += (rzij*fzij + rzij*fzij)*0.5;
                     }
                 }
             }
@@ -348,8 +348,9 @@ void engforce_nmlj_pbc(double *u, double *pvir)
     }
     for (int i=0;i<3;i++){
         for(int j=i;j<3;j++){
-            tau_nonb[i][j] *= simuCell.inveOmegaU;
-            tau_nonb[j][i]=tau_nonb[i][j];
+            ttau[i][j] *= simuCell.inveOmegaU;
+            ttau[j][i]=ttau[i][j];
+            tau[i][j]=ttau[i][j];
         }
     }
     *u=uu;
@@ -361,9 +362,9 @@ void engforce_nmlj_pbc(double *u, double *pvir)
     MPI_Allreduce_sumDouble(fx,nion);
     MPI_Allreduce_sumDouble(fy,nion);
     MPI_Allreduce_sumDouble(fz,nion);
-    MPI_Allreduce_sumDouble(tau_nonb[0],3);
-    MPI_Allreduce_sumDouble(tau_nonb[1],3);
-    MPI_Allreduce_sumDouble(tau_nonb[2],3);
+    MPI_Allreduce_sumDouble(tau[0],3);
+    MPI_Allreduce_sumDouble(tau[1],3);
+    MPI_Allreduce_sumDouble(tau[2],3);
     statime(9);
     mestime(&COMMCPUtime,9,8);
 #endif

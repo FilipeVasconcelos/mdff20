@@ -11,6 +11,7 @@
 #include "md.h"
 #include "tools.h"
 
+/******************************************************************************/
 void init_velocities()
 {
     double comit[NTYPEMAX+1][3];
@@ -21,15 +22,16 @@ void init_velocities()
 
     com(vx,vy,vz,ntype+1, comit);
     if (ionode) {
-        printf("c.o.m. vel ALL "ee3"\n",comit[ntype][0],comit[ntype][1],comit[ntype][2]);
+        //printf("c.o.m. vel ALL "ee3"\n",comit[ntype][0],comit[ntype][1],comit[ntype][2]);
         for (int it=0;it<ntype;it++){
-            printf("c.o.m. vel %3s "ee3"\n",atypit[it],comit[it][0],comit[it][1],comit[it][2]);
+        //    printf("c.o.m. vel %3s "ee3"\n",atypit[it],comit[it][0],comit[it][1],comit[it][2]);
         }
     }
     sample_config(0);
 //    exit(-1);
 }
 
+/******************************************************************************/
 void print_velocities()
 {
     if (ionode){
@@ -40,6 +42,7 @@ void print_velocities()
     }
 }
 
+/******************************************************************************/
 void maxwellboltzmann_velocities()
 {
     double rtemp;
@@ -67,25 +70,36 @@ void maxwellboltzmann_velocities()
 }
 
 
-void calc_temp(double *tempi, double *ekin, int flag)
-{
-    double l = 3.0 * ((double) nion);
-    double kin;
-    kin = 0.0;
+/******************************************************************************/
+double calc_kin() {
+    double kin = 0.0;
     for (int ia=0; ia< nion; ia++) {
         kin += ( vx[ia]*vx[ia] + vy[ia]*vy[ia] + vz[ia]*vz[ia] ) * massia[ia] ;
-        //printf("ia %d %f %f\n",ia,kin,massia[ia]);
     }
-    (*ekin)=(kin*0.5);
-    (*tempi)= 2.0*(*ekin) / ( l * boltz_unit );
+    kin*=0.5;
+    return kin;
 }
 
+/******************************************************************************/
+double calc_temp(double kin) {
+    return ( 2.0 * kin ) / ( 3.0 * ((double) nion)  * boltz_unit );
+}
+
+/******************************************************************************/
 void rescale_velocities(int quiet)
 {
     double sx=0.0; double sy=0.0; double sz=0.0;
-    double T,ekin;
-    calc_temp(&T,&ekin,0);
-    double lambda = sqrt(1.0 + (dt / tauTberendsen) * (( temp / T / boltz_unit ) - 1.0 )) ;
+    double l = 3.0 * ((double) nion);
+    double ekin = calc_kin();
+    double T    = calc_temp(ekin);
+
+    double lambda;
+    if (egrator !=2 ) { 
+        lambda = sqrt(1.0 + (dt / tauTberendsen) * (( temp / T / boltz_unit ) - 1.0 )) ;
+    } 
+    else {
+        lambda = sqrt(1.0 + (( temp / T / boltz_unit ) - 1.0 )) ;
+    }
     for(int ia=0; ia<nion; ia++) {
         vx [ia] *= lambda;
         vy [ia] *= lambda;
@@ -102,12 +116,22 @@ void rescale_velocities(int quiet)
         vy [ia] -= sy;
         vz [ia] -= sz;
     }
-
     if (ionode && quiet == 0) {
-        printf("effective temperature T = %10.4f\n",T);
+        printf("effective temperature T  = %10.4f\n",T);
         printf("wanted temperature    T0 = %10.4f\n",temp/boltz_unit);
-        printf("velocities rescaled by = "ee ee"\n",lambda,(dt/tauTberendsen)*((temp/T/boltz_unit)-1.0));
+        if (egrator !=2 ) {
+            printf("velocities rescaled by   : "ee ee"\n",lambda,(dt/tauTberendsen)*((temp/T/boltz_unit)-1.0));
+        }
+        else {
+            printf("velocities rescaled by   : "ee ee"\n",lambda,(temp/T/boltz_unit)-1.0);
+        }
     }
-    calc_temp(&T,&ekin,0);
-    if (ionode && istep%nprint==0) printf("(after rescaling)        temp : %f kin : %f lambda %f\n",T,ekin,lambda);
+    ekin = calc_kin();
+    T    = calc_temp(ekin);
+    if (ionode && istep%nprint==0) {
+        printf("(after rescaling)\n");
+        printf("temp                     : %f\n",T);
+        printf("kin                      : %f\n",ekin);
+        printf("lambda                   : %f\n",lambda);
+    }
 }

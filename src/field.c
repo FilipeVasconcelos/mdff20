@@ -6,6 +6,7 @@
 #include "thermo.h"
 #include "field.h"
 #include "nmlj.h"
+#include "ewald.h"
 #include "cell.h"
 #include "timing.h"
 #include "md.h"
@@ -22,16 +23,39 @@ int read_field(char* controlfn)
        return (-1);
    }
    while (EOF != fscanf(fp, "%s\n", buffer)) { 
-        // massit 
+        if (strcmp(buffer,"lnmlj") == 0 ) {
+            fscanf(fp,"%s",buffer);
+            lnmlj=check_boolstring("lnmlj",buffer); 
+        } 
+        if (strcmp(buffer,"lcoul") == 0 ) {
+            fscanf(fp,"%s",buffer);
+            lnmlj=check_boolstring("lcoul",buffer); 
+        } 
+        // mass of type
         if (strcmp(buffer,"massit") == 0 ) {
             for(int it=0;it<ntype;it++){
                 fscanf(fp,"%lf",&massit[it]);
             }
         } 
-        if (strcmp(buffer,"lnmlj") == 0 ) {
-            fscanf(fp,"%s",buffer);
-            lnmlj=check_boolstring("lnmlj",buffer); 
+        // charges on type
+        if (strcmp(buffer,"qit") == 0 ) {
+            for(int it=0;it<ntype;it++){
+                fscanf(fp,"%lf",&qit[it]);
+            }
         } 
+        // dipole on type
+        if (strcmp(buffer,"dipit") == 0 ) {
+            for(int it=0;it<ntype;it++){
+                fscanf(fp,"%lf",&dipit[it]);
+            }
+        } 
+        // quadrupole on type
+        if (strcmp(buffer,"quadit") == 0 ) {
+            for(int it=0;it<ntype;it++){
+                fscanf(fp,"%lf",&quadit[it]);
+            }
+        } 
+
    }
    fclose(fp);
    return(0);
@@ -74,9 +98,23 @@ void init_field(char* controlfn){
 void engforce()
 {
     statime(2);
-    if (lnmlj) engforce_nmlj_pbc(&u_lj,&pvir_lj);
+    if (lnmlj) {
+        engforce_nmlj_pbc(&u_lj,&pvir_lj,tau_lj);
+    }
     statime(3);
     mestime(&engforceCPUtime,3,2);
+
+
+    if (lcoul) {
+        multipole_ewald_sum();
+    }
+
+
+
+
+
+
+
 }
 
 

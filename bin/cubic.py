@@ -4,14 +4,14 @@ from config import Config
 from ion import Ion 
 
 if __name__=="__main__":
-    atype=["Ar"]
-    nn=6
-    d=1./(nn+1)
-    nion=2*nn**3
+    atype=["A"]
+    nn=8
+    d=1./(nn)
+    nion=4*(nn**3)
     print(nion)
     print(nn)
     itype=[nion]
-    cell=30
+    cell=nn*5.4
     u=[cell,0,0]
     v=[0,cell,0]
     w=[0,0,cell]
@@ -34,6 +34,16 @@ if __name__=="__main__":
                 conf.move(ia,pos=[x,y,z])
                 ia+=1
                 x = (i+0.5)*d
+                y = (j+0.5)*d
+                z = k*d
+                conf.move(ia,pos=[x,y,z])
+                ia+=1
+                x = (i+0.5)*d
+                y = j*d
+                z = (k+0.5)*d
+                conf.move(ia,pos=[x,y,z])
+                ia+=1
+                x = i*d
                 y = (j+0.5)*d
                 z = (k+0.5)*d
                 conf.move(ia,pos=[x,y,z])

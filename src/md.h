@@ -10,15 +10,31 @@ int                  fprint; /* osziff printing period */
 int                  nequil; /* equilibration period (rescaling) */
 double                 temp; /* temperature */
 double                   dt; /* time step */  
-double        tauTberendsen; /* Berendsen thermostat period */
+double        tauTberendsen; /* berendsen thermostat period */
 int                 egrator; /* int version of */
+/*****************************************************************************/
+/*                  Nose-Hoover Chain related parameters                     */
+/*****************************************************************************/
+double       timesca_thermo; /* time scale of thermostat */
+double         timesca_baro; /* time scale of barostat */
+int          nhc_yosh_order; /* order of the yoshida integrator */
+int               nhc_mults; /* number of multiple timesteps  */
+int                   nhc_n; /* length of the Nose-Hoover chain */
+double           *vxi,  *xi; /* thermostat coordinates coupled to the particules */  
+double          *vxib, *xib; /* barostat coordinates coupled to the volume */ 
 
-#define ALLWD_INTEGRATOR_STR 2
-char allwd_integrator_str[ALLWD_INTEGRATOR_STR][MAX_LEN+1];
+#define ALLWD_YOSH_PARAM 5
+int yosh_allowed[ALLWD_YOSH_PARAM];
+
+#define ALLWD_INTEGRATOR_STR 3
+char allwd_integrator[ALLWD_INTEGRATOR_STR][MAX_LEN+1];
+#define ALLWD_RESCALE_INTEGRATOR 1
+int allwd_rescale_integrator[ALLWD_RESCALE_INTEGRATOR];
+
 
 #include <stdbool.h>
 bool             lleapequi; /* true if integrator == nve-lf and nequil > 0 */
-
+bool       rescale_allowed;
 /* ****************************************************************************/
 /*                                prototypes                                  */
 /* ****************************************************************************/
@@ -26,4 +42,6 @@ int read_md(char* controlfn);
 void init_md(char* controlfn);
 void info_md();
 void run_md();
+void alloc_md();
+void free_md();
 #endif

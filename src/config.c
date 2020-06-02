@@ -8,9 +8,11 @@
 #include "cell.h"
 #include "tools.h"
 #include "io.h"
+#include "global.h"
 #include "pbc.h"
-
+#include "verlet.h"
 #include "kinetic.h"
+#include "field.h"
 
 void pre_alloc_config(){
     for (int it=0;it<NTYPEMAX;it++)
@@ -59,6 +61,21 @@ void alloc_config(){
         fx[ia]=0.0;fy[ia]=0.0;fz[ia]=0.0;
         rxs[ia]=0.0;rys[ia]=0.0;rzs[ia]=0.0;
     }
+    if (lverletL) { 
+        verlet_nb=allocate_verletlist("vnlnb");
+        verlet_nb->cut=cutshortrange+skindiff; 
+    }
+
+    if (lcoul) {
+        qia=malloc(nion*sizeof(*qia));
+        dipia=malloc(nion*sizeof(*dipia));
+        quadia=malloc(nion*sizeof(*quadia));
+        if (lverletL) {
+            verlet_coul=allocate_verletlist("vnlcoul");
+            verlet_coul->cut=cutlongrange+skindiff; 
+        }
+    }
+
 }
 
 //-----------------------------------------------------------------------------
@@ -76,6 +93,14 @@ void free_config(){
     free(vx);free(vy);free(vz);
     free(fx);free(fy);free(fz);
     free(rxs);free(rys);free(rzs);
+    if (lverletL) free_verletlist("vnlnb");
+
+    if (lcoul) {
+        free(qia);
+        free(dipia);
+        free(quadia);
+    }
+
 }
 
 //-----------------------------------------------------------------------------
@@ -104,9 +129,25 @@ void init_config()
         ccs = cc;
         cc  = cc + nionit[it];
         for ( int ia=ccs;ia<=(cc-1);ia++) {
-            massia[ia] = massit[it];
+            /***********************************/
+            /*        global i                 */
+            /***********************************/
+            typia[ia]      = it;
+            massia[ia]     = massit[it];
             invemassia[ia] = 1.0/massit[it];
-            typia[ia]  = it;
+            /***********************************/
+            /*       coulombic field           */
+            /***********************************/
+            if ( lcoul ) {
+                qia[ia]        = qit[it]; 
+                for (int i=0;i<3;i++){     
+                    dipia[ia][i] = dipit[it][i];  
+                    for (int j=0;j<3;j++){ 
+                        quadia[ia][i][j]=quadit[it][i][j];
+                    }
+                }
+            }
+            /***********************************/
         }
     }
     nionit[ntype]=nion;
@@ -142,7 +183,7 @@ void sample_config(int key){
                 printf("%5d %5s "ee3"\n",ia,atypia[ia],ry[ia],vy[ia],fy[ia]);
             }
             printf("   ia atype              rz              vz              fz\n");
-            for (int ia=4;ia<8;ia++){
+            for (int ia=8;ia<12;ia++){
                 printf("%5d %5s "ee3"\n",ia,atypia[ia],rz[ia],vz[ia],fz[ia]);
             }
             LSEPARATOR;
@@ -282,9 +323,15 @@ int read_config()
 
     // reading positions of ions 
     for (int ia=0;ia<nion;ia++) {
-        fscanf(fp,"%s %lf %lf %lf",atypia[ia],&rx[ia],&ry[ia],&rz[ia]);
-        //fscanf(fp,"%lf %lf %lf",&vx[ia],&vy[ia],&vz[ia]);
-        //fscanf(fp,"%lf %lf %lf",&fx[ia],&fy[ia],&fz[ia]);
+        fscanf(fp," %s ",atypia[ia]);
+        fscanf(fp,"%lf %lf %lf ",&rx[ia],&ry[ia],&rz[ia]);
+        if (Fposff>0) {
+            fscanf(fp,"%lf %lf %lf ",&vx[ia],&vy[ia],&vz[ia]);
+        }
+        if (Fposff>1) {
+            fscanf(fp,"%lf %lf %lf ",&fx[ia],&fy[ia],&fz[ia]);
+        }
+        //printf("ia %d atypia %s"ee9"\n",ia,atypia[ia],rx[ia],ry[ia],rz[ia],vx[ia],vy[ia],vz[ia],fx[ia],fy[ia],fz[ia]);
     }
     // if position are in direct coordinates => cartesian coordinates
     if ((strcmp(cpos,"Direct") == 0 ) || (strcmp(cpos,"D") == 0 )) {
@@ -308,7 +355,6 @@ int read_config()
     kardir(nion,rx,ry,rz,simuCell.B);
     replace_pbc(nion,rx,ry,rz); 
     dirkar(nion,rx,ry,rz,simuCell.A);
-
     return 0;
 }
 

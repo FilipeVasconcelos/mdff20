@@ -85,7 +85,7 @@ void gen_pbc_verletlist(){
 }
 /*******************************************************************************/
 void check_verletlist(){
-
+    
     double drneimax=0.0,drneimax2=0.0,drnei;
     double rxvl,ryvl,rzvl;
     /*************************************** 

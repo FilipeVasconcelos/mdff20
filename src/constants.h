@@ -12,6 +12,7 @@
 #define FF "%19.12f " 
 #define EE "%19.12e " 
 #define ff3 "%15.8f %15.8f %15.8f " 
+#define ff5 "%15.8f %15.8f %15.8f %15.8f %15.8f " 
 #define ee3 "%15.8e %15.8e %15.8e " 
 #define FF3 "%19.12f %19.12f %19.12f " 
 #define EE3 "%19.12e %19.12e %19.12e " 

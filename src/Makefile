@@ -9,13 +9,14 @@ $(info installation dir $(shell readlink -f $(INSTALL_DIR)) )
 # List of executable to be built within the package
 EXE= mdff20.x
 
-#CC=gcc
-CC=mpicc
-#CC=clang
+CC=gcc
+#CC=mpicc
+#CC=clang -fopenmp=libomp 
 $(info CC  $(shell which $(CC) ))
 
 #CFLAGS=-O3 -msse4 -mavx2 -Wall -ffast-math -fopenmp
-CFLAGS=-O3 -msse4 -mavx2 -ffast-math -fopenmp
+CFLAGS=-O0 -msse4 -mavx2 -ffast-math -fopenmp -Ofast
+CFLAGS+=-I/usr/lib/gcc/x86_64-linux-gnu/6.3.0/include/
 $(info CFLAGS   $(CFLAGS))
 LDFLAGS = -lm -fopenmp # bibliotheque math 
 #LDFLAGS = -lm 
@@ -25,7 +26,7 @@ $(info LDFLAGS   $(LDFLAGS))
 
 OBJ=mdff20.o io.o mpi_mdff.o timing.o constants.o \
     global.o pbc.o verlet.o config.o cell.o \
-    nmlj.o integration.o field.o md.o rand.o\
+    nmlj.o ewald.o integration.o field.o md.o rand.o\
     cell.o thermo.o tools.o kinetic.o
 
 

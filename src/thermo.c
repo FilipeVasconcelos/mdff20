@@ -9,16 +9,25 @@
 void info_thermo(int key, FILE* fp){
 
     double iso=0.0;
+    double l = 3.0 * ((double) nion);
+    double temp_r= ( 2.0 *e_kin ) / ( l * boltz_unit );
     double time = ( (double) istep ) * dt / time_unit;
     double acell=simuCell.Anorm[0];
     double bcell=simuCell.Anorm[1];
     double ccell=simuCell.Anorm[2];
     double e_tot=u_lj+e_kin;
-    double h_tot=e_tot;
+    double h_tot = e_tot + e_nvt;
     double pvir_nb=pvir_lj;
     double pressure=(pvir_lj + temp_r * boltz_unit * simuCell.inveOmega )/press_unit;
     double u_nb=u_lj;
     double u_tot=u_nb+u_coul;
+    double tau_nonb[3][3];
+    for (int i=0;i<3;i++){
+        for (int j=0;j<3;j++){
+            tau_nonb[i][j]=tau_lj[i][j]; /* + other nonbonded contributions */
+        }
+    }
+
 
     if ( key == 0 ) { /* stdout */
         if (ionode) {
