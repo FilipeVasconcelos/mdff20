@@ -4,6 +4,8 @@
 #include "constants.h"
 #include "io.h"
 #include "config.h"
+#include "float.h"
+#include "tools.h"
 
 /*******************************************************************************
  EXPRO
@@ -32,6 +34,20 @@ int sum(int *arr,size_t n){
     for(i=0;i<n;i++) s+=arr[i];
     return s;
 }
+/******************************************************************************/
+double dmin(double a,double b){
+    if (a > b) return b;
+    return a;
+}
+
+/******************************************************************************/
+double dmin_arr(double *arr, int n){
+    double min=DBL_MAX;
+    for (int i=0;i<n;i++){
+        if ( arr[i]<min ) min=arr[i];
+    }
+    return min;
+}
 
 /******************************************************************************/
 int check_string(char* label,char buffer[MAX_LEN+1], char allwd[][MAX_LEN+1], int size_allwd){
@@ -55,6 +71,7 @@ int check_boolstring(char* label,char buffer[MAX_LEN+1]){
     return check_string(label,buffer,allwd_FT_str,16) %2==0;
 }
 
+/******************************************************************************/
 /* center of mass by type (e.g comit)*/
 void com(double *ax,double *ay,double *az, int n, double comit[n][3]){
 
@@ -82,3 +99,56 @@ void com(double *ax,double *ay,double *az, int n, double comit[n][3]){
     }
 }
 
+/******************************************************************************/
+int cmp(const void *a,const void *b){
+    struct sort *a1 = (struct sort *)a;
+    struct sort *a2 = (struct sort *)b;
+    if ((*a1).value < (*a2).value){
+        return -1;
+    }
+    else if ((*a1).value > (*a2).value){
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+
+void mainsort(double *arr, int n , int *index) {
+    struct sort obj[n];
+    for (int i=0;i<n;i++){
+        obj[i].value = arr[i];
+        obj[i].index = i;
+    }
+    qsort(obj,n,sizeof(obj[0]),cmp);
+    for (int i=0;i<n;i++){
+        index[i]=obj[i].index;
+    }
+}
+
+
+
+/******************************************************************************/
+void merge(double *a,int n,int m) {
+    int i,j,k;
+    int *x =malloc(n*sizeof(double));
+    for (i=0,j=m,k=0;k<n;k++){
+        x[k] = j == n      ? a[i++]
+             : i == m      ? a[j++]
+             : a[j] < a[i] ? a[j++]
+             :               a[i++];
+    }
+    for (i=0;i<n;i++){
+        a[i]=x[i];
+    }
+    free(x);
+}
+/******************************************************************************/
+void merge_sort(double *a,int n){
+    if (n<2) return;
+    int m = n/2;
+    merge_sort(a,m);
+    merge_sort(a+m,n-m);
+    merge_sort(a,m);
+    merge(a,n,m);
+}
