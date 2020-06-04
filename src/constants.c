@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include "constants.h"
 
 /******************************************************************************/
@@ -10,6 +11,8 @@ void gen_constants()
     time_unit  = 98.2269514139276    ;  // unit of time picosecond => angstrom * ( atomicmassunit / eV ) ** 0.5
     press_unit = 0.00624150964712042 ;  // GPa => internal unit of pressure (eV/A^3)
     rho_unit   = 1.660538782         ;
+    coul_unit  = 14.3996441494161    ;
+
 
     radian     = 180. / PI           ;     
     onethird   = 1.   / 3.0          ;
@@ -39,4 +42,5 @@ void reduced_units()
     time_unit  = 1.0;
     press_unit = 1.0;
     rho_unit   = 1.0;
+    coul_unit  = 1.0;
 }

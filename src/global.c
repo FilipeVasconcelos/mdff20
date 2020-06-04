@@ -32,13 +32,17 @@ int read_global(char* controlfn)
             fscanf(fp,"%lf",&cutshortrange);
         } 
         if (strcmp(buffer,"cutlongrange") == 0 ) {
-            fscanf(fp,"%lf",&cutshortrange);
+            fscanf(fp,"%lf",&cutlongrange);
         } 
         if (strcmp(buffer,"Fposff") == 0 ) {
             fscanf(fp,"%d",&Fposff);
         } 
         if (strcmp(buffer,"skindiff") == 0 ) {
             fscanf(fp,"%lf",&skindiff);
+        } 
+        if (strcmp(buffer,"lreduced") == 0 ) {
+            fscanf(fp,"%s",buffer);
+            lreduced=check_boolstring("lreduced",buffer); 
         } 
    }
    fclose(fp);
@@ -53,6 +57,7 @@ void info_global(){
         LSEPARATOR;
         printf("verlet list           = %s \n",lverletL?"true":"false");               
         printf("cutshortrange         = %-6.2f \n",cutshortrange);
+        printf("cutlongrange          = %-6.2f \n",cutlongrange);
         printf("skindiff              = %-6.2f \n",skindiff);
         putchar('\n');
     }
@@ -62,8 +67,8 @@ void info_global(){
 void init_global(char* controlfn){
     /* default values */
     skindiff=0.15;
-    
     read_global(controlfn);
+    if (lreduced) reduced_units(); 
     info_global();
 }
 

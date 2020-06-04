@@ -1,5 +1,7 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
+#include "global.h"
 #include "config.h"
 #include "field.h"
 #include "tensors.h"
@@ -8,6 +10,38 @@
 #include "verlet.h"
 #include "ewald.h"
 #include "pbc.h"
+#include "tools.h"
+#include "math_mdff.h"
+#include "kspace.h"
+#include "functions.h"
+
+
+
+void set_autoES(){
+
+    double rcut;
+    double eps;
+    double tol,alpha,tol1;
+
+    rcut =  0.5 * dmin_arr(simuCell.w,3); 
+    printf("rcut %f min %f  \n",rcut,dmin_arr(simuCell.w,3));
+    if ( cutlongrange < rcut ) {
+        printf("WARNING : cutlongrange will be changed according to simuCell.W[]\n");
+        cutlongrange=rcut;
+    }
+    eps=dmin(fabs(epsw),0.5);
+    tol=sqrt(fabs(log(eps*cutlongrange)));
+    alpha=sqrt(abs(log(eps*cutlongrange*tol)))/cutlongrange;
+    tol1=sqrt(-log(eps*cutlongrange*(2.0*tol*alpha)*(2.0*tol*alpha)));
+
+    printf("automatic Ewald Sum\n");    
+    alphaES = alpha;
+    for(int k=0;k<3;k++){
+        kES[k]=(int) nint(0.25+simuCell.Anorm[k]*alpha*tol1/PI);
+    }
+
+//    printf("eps %e tol %e  tol1 %e %d\n",eps,tol,tol1,((int) nint(0.25+simuCell.Anorm[0]*alpha*tol1/PI)));
+}
 
 /******************************************************************************/
 void get_monopoles(){
@@ -29,7 +63,7 @@ void alloc_multipole(){
 
 /******************************************************************************/
 /* Ewald Summation */
-void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3]){
+void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u){
 
     double u_dir, u_rec;
     double (*ef_dir)[3], (*ef_rec)[3];
@@ -47,7 +81,7 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3]){
     fy_dir=malloc(nion*sizeof(*fy_dir));
     fz_dir=malloc(nion*sizeof(*fz_dir));
     
-    multipole_ES_dir(q, mu, theta, u_dir, ef_dir, efg_dir, fx_dir, fy_dir, fz_dir, tau_dir);
+    multipole_ES_dir(q, mu, theta, &u_dir, ef_dir, efg_dir, fx_dir, fy_dir, fz_dir, tau_dir);
 
     /*************************************************************/
     /*                RECIPROCAL SPACE                           */
@@ -58,7 +92,50 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3]){
     fy_rec=malloc(nion*sizeof(*fy_rec));
     fz_rec=malloc(nion*sizeof(*fz_rec));
 
-    multipole_ES_rec(q, mu, theta, u_rec, ef_rec, efg_rec, fx_rec, fy_rec, fz_rec, tau_rec);
+    multipole_ES_rec(q, mu, theta, &u_rec, ef_rec, efg_rec, fx_rec, fy_rec, fz_rec, tau_rec);
+
+
+    double tpi_V,tpi_3V;
+    double qsq,selfa;
+    double u_self_qq;
+    double u_surf_qq;
+    double qt[3];
+
+    qsq=0.0;
+    qt[0]=0;    qt[1]=0;    qt[2]=0;
+    for(int ia=0;ia<nion;ia++){
+        qt[0]+=q[ia]*rx[ia];
+        qt[1]+=q[ia]*ry[ia];
+        qt[2]+=q[ia]*rz[ia];
+        qsq += q[ia];
+    }
+    tpi_V  = TPI    * simuCell.inveOmega;  // 2pi / V 
+    tpi_3V = tpi_V  / 3.0;                 // 2pi / 3V
+
+    u_surf_qq = qt[0]*qt[0] + qt[1]*qt[1] + qt[2]*qt[2]; 
+    u_surf_qq *= tpi_3V; 
+
+    selfa  = alphaES / piroot ;
+    u_self_qq   =  - selfa  * qsq;
+
+    //colombic potential energy
+    printf("u_dir %e\n",u_dir);
+    printf("u_rec %e\n",u_rec);
+    printf("u_self_qq %e\n",u_self_qq);
+    printf("u_surf_qq %e\n",u_surf_qq);
+    *u= (u_dir + u_rec + u_self_qq + u_surf_qq )*coul_unit;
+
+
+    for(int ia=0;ia<nion;ia++){
+        fx[ia] = fx_dir[ia] + fx_rec[ia];
+        fy[ia] = fy_dir[ia] + fy_rec[ia];
+        fz[ia] = fz_dir[ia] + fz_rec[ia];
+        printf("ia %d fx_dir %15.8e\n",ia,fx_dir[ia]);
+        printf("ia %d fx_rec %15.8e\n",ia,fx_rec[ia]);
+        printf("ia %d fx %15.8e\n",ia,fx[ia]);
+    }
+
+    sample_config(0);
 
     free(ef_dir);
     free(ef_rec);
@@ -72,9 +149,10 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3]){
 /******************************************************************************/
 /* Multipole expansion of the Ewald sum  in direct space                      */
 void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3], 
-                                double u_dir, double (*ef_dir)[3], double (*efg_dir)[3][3], 
-                                double *fx_dir, double *fy_dir, double *fz_dir , double tau_dir[3][3]){
+                      double *u_dir, double (*ef_dir)[3], double (*efg_dir)[3][3], 
+                      double *fx_dir, double *fy_dir, double *fz_dir , double tau_dir[3][3]){
 
+    printf("inside multipole_ES_dir\n");
     double rxi,ryi,rzi;
     double rxij,ryij,rzij;
     double rij[3];
@@ -101,10 +179,16 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
 
     double cutsq;
     double alpha2, alpha3, alpha5, alpha7, alpha9;
-
+    double uu = 0;
 
     //  few constants                                         
-    cutsq  = verlet_coul->cut * verlet_coul->cut; //cutlongrange
+    if (lverletL) {
+        cutsq  = verlet_coul->cut * verlet_coul->cut; //cutlongrange
+    }
+    else{
+        cutsq = cutlongrange*cutlongrange;
+    }
+
     alpha2 = alphaES * alphaES;
     alpha3 = alpha2  * alphaES;
     alpha5 = alpha3  * alpha2;
@@ -117,6 +201,7 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
     kardir ( nion , rx , ry , rz , simuCell.B ) ;
 
     for(int ia=atomDec.iaStart;ia<atomDec.iaEnd;ia++) {
+        printf("ia %d\n",ia);
         rxi = rx[ia];
         ryi = ry[ia];
         rzi = rz[ia];
@@ -143,17 +228,15 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
             else{
                 ja=j1;
             }
-            if ( ! ( (( ja > ia ) && !lverletL ) || (( ja !=ia ) && lverletL) ) ) continue;
+            if ( ( (( ja <= ia ) && !lverletL ) || (( ja == ia ) && lverletL) ) ) continue;
 
             qj  = q[ja];
             for(int i=0;i<3;i++){
                 muj[i] = mu[ja][i];
+                fij[i] = 0.0;
                 for(int j=0;j<3;j++){
                     thetaj[i][j] = theta[ja][i][j];
                 }
-            }
-            for (int i=0;i<3;i++){
-                fij[i] = 0.0;
             }
             qij = qi * qj ;
             rij[0]= rxi - rx[ja];
@@ -161,7 +244,9 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
             rij[2]= rzi - rz[ja];
             pbc(&rij[0],&rij[1],&rij[2]);
             d2 = rij[0]*rij[0] + rij[1]*rij[1] + rij[2]*rij[2];
+            printf("test continue %f %f\n",d2,cutsq);
             if ( d2 > cutsq ) continue ;
+            printf("passé !\n");
             d    = sqrt(d2);
             d3   = d2 * d  ;
             d5   = d3 * d2 ;
@@ -176,7 +261,8 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
 
 
             expon = exp( - alpha2 * d2 )/ piroot;              
-            F0    = erfc( alphaES * d );                           
+            //F0    = erfc( alphaES * d );
+            F0    = errfc( alphaES * d );
             F1    = F0 +  2.0 * alphaES * d  * expon;            
             F2    = F1 +  4.0 * alpha3  * d3 * expon / 3.0;   
             F3    = F2 +  8.0 * alpha5  * d5 * expon / 15.0;
@@ -264,8 +350,9 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                ===========================================================  
             */
 	    
-            /*  energy */
-            u_dir += qij * T0.sca;
+            /*  potential energy */
+            uu += qij * T0.sca;
+            printf("here !!! %f %f %f %f %f\n",d2,cutsq,qij,T0.sca,uu);
 
             /* electric field */
             for(int i=0; i<3;i++){
@@ -284,16 +371,13 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                 fij[i] += qij * T1.a[i];
             }
 
-
-
-
             /* TOTAL FORCES */
-            fx_dir[ia] = fx_dir[ia] - fij[0];
-            fy_dir[ia] = fy_dir[ia] - fij[1];
-            fz_dir[ia] = fz_dir[ia] - fij[2];
-            fx_dir[ja] = fx_dir[ja] + fij[0];
-            fy_dir[ja] = fy_dir[ja] + fij[1];
-            fz_dir[ja] = fz_dir[ja] + fij[2];
+            fx_dir[ia] += -fij[0];
+            fy_dir[ia] += -fij[1];
+            fz_dir[ia] += -fij[2];
+            fx_dir[ja] +=  fij[0];
+            fy_dir[ja] +=  fij[1];
+            fz_dir[ja] +=  fij[2];
             
             /* TOTAL STRESS TENSOR */
             for(int i=0; i<3;i++){    
@@ -306,7 +390,7 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
 
     } /* ia */
 
-
+    *u_dir = uu; 
 
     /*************************************** 
             direct to cartesian                   
@@ -315,9 +399,82 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
 }
 
 /******************************************************************************/
-/* Multipole expansion of the Ewald sum  in reciprocal space                      */
+/* Multipole expansion of the Ewald sum  in reciprocal space                  */
+/******************************************************************************/
 void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
-                      double u_rec  , double (*ef_rec)[3], double (*efg_rec)[3][3],
+                      double *u_rec  , double (*ef_rec)[3], double (*efg_rec)[3][3],
                       double *fx_rec, double *fy_rec, double *fz_rec , double tau_rec[3][3]){
+
+    double uu;
+    double kx,ky,kz,kk,Ak,kcoe;
+    double rxi,ryi,rzi;
+    double qi,k_dot_r;
+    double *ckr,*skr;
+    double rhonk_R,rhonk_I;
+    double recarg;
+
+    ckr=malloc(nion*sizeof(*ckr));
+    skr=malloc(nion*sizeof(*skr));
+
+    uu=0;
+
+    for (int ik=kcoul.kptDec.iaStart;ik<kcoul.kptDec.iaEnd;ik++){
+        if (kcoul.kk[ik] == 0.0) continue;
+        kx   = kcoul.kx[ik];
+        ky   = kcoul.ky[ik];
+        kz   = kcoul.kz[ik];
+        kk   = kcoul.kk[ik];
+        Ak   = kcoul.Ak[ik];
+        kcoe = kcoul.kcoe[ik];
+
+        rhonk_R = 0.0;
+        rhonk_I = 0.0;
+
+        for (int ia=0;ia<nion;ia++){
+            rxi = rx[ia];
+            ryi = ry[ia];
+            rzi = rz[ia];
+            qi  = q[ia];
+            k_dot_r  = ( kx * rxi + ky * ryi + kz * rzi );
+            ckr[ia]  = cos(k_dot_r);
+            skr[ia]  = sin(k_dot_r);
+            rhonk_R  += qi * ckr[ia];
+            rhonk_I  += qi * skr[ia];
+//            printf("%d %d %e %e %e %e\n",ik,ia,rhonk_R,qi * ckria,rhonk_I,qi * skria);
+            
+        } /* sum to get charge density */
+        /* potential energy */                                       
+        uu  += (rhonk_R*rhonk_R + rhonk_I*rhonk_I) * Ak ;                                  
+
+        /* second sum */
+        for (int ia=0;ia<nion;ia++){
+            qi=q[ia];
+            recarg  = Ak * (rhonk_I*ckr[ia] - rhonk_R*skr[ia]);
+            fx_rec[ia] += -qi * kx * recarg;
+            fy_rec[ia] += -qi * ky * recarg;
+            fz_rec[ia] += -qi * kz * recarg;
+        }
+        //printf("%d %e %e %e %e\n",ik,Ak,rhonk_R,rhonk_I,uu);
+
+    }
+
+    double tpiV = TPI * simuCell.inveOmega;
+    double fpiV = 2.0 * tpiV;
+    /* half mesh */
+    uu = 2.0 * uu;
+    for (int ia=0;ia<nion;ia++){
+        fx_rec[ia] *= 2.0 * fpiV;
+        fy_rec[ia] *= 2.0 * fpiV;
+        fz_rec[ia] *= 2.0 * fpiV;
+    }
+
+    /* remark on unit
+    1/(4*pi*epislon_0) = 1 => epsilon_0 = 1/4pi
+    */
+    *u_rec =   uu * tpiV;
+
+
+    free(ckr);free(skr);
+
 }
 

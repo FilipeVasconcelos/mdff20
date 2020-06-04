@@ -24,9 +24,9 @@ $(info LDFLAGS   $(LDFLAGS))
 #INC= constants.h rand.h read_posff.h \
     cell.h config.h md.h kinetic.h thermo.h field.h
 
-OBJ=mdff20.o io.o mpi_mdff.o timing.o constants.o \
-    global.o pbc.o verlet.o config.o cell.o \
-    nmlj.o ewald.o integration.o field.o md.o rand.o\
+OBJ=mdff20.o io.o mpi_mdff.o functions.o timing.o constants.o \
+    global.o pbc.o verlet.o config.o cell.o kspace.o \
+    nmlj.o multipole.o ewald.o integration.o field.o md.o rand.o\
     cell.o thermo.o tools.o kinetic.o
 
 

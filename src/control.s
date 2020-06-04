@@ -1,17 +1,27 @@
 # ------------
 #   global 
 # ------------
-Fposff 0
-lverletL true 
+Fposff 2
+lverletL false 
 cutshortrange 8.5 
+cutlongrange  6.0 
 skindiff  .5 
-lstatic false
+lstatic true
+lreduced true 
 # ------------
 #   field
 # ------------
-lnmlj true
-trunc no 
+lcoul true
+lautoES true 
+qit -1.0 1.0
+alphaES 0.8
+kES 11 11 11  
+epsw 1e-6
+
+lnmlj false 
 massit 39.95
+
+trunc no 
 epslj .010323576
 sigmalj 3.405
 # ------------

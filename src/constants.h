@@ -62,7 +62,12 @@ double boltz_unit;  /* boltzmann constant ( energy in eV) */
 double time_unit ;  /* unit of time picosecond => angstrom * ( atomicmassunit / eV ) ** 0.5 */
 double press_unit;  /* GPa                     => internal unit of pressure ( eV / angstrom**3) */
 double rho_unit  ;  /* g/cm^3                  => internal unit of density (atomicmassunit/angstrom^3)*/
+double coul_unit ;  /*  1 / 4pi epsilon0  in eV */
 
 
+/* ****************************************************************************/
+/*                                prototypes                                  */
+/* ****************************************************************************/
 void gen_constants();
+void reduced_units();
 #endif

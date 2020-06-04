@@ -64,17 +64,11 @@ void alloc_config(){
     if (lverletL) { 
         verlet_nb=allocate_verletlist("vnlnb");
         verlet_nb->cut=cutshortrange+skindiff; 
+        // even if lcoul not set
+        verlet_coul=allocate_verletlist("vnlcoul");
+        verlet_coul->cut=cutlongrange+skindiff; 
     }
 
-    if (lcoul) {
-        qia=malloc(nion*sizeof(*qia));
-        dipia=malloc(nion*sizeof(*dipia));
-        quadia=malloc(nion*sizeof(*quadia));
-        if (lverletL) {
-            verlet_coul=allocate_verletlist("vnlcoul");
-            verlet_coul->cut=cutlongrange+skindiff; 
-        }
-    }
 
 }
 
@@ -94,12 +88,6 @@ void free_config(){
     free(fx);free(fy);free(fz);
     free(rxs);free(rys);free(rzs);
     if (lverletL) free_verletlist("vnlnb");
-
-    if (lcoul) {
-        free(qia);
-        free(dipia);
-        free(quadia);
-    }
 
 }
 
@@ -139,7 +127,7 @@ void init_config()
             /*       coulombic field           */
             /***********************************/
             if ( lcoul ) {
-                qia[ia]        = qit[it]; 
+                qia[ia]= qit[it]; 
                 for (int i=0;i<3;i++){     
                     dipia[ia][i] = dipit[it][i];  
                     for (int j=0;j<3;j++){ 
@@ -159,6 +147,9 @@ void init_config()
 void info_config(){
 
     if (ionode) {  
+        SEPARATOR;
+        printf("config info (continue)\n");
+        LSEPARATOR;
         printf("configname                      : %s\n",configname);
         printf("number of types  (ntype)        : %d\n",ntype);
         printf("number of ions   (nion)         : %d\n",nion);
@@ -170,20 +161,22 @@ void info_config(){
 //-----------------------------------------------------------------------------
 void sample_config(int key){
     if (key==0){ /* first 10 ions */
+        int mia=10;
+        if (nion < mia ) mia=nion;
         if (ionode ) {
             LSEPARATOR;
             printf("              Configuration sample (first 10)\n");
             LSEPARATOR;
             printf("   ia atype              rx              vx              fx\n");
-            for (int ia=0;ia<4;ia++){
+            for (int ia=0;ia<mia;ia++){
                 printf("%5d %5s "ee3"\n",ia,atypia[ia],rx[ia],vx[ia],fx[ia]);
             }
             printf("   ia atype              ry              vy              fy\n");
-            for (int ia=4;ia<8;ia++){
+            for (int ia=0;ia<mia;ia++){
                 printf("%5d %5s "ee3"\n",ia,atypia[ia],ry[ia],vy[ia],fy[ia]);
             }
             printf("   ia atype              rz              vz              fz\n");
-            for (int ia=8;ia<12;ia++){
+            for (int ia=0;ia<mia;ia++){
                 printf("%5d %5s "ee3"\n",ia,atypia[ia],rz[ia],vz[ia],fz[ia]);
             }
             LSEPARATOR;
@@ -279,6 +272,11 @@ int read_config()
         exit(-1);
     }
     // print out info to stdout
+    if (ionode) {
+        SEPARATOR;
+        printf("posff info\n");
+        LSEPARATOR;
+    }
     io_node printf("reading configuration from file POSFF\n");
     
     // reading nion number of ions in POSFF 
@@ -304,13 +302,13 @@ int read_config()
     io_node printf("found type information on POSFF");
     for (int it=0;it<ntype;it++) {
         fscanf(fp,"%s",atypit[it]);
-        io_node printf("%5s",atypit[it]);
+        io_node printf(" %s ",atypit[it]);
     }
     //nionit : ions per type
-    io_node printf("\n                                 ");
+    io_node printf("\n                               ");
     for (int it=0;it<ntype;it++) {
         fscanf(fp,"%d",&nionit[it]);
-        io_node printf("%5d",nionit[it]);
+        io_node printf(" %d ",nionit[it]);
     }
     io_node putchar('\n');
     //can be call only when nion and ntype 

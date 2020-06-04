@@ -38,8 +38,9 @@ int do_split(int n,int np,int mrank, DEC* dec, char* lab){
     dec->label=lab;
     if (ionode) {
         SEPARATOR;
-        printf("paralelisation - %s decomposition\n",dec->label);
+        printf("paralelisation info\n");
         LSEPARATOR;
+        printf("%s decomposition\n",dec->label);
         for (int me=0;me<np;me++){
             printf("rank = %d %s from %4d to %4d load : %d \n",\
             me,dec->label,istartV[me],iendV[me],(iendV[me]-istartV[me] +1));

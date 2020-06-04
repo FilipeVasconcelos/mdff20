@@ -4,6 +4,7 @@ int           Fposff;
 #include <stdbool.h>
 bool        lverletL;
 bool         lstatic;
+bool         lreduced;
 double cutshortrange;
 double  cutlongrange;
 double      skindiff;

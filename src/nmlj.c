@@ -17,7 +17,7 @@
 #include "verlet.h"
 #include <omp.h>
 
-//#define DEBUG_NMLJ_
+//#define DEBUG_NMLJ
 /******************************************************************************/
 double addtruncU(int p1 , int p2, double srp, double srq){
     if (trunctype == 0) {
@@ -302,8 +302,8 @@ void engforce_nmlj_pbc(double *u, double *pvir, double tau[3][3])
                 if ( (( ja > ia ) && !lverletL ) || 
                      (( ja !=ia ) && lverletL) )  {
 #ifdef DEBUG_NMLJ
-                    io_node printf("in nmlj main loop %d %d %d %d\n",ia,ja,jb,je);
                     counttest+=1;
+                    io_node printf("in nmlj main loop %d %d %d %d\n",ia,ja,jb,je);
 #endif
                     rxij = rxi - rx[ja];
                     ryij = ryi - ry[ja];
@@ -368,7 +368,7 @@ void engforce_nmlj_pbc(double *u, double *pvir, double tau[3][3])
             direct to cartesian                   
      ***************************************/
     dirkar ( nion , rx , ry , rz , simuCell.A ) ;
-#ifdef DEBUG_NMLJ_
+#ifdef DEBUG_NMLJ
     io_node printf("exiting nmlj engforce count pairs %d %d\n",counttest,(nion*(nion-1))/2);
 #endif
 

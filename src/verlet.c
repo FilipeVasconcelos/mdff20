@@ -12,10 +12,10 @@
 #include "pbc.h"
 #include "global.h"
 #include "timing.h"
-
+//#define DEBUG
 /*******************************************************************************/
 VERLETL *allocate_verletlist(char* label){
-    printf("allocate Verlet List\n");
+    printf("allocate Verlet List %s\n",label);
     VERLETL *vlist=malloc(sizeof(*vlist));
     vlist->list=malloc(nion*VNLMAX*sizeof(*(vlist->list)));
     vlist->point=malloc((nion+1)*sizeof(*(vlist->point)));
@@ -35,11 +35,9 @@ void free_verletlist(char* label){
     free(verlet_nb->list);
     free(verlet_nb->point);
     free(verlet_nb);
-    if (lcoul) {
-        free(verlet_coul->list);
-        free(verlet_coul->point);
-        free(verlet_coul);
-    }
+    free(verlet_coul->list);
+    free(verlet_coul->point);
+    free(verlet_coul);
     free(xvl);    
     free(yvl);    
     free(zvl);    
@@ -81,7 +79,7 @@ void gen_pbc_verletlist(){
                 pbc(&rxij,&ryij,&rzij);
                 rijsq = rxij * rxij + ryij * ryij + rzij * rzij;
                 // non bonded sphere 
-                if ( lnonbonded && rijsq<=rskinsq_nb){
+                if (rijsq<=rskinsq_nb){
                     verlet_nb->list[icount_nb]=ja;
                     icount_nb+=1;
                     k_nb+=1;
@@ -90,7 +88,7 @@ void gen_pbc_verletlist(){
                     }
                 }
                 // coulomb sphere 
-                if ( lcoul && rijsq<=rskinsq_coul){
+                if (rijsq<=rskinsq_coul){
                     verlet_coul->list[icount_coul]=ja;
                     icount_coul+=1;
                     k_coul+=1;

@@ -24,6 +24,8 @@
 #include "io.h"
 #include "timing.h"
 #include "thermo.h"
+#include "multipole.h"
+#include "kspace.h"
 
 /******************************************************************************/
 int main(int argc, char *argv[])
@@ -71,17 +73,17 @@ int main(int argc, char *argv[])
     //allocate main quantities when nion is known
     read_config();
 
-    // parallelization atom decomposition
-    do_split(nion,numprocs,myrank,&atomDec,"atoms");
-
-    // verlet list
-    if (lverletL) check_verletlist();
-
     // main md parameters
     init_md(controlfn);
     // main field parameters
     init_field(controlfn);
     init_config();
+
+    // parallelization atom decomposition
+    do_split(nion,numprocs,myrank,&atomDec,"atoms");
+    do_split(kcoul.nk,numprocs,myrank,&kcoul.kptDec,"k-points");
+    // verlet list
+    if (lverletL) check_verletlist();
 
     if (!lstatic) {
         //lets give ions some velocities
@@ -125,6 +127,7 @@ int main(int argc, char *argv[])
     }
     free_config();
     free_md();
+    free_multipole();
     free(pstartingDate);
     free(pfinishingDate);
 #ifdef MPI

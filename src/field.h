@@ -5,8 +5,11 @@ bool lnonbonded;
 bool      lnmlj;
 bool      lcoul;
 
-double alphaES;
 
+bool    lautoES; /* auto-determination of Ewald parameter from epsw ( accuracy) */
+double     epsw; /* accuracy of the ewald sum */
+double  alphaES; /*Ewald sum */
+int   kES[3]; /* kmax of ewald sum in reciprocal space */
 
 
 int read_field(char* controlfn);

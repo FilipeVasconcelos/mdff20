@@ -22,13 +22,10 @@ void init_velocities()
 
     com(vx,vy,vz,ntype+1, comit);
     if (ionode) {
-        //printf("c.o.m. vel ALL "ee3"\n",comit[ntype][0],comit[ntype][1],comit[ntype][2]);
         for (int it=0;it<ntype;it++){
-        //    printf("c.o.m. vel %3s "ee3"\n",atypit[it],comit[it][0],comit[it][1],comit[it][2]);
         }
     }
-    sample_config(0);
-//    exit(-1);
+    //sample_config(0);
 }
 
 /******************************************************************************/
@@ -50,11 +47,9 @@ void maxwellboltzmann_velocities()
 
     for ( int ia=0; ia < nion; ia++ ) {
         rtemp = sqrt(temp*invemassia[ia]);
-//        printf("rtemp %12.8f\n",rtemp);
         vx [ia] = rtemp * box_muller(0.0,1.0);
         vy [ia] = rtemp * box_muller(0.0,1.0);
         vz [ia] = rtemp * box_muller(0.0,1.0);
-        //printf("boxmuller %12.8f\n",box_muller(0.0,1.0));
         sx += vx[ia];
         sy += vy[ia];
         sz += vz[ia];
@@ -117,6 +112,9 @@ void rescale_velocities(int quiet)
         vz [ia] -= sz;
     }
     if (ionode && quiet == 0) {
+        SEPARATOR;
+        printf("initial kinetic energy info\n");
+        LSEPARATOR;
         printf("effective temperature T  = %10.4f\n",T);
         printf("wanted temperature    T0 = %10.4f\n",temp/boltz_unit);
         if (egrator !=2 ) {
