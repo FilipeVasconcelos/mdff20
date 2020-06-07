@@ -6,6 +6,7 @@
 #include <omp.h>
 #endif
 #include <time.h>
+#include "field.h"
 #include "timing.h"
 #include "io.h"
 
@@ -50,6 +51,12 @@ void info_timing(){
         LSEPARATOR;
         writimewhole("MD",mdstepCPUtime);
         writimewhole("Engforce",engforceCPUtime);
+        if (lnmlj) writimewhole("  -> nmlj",engforce_nmljCPUtime);
+        if (lcoulombic) {
+            writimewhole("  -> coul",engforce_coulCPUtime);
+            writimewhole("      -> ewald dir",ewaldDirCPUtime);
+            writimewhole("      -> ewald rec",ewaldRecCPUtime);
+        }
         writimewhole("Verlet List",verletLCPUtime);
         writimewhole("Integration ",propagatorCPUtime);
         writimewhole("Dir<->Kar",dirkardirCPUtime);
