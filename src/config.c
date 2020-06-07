@@ -64,7 +64,7 @@ void alloc_config(){
     if (lverletL) { 
         verlet_nb=allocate_verletlist("vnlnb");
         verlet_nb->cut=cutshortrange+skindiff; 
-        // even if lcoul not set
+        // even if lcoulombic not set
         verlet_coul=allocate_verletlist("vnlcoul");
         verlet_coul->cut=cutlongrange+skindiff; 
     }
@@ -126,7 +126,7 @@ void init_config()
             /***********************************/
             /*       coulombic field           */
             /***********************************/
-            if ( lcoul ) {
+            if ( lcoulombic ) {
                 qia[ia]= qit[it]; 
                 for (int i=0;i<3;i++){     
                     dipia[ia][i] = dipit[it][i];  
@@ -181,10 +181,24 @@ void sample_config(int key){
             }
             LSEPARATOR;
         }
-
     }
-
 }
+void sample_(char *label,double *ax, double *ay, double *az){
+    int mia=10;
+    if (nion < mia ) mia=nion;
+    if (ionode ) {
+        LSEPARATOR;
+        printf("              %s sample (first 10)\n",label);
+        LSEPARATOR;
+        printf("   ia atype              x              y              z\n");
+        for (int ia=0;ia<mia;ia++){
+            printf("%5d %5s "ee3"\n",ia,atypia[ia],ax[ia],ay[ia],az[ia]);
+        }
+        LSEPARATOR;
+        }
+}
+
+
 
 /*-----------------------------------------------------------------------------*/
 /*
@@ -234,11 +248,11 @@ int write_config(){
     }
     fprintf(fp,"%d\n",ntype);
     for(int it=0;it<ntype;it++){
-        fprintf(fp,"%s",atypit[it]);
+        fprintf(fp,"%s ",atypit[it]);
     }
     fprintf(fp,"\n");
     for(int it=0;it<ntype;it++){
-        fprintf(fp,"%d",nionit[it]);
+        fprintf(fp,"%d ",nionit[it]);
     }
     fprintf(fp,"\n");
     fprintf(fp,"Cartesian\n");
