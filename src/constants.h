@@ -7,6 +7,11 @@
 
 #define PI        3.1415926535897932385  /* pi  */
 #define TPI       6.2831853071795864770  /* 2pi */ 
+#define xx " "
+#define xx3 "   "
+#define xx6 xx3 xx3
+#define xx9 xx6 xx xx
+#define xx11 xx9 xx3
 #define ff "%15.8f " 
 #define ee "%15.8e " 
 #define FF "%19.12f " 
@@ -34,6 +39,7 @@ pressure      : GPa
 charge        : atomic charge ( proton charge )
 dipole moment : Debye
 efg           : V  / angstom**2
+velocity      : ( atomicmassunit / eV ) ** 0.5
 forces        : eV / angtrom
 density       : g/cm^3
 
@@ -47,8 +53,9 @@ pressure      : ( eV / angstrom**3 )
 charge        : atomic charge ( proton charge )
 dipole moment : angstrom * atomiccharge
 efg           : atomiccharge / angstrom ** 3
+velocity      : ( atomicmassunit / eV ) ** 0.5
 forces        : eV / angtrom
-density       :  atomic mass unit / angstrom^3
+density       : atomic mass unit / angstrom^3
 1/4piepsilon0 : eV  * angstrom / atomiccharge **2 == 1.0
 */
 

@@ -47,6 +47,7 @@ void         alloc_config();
 void          free_config();
 void          info_config();
 void sample_config(int key);
+void sample_(char *label,double *ax, double *ay, double *az);
 int          write_config();
 int           read_config();
 #endif

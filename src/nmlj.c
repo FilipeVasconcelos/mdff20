@@ -266,7 +266,7 @@ void engforce_nmlj_pbc(double *u, double *pvir, double tau[3][3])
     }
     for (int i=0;i<3;i++){
         for(int j=i;j<3;j++){
-            tau[i][j]=0.0;
+            ttau[i][j]=0.0;
         }
     }
     /*************************************** 
@@ -342,11 +342,12 @@ void engforce_nmlj_pbc(double *u, double *pvir, double tau[3][3])
             }
         }
     }
+    ttau[1][0]=ttau[0][1];
+    ttau[2][0]=ttau[0][2];
+    ttau[2][1]=ttau[1][2];
     for (int i=0;i<3;i++){
-        for(int j=i;j<3;j++){
-            ttau[i][j] *= simuCell.inveOmegaU;
-            ttau[j][i]=ttau[i][j];
-            tau[i][j]=ttau[i][j];
+        for(int j=0;j<3;j++){
+            tau[i][j]=ttau[i][j]*simuCell.inveOmegaU;
         }
     }
     *u=uu;

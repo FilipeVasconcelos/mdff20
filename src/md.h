@@ -7,7 +7,8 @@ int                   istep; /* current step */
 int                    npas; /* number of md steps */
 int                  nprint; /* stdout printing period */
 int                  fprint; /* osziff printing period */
-int                  nequil; /* equilibration period (rescaling) */
+int                  nequil; /* equilibration interval (rescaling) */
+int                 nequilT; /* equilibration period (rescaling) */
 double                 temp; /* temperature */
 double                   dt; /* time step */  
 double        tauTberendsen; /* berendsen thermostat period */

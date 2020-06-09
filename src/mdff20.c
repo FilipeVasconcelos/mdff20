@@ -24,7 +24,7 @@
 #include "io.h"
 #include "timing.h"
 #include "thermo.h"
-#include "multipole.h"
+#include "coulombic.h"
 #include "kspace.h"
 
 /******************************************************************************/
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
     }
     free_config();
     free_md();
-    free_multipole();
+    free_coulombic();
     free(pstartingDate);
     free(pfinishingDate);
 #ifdef MPI

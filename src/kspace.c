@@ -80,7 +80,7 @@ void set_param_kmesh(KMESH *km,double alpha){
                 km->kz[nk]=kz;
                 km->kk[nk]=kk;
                 km->Ak[nk]= exp(-kk*0.25/alpha2)/kk;
-                printf("%d test Ak %e\n",nk,km->Ak[nk]);
+    //            printf("%d test Ak %e\n",nk,km->Ak[nk]);
                 km->kcoe[nk]= 2.0 * ( 1.0 / kk + 1.0 / alpha2 / 4.0 );
                 nk = nk + 1;
             }

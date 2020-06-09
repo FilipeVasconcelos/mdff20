@@ -54,6 +54,9 @@ int read_md (char * controlfn)
         if (strcmp(buffer,"nequil") == 0 ) {
             fscanf(fp,"%d",&nequil);
         } 
+        if (strcmp(buffer,"nequilT") == 0 ) {
+            fscanf(fp,"%d",&nequilT);
+        } 
         if (strcmp(buffer,"tauTberendsen") == 0 ) {
             fscanf(fp,"%lf",&tauTberendsen);
         } 
@@ -144,6 +147,7 @@ void info_md(){
         printf("npas                  = %d \n", npas );
         printf("nprint                = %d \n", nprint );
         printf("nequil                = %d \n", nequil );
+        printf("nequilT               = %d \n", nequilT );
         putchar('\n');
     }
 }
@@ -206,7 +210,7 @@ void run_md()
         /* --------------------------------- */
         /*     rescale velocities in "NVE"   */
         /* --------------------------------- */
-        //if (rescale_allowed && istep < nequil) rescale_velocities(1);
+        if ( ( rescale_allowed) && (istep < nequil) && (istep%nequilT == 0)) rescale_velocities(1);
         /* --------------------------------- */
         /*          stdout info              */
         /* --------------------------------- */

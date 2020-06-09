@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "constants.h"
@@ -12,26 +13,31 @@
 #include "md.h"
 #include "io.h"
 #include "tools.h"
-#include "multipole.h"
+#include "coulombic.h"
 
 /******************************************************************************/
 int read_field(char* controlfn)
 {
-   char buffer[MAX_LEN+1];
-   FILE * fp;
-   fp = fopen (controlfn, "r");
-   if (NULL == fp )  {
-       perror("opening database file");
-       return (-1);
-   }
-   while (EOF != fscanf(fp, "%s\n", buffer)) { 
+    int kqch,kdip,kqua;
+    kqch=0;
+    kdip=0;
+    kqua=0;
+
+    char buffer[MAX_LEN+1];
+    FILE * fp;
+    fp = fopen (controlfn, "r");
+    if (NULL == fp )  {
+        perror("opening database file");
+        return (-1);
+    }
+    while (EOF != fscanf(fp, "%s\n", buffer)) { 
         if (strcmp(buffer,"lnmlj") == 0 ) {
             fscanf(fp,"%s",buffer);
             lnmlj=check_boolstring("lnmlj",buffer); 
         } 
-        if (strcmp(buffer,"lcoul") == 0 ) {
+        if (strcmp(buffer,"lcoulombic") == 0 ) {
             fscanf(fp,"%s",buffer);
-            lcoul=check_boolstring("lcoul",buffer); 
+            lcoulombic=check_boolstring("lcoulombic",buffer); 
         } 
         // mass of type
         if (strcmp(buffer,"massit") == 0 ) {
@@ -41,25 +47,23 @@ int read_field(char* controlfn)
         } 
         // charges on type
         if (strcmp(buffer,"qit") == 0 ) {
-            for(int it=0;it<ntype;it++){
-                fscanf(fp,"%lf",&qit[it]);
-            }
+            fscanf(fp,"%lf",&qit[kqch]);
+            kqch+=1;
         } 
         // dipole on type
         if (strcmp(buffer,"dipit") == 0 ) {
-            for(int it=0;it<ntype;it++){
-                fscanf(fp,"%lf %lf %lf",&dipit[it][0],&dipit[it][1],&dipit[it][2]);
-            }
+            fscanf(fp,"%lf %lf %lf",&dipit[kdip][0],&dipit[kdip][1],&dipit[kdip][2]);
+            kdip+=1;
         } 
         // quadrupole on type
         if (strcmp(buffer,"quadit") == 0 ) {
-            for(int it=0;it<ntype;it++){
-                fscanf(fp,"%lf %lf %lf %lf %lf %lf %lf %lf %lf",
-                          &quadit[it][0][0],&quadit[it][0][1],&quadit[it][0][2],
-                          &quadit[it][1][0],&quadit[it][1][1],&quadit[it][1][2],
-                          &quadit[it][2][0],&quadit[it][2][1],&quadit[it][2][2]);
-            }
+           fscanf(fp,"%lf %lf %lf %lf %lf %lf %lf %lf %lf",
+                  &quadit[kqua][0][0],&quadit[kqua][0][1],&quadit[kqua][0][2],
+                  &quadit[kqua][1][0],&quadit[kqua][1][1],&quadit[kqua][1][2],
+                  &quadit[kqua][2][0],&quadit[kqua][2][1],&quadit[kqua][2][2]);
+            kqua+=1;
         } 
+        //ewald sum param 
         if (strcmp(buffer,"alphaES") == 0 ) {
             fscanf(fp,"%lf",&alphaES);
         } 
@@ -79,9 +83,25 @@ int read_field(char* controlfn)
             lautoES=check_boolstring("lautoES",buffer);
         } 
 
-   }
-   fclose(fp);
-   return(0);
+    }
+    if ( (kqch != ntype) && (kqch !=0) ) {
+        pError("qit not found\n");
+        printf("kdip %d != ntype %d\n",kqch,ntype);
+        exit(-1);
+    } 
+    if ( (kdip != ntype) && (kdip !=0) ) {
+        pError("dipit not found\n");
+        printf("kdip %d != ntype %d\n",kdip,ntype);
+        exit(-1);
+    } 
+    if ( (kqua != ntype) && (kqua !=0) ) {
+        pError("quadit not found\n");
+        printf("kdip %d != ntype %d\n",kqua,ntype);
+        exit(-1);
+    } 
+
+    fclose(fp);
+    return(0);
 }
 
 /******************************************************************************/
@@ -93,6 +113,22 @@ void info_field(){
     }
     double rho; /* mass density */
     rho = totalMass * simuCell.inveOmega;
+
+    lqch = false; ldip= false; lqua = false;
+    for(int it; it< ntype ; it++){
+        if (qit[it] != 0.0 ) lqch = true;
+        for (int j=0;j<3;j++){
+            if (dipit[it][j] != 0.0 ) ldip = true;
+            for(int k=0;k<3;k++){
+                if (quadit[it][j][k] != 0.0 ) lqua = true;
+            }
+        }
+    } 
+    if ( ( lcoulombic ) && ! ( ( lqch)  || ( ldip ) || ( lqua ) ) ) {
+        pError("with lcoulombic :  charges, dipoles or quadrupoles need to be set\n");
+        exit(-1);
+    }
+
 
     if (ionode){
         SEPARATOR;
@@ -107,26 +143,42 @@ void info_field(){
         printf("density               = %.5f g/cm^3  \n",rho*rho_unit);
         printf("density(N)            = %.5f ions/A^3\n",rhoN); 
         putchar('\n');
-        printf("point charges:\n");
-        for (int it=0;it<ntype;it++) {
-            printf("q_%s                  = %.5f \n",atypit[it],qit[it]);
-            printf("mu_%s                 = ",atypit[it]);
-            for(int k=0;k<3;k++){
-                printf("%.5f ",atypit[it],dipit[it][k]);
+        if (lqch) {
+            printf("point charges :\n");
+            printf("--------------\n");
+            for (int it=0;it<ntype;it++) {
+                printf("q_%s                  = %8.5f \n",atypit[it],qit[it]);
             }
             putchar('\n');
-            printf("theta_%s              = \n",atypit[it]);
-            for(int j=0;j<3;j++){
-                printf("                      ");
+        }
+        if (ldip) {
+            printf("dipoles :\n");
+            printf("--------\n");
+            for (int it=0;it<ntype;it++) {
+                printf("mu_%s                 = ",atypit[it]);
                 for(int k=0;k<3;k++){
-                    printf(" %.5f",quadit[it][j][k]);
+                    printf("%8.5f ",dipit[it][k]);
                 }
                 putchar('\n');
             }
             putchar('\n');
         }
+        if (lqua) {
+            printf("quadrupoles :\n");
+            printf("------------\n");
+            for (int it=0;it<ntype;it++) {
+                printf("theta_%s              = \n",atypit[it]);
+                for(int j=0;j<3;j++){
+                    printf("                      ");
+                    for(int k=0;k<3;k++){
+                        printf(" %8.5f",quadit[it][j][k]);
+                    }
+                    putchar('\n');
+                }
+                putchar('\n');
+            }
+        }
     }
-
 }
 
 /******************************************************************************/
@@ -137,11 +189,10 @@ void init_field(char* controlfn){
     if (lnmlj) {
         lnonbonded=true;
     }
-
     info_field();
     if (lnmlj) init_nmlj(controlfn);
     if (lautoES) set_autoES();
-    if (lcoul) init_multipole();
+    if (lcoulombic) init_coulombic();
 }
 
 /******************************************************************************/
@@ -149,23 +200,24 @@ void engforce()
 {
     statime(2);
     if (lnmlj) {
-        printf("here NMLJ\n");
+//        printf("here NMLJ\n");
         engforce_nmlj_pbc(&u_lj,&pvir_lj,tau_lj);
+    }
+    statime(15);
+    mestime(&engforce_nmljCPUtime,15,2);
+
+    if (lcoulombic) {
+        double (*ef)[3];
+        double (*efg)[3][3];
+        ef=malloc(nion*sizeof(*ef));
+        efg=malloc(nion*sizeof(*efg));
+
+//        printf("here ES\n");
+        multipole_ES(qia,dipia,quadia,&u_coul,ef,efg);
     }
     statime(3);
     mestime(&engforceCPUtime,3,2);
-
-
-    if (lcoul) {
-        printf("here ES\n");
-        multipole_ES(qia,dipia,quadia,&u_coul);
-    }
-
-
-
-
-
-
+    mestime(&engforce_coulCPUtime,3,15);
 
 }
 

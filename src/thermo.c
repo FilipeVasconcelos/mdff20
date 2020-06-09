@@ -5,6 +5,7 @@
 #include "md.h"
 #include "config.h"
 #include "cell.h"
+#include "field.h"
 
 /******************************************************************************/
 void info_thermo(int key, FILE* fp){
@@ -53,16 +54,30 @@ void info_thermo(int key, FILE* fp){
             printf("  Etot                  = "EE"\n"            ,e_tot);
             printf("  Htot                  = "EE"\n"            ,h_tot);
             printf("\n");
-            printf("  ---------------------------------------------\n" );
-            printf("  non_bonded stress tensor :\n"                    );
-            printf("  ---------------------------------------------\n" );
-            for (int i=0;i<3;i++){
-                printf("  "ee3"\n",tau_vdw[i][0],tau_vdw[i][1],tau_vdw[i][2]);
-                iso+=tau_vdw[i][i];
+            if (lnonbonded) {
+                printf("  ---------------------------------------------\n" );
+                printf("  non_bonded stress tensor :\n"                    );
+                printf("  ---------------------------------------------\n" );
+                for (int i=0;i<3;i++){
+                    printf("  "ee3"\n",tau_vdw[i][0],tau_vdw[i][1],tau_vdw[i][2]);
+                        iso+=tau_vdw[i][i];
+                }
+                printf("  ---------------------------------------------\n" );
+                printf("  iso = "ee "("ee")\n",iso*onethird,iso*onethirdnion);
+                putchar('\n');
             }
-            printf("  ---------------------------------------------\n" );
-            printf("  iso = "ee "("ee")\n",iso*onethird,iso*onethirdnion);
-            putchar('\n');
+            if (lcoulombic) {
+                printf("  ---------------------------------------------\n" );
+                printf("  electrostatic stress tensor :\n"                    );
+                printf("  ---------------------------------------------\n" );
+                for (int i=0;i<3;i++){
+                    printf("  "ee3"\n",tau_coul[i][0],tau_coul[i][1],tau_coul[i][2]);
+                        iso+=tau_coul[i][i];
+                }
+                printf("  ---------------------------------------------\n" );
+                printf("  iso = "ee "("ee")\n",iso*onethird,iso*onethirdnion);
+                putchar('\n');
+            }
         }
     }
     else if (key==1) { /* OSZIFF */

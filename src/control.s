@@ -2,24 +2,23 @@
 #   global 
 # ------------
 Fposff 2
-lverletL false 
+lverletL true 
 cutshortrange 8.5 
-cutlongrange  6.0 
-skindiff  .5 
-lstatic true
-lreduced true 
+cutlongrange  10.0 
+skindiff  1.0 
+lstatic false 
+lreduced false 
 # ------------
 #   field
 # ------------
-lcoul true
+lcoulombic true 
 lautoES true 
-qit -1.0 1.0
-alphaES 0.8
-kES 11 11 11  
+qit  1.0 
+qit  -1.0
 epsw 1e-6
 
-lnmlj false 
-massit 39.95
+lnmlj true 
+massit 39.95 39.95
 
 trunc no 
 epslj .010323576
@@ -27,16 +26,17 @@ sigmalj 3.405
 # ------------
 #    md  
 # ------------
-# integrator nvt-nhcn
+#integrator nvt-nhcn
 integrator nve-vv
-nhc_yosh_order 3      
-nhc_mults      3      
+nhc_yosh_order 1      
+nhc_mults      1      
 nhc_n          2 
-timesca_thermo 10.0
+timesca_thermo 2.0 
 temp 119.8 
-npas 0
+npas  0
 nprint 1000
-fprint 10
-nequil 1 
-dt .004
-tauTberendsen .004
+fprint 100
+nequil 20000 
+nequilT 5
+dt .002
+tauTberendsen .002
