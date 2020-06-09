@@ -36,8 +36,8 @@ int read_nmlj(char* controlfn){
     FILE * fp;
     fp = fopen (controlfn, "r");
     if (NULL == fp )  {
-       perror("opening database file");
-       return (-1);
+        pError("opening control file (reading nmlj)");
+        return (-1);
     }
     while (EOF != fscanf(fp, "%s", buffer)) {
         // SIGMALJ
@@ -80,10 +80,6 @@ int read_nmlj(char* controlfn){
                 }
             }
         } 
-        //  lsymmetric 
-        if (strcmp(buffer,"lsymmetric") == 0 ) {
-            lsymmetric=true;
-        } 
         //  trunc 
         if (strcmp(buffer,"trunc") == 0 ) {
             fscanf(fp,"%s",buffer);
@@ -119,9 +115,7 @@ void default_nmlj(){
 /******************************************************************************/
 void init_nmlj(char* controlfn){
 
-    double rcut=cutshortrange;
-    rcutsq=rcut*rcut;
-    double rcut3,pp,qq,ppqq,ut,pt,epsppqq,srq,srp,sr,sr2,qq3,pp3;
+    double srcut3,pp,qq,ppqq,ut,pt,epsppqq,srq,srp,sr,sr2,qq3,pp3;
     double one16 = (1.0 / 6.0) ;
     double two16 = pow(2.0,one16);  
     strcpy(trunclabel[0],"no");
@@ -133,63 +127,67 @@ void init_nmlj(char* controlfn){
     //read parameters
     read_nmlj(controlfn) ;
 
-// ==================================================================================================
-// TAIL ( checked september 2011) :
-// be careful two minus are vanishing
-//
-//     2 pi rc^3 espilon NA NB    /     p         / sigma* \ q           q         / sigma*  \ p  \
-//    -------------------------- |  ----------   | ------- |    --   ----------   | -------- |    |
-//         ( q - p )   V          \ ( q - 3 )     \   rc   /          ( p - 3 )    \  rc     /    /
-//
-//  virial the same with qp in the first term
-//
-// ==================================================================================================
-  
-  
-// ==================================================================================================
-//  simple truncation  
-//
-//  trunclabel = 'linear'
-//  trunctype  = 1 
-//
-//
-//           eps    /    / sigma* \ q         / sigma* \ p  \
-//  V  =   ------- |  p | ------- |    -  q  | --------|    |   -  c1   with  sigma* = 2^(1/6)*sigma
-//          q - p   \    \   r    /           \    r   /    /
-//
-// 
-//          eps      /     /  sigma* \ q        /  sigma* \ p  \
-//  c1 = ---------  |   p |  -------- |    - q |  -------- |   |      with rc = cutshortrange 
-//         q - p     \     \   rc    /          \   rc    /    / 
-// 
-// ==================================================================================================
-  
+/*
+ ==================================================================================================
+ TAIL ( checked september 2011) :
+ be careful two minus are vanishing
 
-// ==================================================================================================
-//  truncation presented in J. Chem. Phys. 135 (2011) , Sengupta, Vasconcelos, Affouard, Sastry
-// 
-//  trunclabel = 'quadratic'
-//  trunctype  = 2    
-// 
-//
-//         eps    /    / sigma* \ q         / sigma* \ p  \
-//V  =   ------- |  p | ------- |    -  q  | --------|    |   +  c1 r^2  -  c2 with sigma* 2^(1/6)*sigma
-//        q - p   \    \   r   /            \    r   /    /
-//
-//
-// verified on Sage (January 2013) 
-//     
-//              eps p  q           /  / sigma* \ q       /  sigma* \ p \
-//    c1 =  --------------------- |  | --------|    -   | --------- |  |
-//          2  ( q - p ) * rc^2    \  \   rc   /         \   rc    /   /
-// 
-//   and
-//     
-//           epsilon     /           / sigma* \ q               / sigma* \ p  \
-//    c2 =  ----------- |  (2p+qp)  | --------|     - (2q+pq)  | --------|   |
-//          2 ( q - p )  \           \   rc   /                 \   rc   /   /       
-//
-// ==================================================================================================
+     2 pi rc^3 espilon NA NB    /     p         / sigma* \ q           q         / sigma*  \ p  \
+    -------------------------- |  ----------   | ------- |    --   ----------   | -------- |    |
+         ( q - p )   V          \ ( q - 3 )     \   rc   /          ( p - 3 )    \  rc     /    /
+
+  virial the same with qp in the first term
+
+ ==================================================================================================
+*/  
+ 
+/* 
+ ==================================================================================================
+  simple truncation  
+
+  trunclabel = 'linear'
+  trunctype  = 1 
+
+
+           eps    /    / sigma* \ q         / sigma* \ p  \
+  V  =   ------- |  p | ------- |    -  q  | --------|    |   -  c1   with  sigma* = 2^(1/6)*sigma
+          q - p   \    \   r    /           \    r   /    /
+
+ 
+          eps      /     /  sigma* \ q        /  sigma* \ p  \
+  c1 = ---------  |   p |  -------- |    - q |  -------- |   |      with rc = cutshortrange 
+         q - p     \     \   rc    /          \   rc    /    / 
+ 
+ ==================================================================================================
+*/
+
+/* 
+ ==================================================================================================
+  truncation presented in J. Chem. Phys. 135 (2011) , Sengupta, Vasconcelos, Affouard, Sastry
+ 
+  trunclabel = 'quadratic'
+  trunctype  = 2    
+ 
+
+         eps    /    / sigma* \ q         / sigma* \ p  \
+V  =   ------- |  p | ------- |    -  q  | --------|    |   +  c1 r^2  -  c2 with sigma* 2^(1/6)*sigma
+        q - p   \    \   r   /            \    r   /    /
+
+
+ verified on Sage (January 2013) 
+     
+              eps p  q           /  / sigma* \ q       /  sigma* \ p \
+    c1 =  --------------------- |  | --------|    -   | --------- |  |
+          2  ( q - p ) * rc^2    \  \   rc   /         \   rc    /   /
+ 
+   and
+     
+           epsilon     /           / sigma* \ q               / sigma* \ p  \
+    c2 =  ----------- |  (2p+qp)  | --------|     - (2q+pq)  | --------|   |
+          2 ( q - p )  \           \   rc   /                 \   rc   /   /       
+
+ ==================================================================================================
+ */
     for ( int it=0;it<ntype; it++) {
         for ( int jt=0; jt<ntype; jt++) {
             // symmetric pot
@@ -199,7 +197,7 @@ void init_nmlj(char* controlfn){
                 sigmalj[jt][it]=sigmalj[it][jt];
                 epslj[jt][it]=epslj[it][jt];
             }
-            rcut3=rcutsq*rcut;
+            srcut3=srcutsq*cutshortrange;
             pp=plj[it][jt];qq=qlj[it][jt];
             pp3=pp-3.0; qq3=qq-3.0;
             
@@ -219,21 +217,21 @@ void init_nmlj(char* controlfn){
             // p*q
             epsppqq=epsqp[it][jt];
             ppqq = pp * qq;
-            sr2=sigsq[it][jt]/rcutsq;
+            sr2=sigsq[it][jt]/srcutsq;
             sr=sqrt(sr2);
             srp=pow(sr,pp);
             srq=pow(sr,qq);
             //trunctype = 1
             uc[it][jt]=epsppqq*(pp*srq-qq*srp);
             //trunctype = 2 
-            c1[it][jt]=epsppqq*ppqq/(2.0*rcutsq) * (srq-srp);
+            c1[it][jt]=epsppqq*ppqq/(2.0*srcutsq) * (srq-srp);
             c2[it][jt]=0.5*epsppqq*((2.0*pp+ppqq)*srq-
                                  (2.0*qq+ppqq)*srp);
             // tail energy
             ut=epsppqq*(pp*srq/qq3 - qq*srp/pp3);
             pt=ppqq*epsppqq*(srq/qq3 -srp/pp3);
-            ut*=rcut3*TPI;
-            pt*=rcut3*TPI;
+            ut*=srcut3*TPI;
+            pt*=srcut3*TPI;
             if ( (nionit[it] != 0) && (nionit[jt] != 0) ) {
                 utail+=ut*nionit[it]*nionit[jt]*simuCell.inveOmega;
                 ptail+=pt*nionit[it]*nionit[jt]*simuCell.inveOmega;
@@ -257,13 +255,10 @@ void engforce_nmlj_pbc(double *u, double *pvir, double tau[3][3])
 
     int p1,p2;
     double uu =0.0;
-    double pvv =0.0;
+//    double pvv =0.0;
     double ttau[3][3];
     int ia,j1,ja,jb,je;
 
-    for(int ia=0;ia<nion;ia++){
-        fx[ia]=0.0;fy[ia]=0.0;fz[ia]=0.0;
-    }
     for (int i=0;i<3;i++){
         for(int j=i;j<3;j++){
             ttau[i][j]=0.0;
@@ -274,12 +269,14 @@ void engforce_nmlj_pbc(double *u, double *pvir, double tau[3][3])
      ***************************************/
     kardir ( nion , rx , ry , rz , simuCell.B ) ;
 
+#ifdef DEBUG_NMLJ 
     int counttest=0;
+#endif
 
-    #pragma omp parallel shared(rcutsq,rx,ry,rz,vx,vy,vz,fx,fy,fz,sigsq,ptwo,qtwo,typia,epsqp,plj,qlj,uc) \
+    #pragma omp parallel shared(srcutsq,rx,ry,rz,vx,vy,vz,fx,fy,fz,sigsq,ptwo,qtwo,typia,epsqp,plj,qlj,uc) \
                          private(ia,j1,jb,je,ja,rxi,ryi,rzi,rxij,ryij,rzij,rijsq,p1,p2,sr2,srp,srq,wij,fxij,fyij,fzij) 
     {
-        #pragma omp for reduction (+:uu,pvv,ttau,fx[:nion],fy[:nion],fz[:nion]) schedule(dynamic,16) 
+        #pragma omp for reduction (+:uu,ttau,fx[:nion],fy[:nion],fz[:nion]) schedule(dynamic,16) 
         for(ia=atomDec.iaStart;ia<atomDec.iaEnd;ia++) {
             rxi = rx[ia];
             ryi = ry[ia];
@@ -288,7 +285,7 @@ void engforce_nmlj_pbc(double *u, double *pvir, double tau[3][3])
                 jb=verlet_nb->point[ia];
                 je=verlet_nb->point[ia+1];
             }
-            else{
+            else {
                 jb = 0;
                 je = nion;
             }
@@ -310,7 +307,7 @@ void engforce_nmlj_pbc(double *u, double *pvir, double tau[3][3])
                     rzij = rzi - rz[ja];
                     pbc(&rxij,&ryij,&rzij);
                     rijsq = rxij * rxij + ryij * ryij + rzij * rzij;
-                    if ( rijsq < rcutsq ) {
+                    if ( rijsq < srcutsq ) {
                         p1 = typia[ia];
                         p2 = typia[ja];
                         sr2 = sigsq[p1][p2] / rijsq;
@@ -322,7 +319,7 @@ void engforce_nmlj_pbc(double *u, double *pvir, double tau[3][3])
                         fyij = wij * ryij;
                         fzij = wij * rzij;
                         // Pvirial;
-                        pvv += wij * rijsq;
+                        //pvv += wij * rijsq;
                         // forces
            	        fx[ia] +=  fxij;
                         fy[ia] +=  fyij;
@@ -347,11 +344,14 @@ void engforce_nmlj_pbc(double *u, double *pvir, double tau[3][3])
     ttau[2][1]=ttau[1][2];
     for (int i=0;i<3;i++){
         for(int j=0;j<3;j++){
-            tau[i][j]=ttau[i][j]*simuCell.inveOmegaU;
+            tau[i][j]=ttau[i][j]*simuCell.inveOmegaPU;
         }
     }
     *u=uu;
-    *pvir=pvv * onethird * simuCell.inveOmega;
+    *pvir=0.0;
+    for (int i=0;i<3;i++){
+        *pvir += tau[i][i] * onethird;
+    }
 #ifdef MPI 
     statime(8);
     MPI_Allreduce_sumDouble(u,1);
