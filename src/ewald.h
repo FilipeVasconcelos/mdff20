@@ -13,7 +13,7 @@ double  *thetaia;  /* quadrupole at ion */
 /* ****************************************************************************/
 void set_autoES();
 
-void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, 
+void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, double *pvir, double tau[3][3],
                   double (*ef)[3], double (*efg)[3][3]);
 
 void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
