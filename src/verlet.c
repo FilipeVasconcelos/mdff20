@@ -104,8 +104,10 @@ void gen_pbc_verletlist(){
     verlet_nb->point[atomDec.iaEnd]=icount_nb;
     verlet_coul->point[atomDec.iaEnd]=icount_coul;
 #ifdef DEBUG
-    for(int k=0;k<10;k++){printf("verlet list %d %d\n",k,verlet_nb->list[k]); }
-    for(int k=0;k<10;k++) {printf("verlet point %d %d\n",k,verlet_nb->point[k]); }
+    for(int k=0;k<nion;k++) {printf("verlet list  NB  %d %d\n",k,verlet_nb->list[k]); }
+    for(int k=0;k<nion;k++) {printf("verlet point NB  %d %d\n",k,verlet_nb->point[k]); }
+    for(int k=0;k<nion;k++) {printf("verlet list  COUL%d %d\n",k,verlet_coul->list[k]); }
+    for(int k=0;k<nion;k++) {printf("verlet point COUL%d %d\n",k,verlet_coul->point[k]); }
 #endif
 }
 /*******************************************************************************/
