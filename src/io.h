@@ -3,9 +3,9 @@
 #include <stdbool.h>
 #include "color_mdff.h"
 #include "constants.h"
-#define SEPARATOR  for(int i=0;i<61;i++) putchar('=');putchar('\n') 
-#define LSEPARATOR for(int i=0;i<61;i++) putchar('-');putchar('\n') 
-#define BSEPARATOR for(int i=0;i<105;i++) putchar('-');putchar('\n') 
+#define SEPARATOR  for(int i=0;i<61;i++)  putchar('=');putchar('\n')
+#define LSEPARATOR for(int i=0;i<61;i++)  putchar('-');putchar('\n')
+#define BSEPARATOR for(int i=0;i<105;i++) putchar('-');putchar('\n')
 #define BLANKLINE  putchar('\n');
 #define BSEPF(X) for(int i=0;i<105;i++) fprintf(X,"-");fprintf(X,"\n")
 #define io_node if ( ionode ) 
