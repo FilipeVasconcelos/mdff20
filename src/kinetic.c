@@ -84,7 +84,7 @@ double calc_temp(double kin) {
 void rescale_velocities(int quiet)
 {
     double sx=0.0; double sy=0.0; double sz=0.0;
-    double l = 3.0 * ((double) nion);
+    //double l = 3.0 * ((double) nion);
     double ekin = calc_kin();
     double T    = calc_temp(ekin);
 
