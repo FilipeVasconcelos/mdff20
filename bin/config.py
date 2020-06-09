@@ -7,7 +7,7 @@ import random
 
 from ion import Ion
 from lattice import Lattice
-from constants import float1,float3,posff 
+from constants import float1,float3,posff,poscar
 from vesta import vesta_definitions
 # =====================================================================================
 class Config(Lattice):
@@ -261,6 +261,25 @@ class Config(Lattice):
                                         self.ions[ia].r[1],\
                                         self.ions[ia].r[2]))
         f.close()
+    # =====================================================================================
+    def write_POSCAR(self,filename):
+
+        f = open(filename,'w+')
+        f.write(self.system+'\n')
+        f.write(str(self.coeff)+'\n')
+        self.print_direct_basis(f) # standard output filename = None
+        for k in range(self.ntype-1):
+            f.write(str(self.types[k])+" ")
+        f.write(str(self.types[-1])+"\n")
+        for k in range(self.ntype-1):
+            f.write(str(self.natmpertype[k])+" ")
+        f.write(str(self.natmpertype[-1])+"\n")
+        f.write(self.coord_format+'\n')
+        for ia in range(self.nion):
+            f.write(poscar.format(self.ions[ia].r[0],\
+                                  self.ions[ia].r[1],\
+                                  self.ions[ia].r[2],str(self.ions[ia].type)))
+	f.close()
     # =====================================================================================
     def write_TRAJFF(self,filename,option):
     
