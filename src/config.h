@@ -22,6 +22,13 @@ char*        atypit[NTYPEMAX]; /* string type */
 double          qit[NTYPEMAX]; /* charge type */
 double     dipit[NTYPEMAX][3]; /* dipole type */
 double quadit[NTYPEMAX][3][3]; /* quadrupole type */
+double poldip[NTYPEMAX][3][3]; /* dipole polarizability tensor if ldip_polar( it ) = .true.*/
+
+/* dipole damping */
+//bool         lpoldamping[NTYPEMAX][NTYPEMAX][NTYPEMAX];
+/*
+  lpoldamping[i][j][k] for type i and interaction bewteen type j and k
+ */ 
 
 
 /* ****************************************************************************/

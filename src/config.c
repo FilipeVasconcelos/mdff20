@@ -83,10 +83,18 @@ void free_config(){
         free(atypia[ia]);
     }
     free(atypia);
-    free(rx);free(ry);free(rz);
-    free(vx);free(vy);free(vz);
-    free(fx);free(fy);free(fz);
-    free(rxs);free(rys);free(rzs);
+    free(rx);
+    free(ry);
+    free(rz);
+    free(vx);
+    free(vy);
+    free(vz);
+    free(fx);
+    free(fy);
+    free(fz);
+    free(rxs);
+    free(rys);
+    free(rzs);
     if (lverletL) free_verletlist("vnlnb");
 
 }
@@ -235,7 +243,7 @@ int write_config(){
     FILE * fp;
     fp = fopen ("CONTFF", "w");
     if (NULL == fp) {
-        perror("opening input file");
+        pError("opening CONTFF file");
         return -1;
     }
     fprintf(fp,"%d\n",nion); 
@@ -264,8 +272,10 @@ int write_config(){
         fprintf(fp,"\n");
     }
     fclose(fp);
+    free(xxx);
+    free(yyy);
+    free(zzz);
     return 0;
-    free(xxx);free(yyy);free(zzz);
 }
 /*-----------------------------------------------------------------------------*/
 int read_config()
