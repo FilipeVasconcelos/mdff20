@@ -37,7 +37,7 @@ void lattice(CELL * Cell)
             Cell->B[2][0]*Cell->A[2][0];
     Cell->Omega=omega;
     Cell->inveOmega=1.0/omega;
-    Cell->inveOmegaU=1.0/(omega*press_unit);
+    Cell->inveOmegaPU=1.0/(omega*press_unit);
 
     // shortest distance between opposite faces                                                                          
     for(int i=0;i<3;i++){
