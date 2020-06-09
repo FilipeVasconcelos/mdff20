@@ -15,7 +15,7 @@ CC=gcc
 $(info CC  $(shell which $(CC) ))
 
 #CFLAGS=-O3 -msse4 -mavx2 -Wall -ffast-math -fopenmp
-CFLAGS=-O0 -msse4 -mavx2 -ffast-math -fopenmp -Ofast -ggdb3 -Wall
+CFLAGS=-O2 -msse4 -mavx2 -ffast-math -fopenmp -Ofast
 CFLAGS+=-I/usr/lib/gcc/x86_64-linux-gnu/6.3.0/include/
 $(info CFLAGS   $(CFLAGS))
 LDFLAGS = -lm -fopenmp # bibliotheque math 
