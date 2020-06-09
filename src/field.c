@@ -2,11 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "global.h"
 #include "constants.h"
 #include "config.h"
 #include "thermo.h"
 #include "field.h"
+#include "nonbonded.h"
 #include "nmlj.h"
+#include "bhmftd.h"
 #include "ewald.h"
 #include "cell.h"
 #include "timing.h"
@@ -18,19 +21,28 @@
 /******************************************************************************/
 int read_field(char* controlfn)
 {
-    int kqch,kdip,kqua;
+    int kqch,kdip,kqua,kmass;
     kqch=0;
     kdip=0;
     kqua=0;
+    kmass=0;
 
     char buffer[MAX_LEN+1];
     FILE * fp;
     fp = fopen (controlfn, "r");
     if (NULL == fp )  {
-        perror("opening database file");
+        pError("opening control file");
         return (-1);
     }
     while (EOF != fscanf(fp, "%s\n", buffer)) { 
+        if (strcmp(buffer,"lbhmft") == 0 ) {
+            fscanf(fp,"%s",buffer);
+            lbhmft=check_boolstring("lbhmft",buffer); 
+        } 
+        if (strcmp(buffer,"lbhmftd") == 0 ) {
+            fscanf(fp,"%s",buffer);
+            lbhmftd=check_boolstring("lbhmftd",buffer); 
+        } 
         if (strcmp(buffer,"lnmlj") == 0 ) {
             fscanf(fp,"%s",buffer);
             lnmlj=check_boolstring("lnmlj",buffer); 
@@ -41,9 +53,8 @@ int read_field(char* controlfn)
         } 
         // mass of type
         if (strcmp(buffer,"massit") == 0 ) {
-            for(int it=0;it<ntype;it++){
-                fscanf(fp,"%lf",&massit[it]);
-            }
+            fscanf(fp,"%lf",&massit[kmass]);
+            kmass+=1;
         } 
         // charges on type
         if (strcmp(buffer,"qit") == 0 ) {
@@ -84,6 +95,11 @@ int read_field(char* controlfn)
         } 
 
     }
+    if ( (kmass != ntype) && (kmass !=0) ) {
+        pError("massit not found\n");
+        printf("kmass %d != ntype %d\n",kmass,ntype);
+        exit(-1);
+    } 
     if ( (kqch != ntype) && (kqch !=0) ) {
         pError("qit not found\n");
         printf("kdip %d != ntype %d\n",kqch,ntype);
@@ -115,7 +131,7 @@ void info_field(){
     rho = totalMass * simuCell.inveOmega;
 
     lqch = false; ldip= false; lqua = false;
-    for(int it; it< ntype ; it++){
+    for(int it=0; it< ntype ; it++){
         if (qit[it] != 0.0 ) lqch = true;
         for (int j=0;j<3;j++){
             if (dipit[it][j] != 0.0 ) ldip = true;
@@ -136,7 +152,7 @@ void info_field(){
         LSEPARATOR;
         printf("mass of types :\n");
         for(int it=0;it<ntype;it++){
-            printf("%d %s                   = %.5f\n",it,atypit[it],massit[it]);
+            printf("m_%-2s                  = %.5f a.m\n",atypit[it],massit[it]);
         }
         LSEPARATOR;
         printf("total mass            = %.5f a.m     \n",totalMass);               
@@ -147,7 +163,7 @@ void info_field(){
             printf("point charges :\n");
             printf("--------------\n");
             for (int it=0;it<ntype;it++) {
-                printf("q_%s                  = %8.5f \n",atypit[it],qit[it]);
+                printf("q_%-2s                  = %8.5f \n",atypit[it],qit[it]);
             }
             putchar('\n');
         }
@@ -181,39 +197,56 @@ void info_field(){
     }
 }
 
+
 /******************************************************************************/
 void init_field(char* controlfn){
     
     read_field(controlfn);
 
-    if (lnmlj) {
-        lnonbonded=true;
-    }
     info_field();
-    if (lnmlj) init_nmlj(controlfn);
-    if (lautoES) set_autoES();
-    if (lcoulombic) init_coulombic();
+
+    /* NON BONDED POTENTIAL */
+    if ( (lnmlj) || (lbhmft) || (lbhmftd) ) {
+        srcutsq=cutshortrange*cutshortrange;
+        lnonbonded=true;
+        init_nonbonded(controlfn);
+        if (lnmlj) init_nmlj(controlfn);
+        if ( (lbhmft) || (lbhmftd) ) init_bhmftd(controlfn);
+    }
+    /* ELECTROSTATIC POTENTIAL */
+    if (lcoulombic) {
+        lrcutsq=cutlongrange*cutlongrange;
+        if (lautoES) set_autoES();
+        init_coulombic();
+    }
 }
 
 /******************************************************************************/
 void engforce()
 {
+    for(int ia=0;ia<nion;ia++){
+        fx[ia]=0.0;fy[ia]=0.0;fz[ia]=0.0;
+    }
     statime(2);
     if (lnmlj) {
-//        printf("here NMLJ\n");
         engforce_nmlj_pbc(&u_lj,&pvir_lj,tau_lj);
     }
     statime(15);
     mestime(&engforce_nmljCPUtime,15,2);
+    if ( (lbhmft) || (lbhmftd) ) {
+        engforce_bhmftd_pbc(&u_bhmftd,&pvir_bhmftd,tau_bhmftd);
+    }
+    statime(15);
+    mestime(&engforce_bhmftdCPUtime,15,2);
 
     if (lcoulombic) {
         double (*ef)[3];
         double (*efg)[3][3];
         ef=malloc(nion*sizeof(*ef));
         efg=malloc(nion*sizeof(*efg));
-
-//        printf("here ES\n");
-        multipole_ES(qia,dipia,quadia,&u_coul,ef,efg);
+        multipole_ES(qia,dipia,quadia,&u_coul,&pvir_coul,tau_coul,ef,efg);
+        free(ef);
+        free(efg);
     }
     statime(3);
     mestime(&engforceCPUtime,3,2);
