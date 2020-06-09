@@ -12,6 +12,7 @@
 // 16 -> 17 coulomb
 // 18 -> 19 ewald dir
 // 19 -> 20 ewald rec
+// 15 -> 21 bhmftd
 #include <time.h>
 #if defined(MPI) || defined(OMP)
 double ttt[MAX_INDEX_TIME]; /* ttt[0] reference time */
@@ -21,6 +22,7 @@ clock_t ttt[MAX_INDEX_TIME]; /* ttt[0] reference time */
 double mdstepCPUtime;
 double engforceCPUtime;
 double engforce_nmljCPUtime;
+double engforce_bhmftdCPUtime;
 double engforce_coulCPUtime;
 double ewaldDirCPUtime;
 double ewaldRecCPUtime;

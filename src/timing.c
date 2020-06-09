@@ -51,7 +51,9 @@ void info_timing(){
         LSEPARATOR;
         writimewhole("MD",mdstepCPUtime);
         writimewhole("Engforce",engforceCPUtime);
-        if (lnmlj) writimewhole("  -> nmlj",engforce_nmljCPUtime);
+        if (lnmlj)   writimewhole("  -> nmlj",engforce_nmljCPUtime);
+        if (lbhmft)  writimewhole("  -> bhmft",engforce_bhmftdCPUtime);
+        if (lbhmftd) writimewhole("  -> bhmftd",engforce_bhmftdCPUtime);
         if (lcoulombic) {
             writimewhole("  -> coul",engforce_coulCPUtime);
             writimewhole("      -> ewald dir",ewaldDirCPUtime);
