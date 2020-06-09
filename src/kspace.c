@@ -7,10 +7,10 @@
 #include "cell.h"
 #include "tools.h"
 
+/******************************************************************************/
 void init_kspace(){
 
     int nk; /* number k points */
-
     strcpy(kcoul.meshlabel,"kpt-coul");
     for(int k=0;k<3;k++){
         kcoul.kmax[k]=kES[k];
@@ -18,42 +18,33 @@ void init_kspace(){
     nk = kcoul.kmax[2] + kcoul.kmax[1] * (2*kcoul.kmax[2]+1) + kcoul.kmax[0] * (2*kcoul.kmax[1]+1) * (2*kcoul.kmax[2]+1);
     kcoul.nk = nk;
     printf("number of k-point %d\n",nk);
-
     kcoul.kx=malloc(nk*sizeof(*kcoul.kx));
     kcoul.ky=malloc(nk*sizeof(*kcoul.ky));
     kcoul.kz=malloc(nk*sizeof(*kcoul.kz));
     kcoul.kk=malloc(nk*sizeof(*kcoul.kk));
     kcoul.Ak=malloc(nk*sizeof(*kcoul.Ak));
     kcoul.kcoe=malloc(nk*sizeof(*kcoul.kcoe));
-
     set_param_kmesh(&kcoul,alphaES);
-    /* debug 
-    printf("before sorting\n");
-    for (int ik=0;ik<nk;ik++){
-        printf("%d %f\n",ik,kcoul.kk[ik]);
-    }
-    */
     reorder_kmesh(&kcoul);
-
-    /* debug
-    printf("after sorting\n");
-    for (int ik=0;ik<nk;ik++){
-        printf("%d %f\n",ik,kcoul.kk[ik]);
-    }
-    exit(-1);
-    */
-
 }
 
+/******************************************************************************/
+void free_kspace(){
+    free(kcoul.kx);
+    free(kcoul.ky);
+    free(kcoul.kz);
+    free(kcoul.kk);
+    free(kcoul.Ak);
+    free(kcoul.kcoe);
+}
 
+/******************************************************************************/
 void set_param_kmesh(KMESH *km,double alpha){
 
     int nk;
     int nymin,nzmin;
     double kk,kx,ky,kz;
     double alpha2=alpha*alpha;
-
-    printf("(top)inside set_param_kmesh %f\n",km->kk[10]);
     nk=0;
     for (int nx=0;nx<km->kmax[0]+1;nx++){
         if (nx == 0) {
@@ -80,19 +71,16 @@ void set_param_kmesh(KMESH *km,double alpha){
                 km->kz[nk]=kz;
                 km->kk[nk]=kk;
                 km->Ak[nk]= exp(-kk*0.25/alpha2)/kk;
-    //            printf("%d test Ak %e\n",nk,km->Ak[nk]);
                 km->kcoe[nk]= 2.0 * ( 1.0 / kk + 1.0 / alpha2 / 4.0 );
                 nk = nk + 1;
             }
-
         }
     }
-    printf("(bottom)inside set_param_kmesh %f\n",km->kk[10]);
     km->nk=nk;
-
 }
 
 
+/******************************************************************************/
 void reorder_kmesh(KMESH *km){
 
     int *index;
@@ -110,7 +98,7 @@ void reorder_kmesh(KMESH *km){
     index=malloc(nk*sizeof(*index));
     mainsort(km->kk, nk, index);
 
-    /* save befor sort */
+    /* save before sort */
     for (int ik=0;ik<nk;ik++){
         tkx[ik]=km->kx[ik];
         tky[ik]=km->ky[ik];
