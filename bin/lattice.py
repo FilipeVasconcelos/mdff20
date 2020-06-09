@@ -66,16 +66,16 @@ class Lattice(object):
         strout1=["a     =","b     =","c     ="]
         strout2=["alpha =","beta  =","gamma ="]
         for i in range(3):
-            if filename :
-                print(strout1[i]+float1.format(self.lattice_lengths[i]),file=open(filename,"w"),end=" ")
-                print(strout2[i]+float1.format(self.lattice_angles[i]),file=open(filename,"w"))
+            if f :
+                f.write(strout1[i]+float1.format(self.lattice_lengths[i]))
+                f.write(strout2[i]+float1.format(self.lattice_angles[i]))
             else:
-                print(strout1[i]+float1.format(self.lattice_lengths[i]),end=" ")
+                print(strout1[i]+float1.format(self.lattice_lengths[i]))
                 print(strout2[i]+float1.format(self.lattice_angles[i]))
 
-    def print_volume(self, filename):
-        if filename :
-            print("volume = "+float1.format(self.volume),file=open(filename,'w'))
+    def print_volume(self, f):
+        if f :
+            f.write("volume = "+float1.format(self.volume))
         else:
             print("volume = "+float1.format(self.volume))
             

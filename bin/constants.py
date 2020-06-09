@@ -5,6 +5,7 @@ sep=30*'-'
 float1       = '{0:16.12f} '
 float3       = '{0[0]:>16.12f} {0[1]:>16.12f} {0[2]:>16.12f}'
 posff        = '{0:2s} {1:16.12f} {2:16.12f} {3:16.12f}\n'
+poscar       = '{0:16.12f} {1:16.12f} {2:16.12f} {3:2s}\n'
 float_format_config = '%20.9f'
 
 piroot       = np.sqrt(np.pi) 
