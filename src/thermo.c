@@ -1,5 +1,6 @@
-#include "stdio.h"
+#include <stdio.h>
 #include "io.h"
+#include "global.h"
 #include "constants.h"
 #include "thermo.h"
 #include "md.h"
@@ -10,27 +11,28 @@
 /******************************************************************************/
 void info_thermo(int key, FILE* fp){
 
-    double iso=0.0;
+    double iso;
     double l = 3.0 * ((double) nion);
     double temp_r= ( 2.0 *e_kin ) / ( l * boltz_unit );
     double time = ( (double) istep ) * dt / time_unit;
     double acell=simuCell.Anorm[0];
     double bcell=simuCell.Anorm[1];
     double ccell=simuCell.Anorm[2];
-    double e_tot=u_lj+e_kin;
-    double h_tot = e_tot + e_nvt;
-    double pvir_vdw=pvir_lj;
-    double pressure=(pvir_lj + temp_r * boltz_unit * simuCell.inveOmega )/press_unit;
-    double u_vdw=u_lj;
+    double u_vdw=u_lj+u_bhmftd;
     double u_tot=u_vdw+u_coul;
+    double e_tot=u_tot+e_kin;
+    double h_tot = e_tot + e_nvt;
+    double pvir_vdw = pvir_lj + pvir_bhmftd;
+    double pvir_tot = pvir_vdw + pvir_coul;
+    double pressure=(pvir_tot + temp_r * boltz_unit * simuCell.inveOmegaPU );
     double tau_vdw[3][3];
+    double tau_tot[3][3];
     for (int i=0;i<3;i++){
         for (int j=0;j<3;j++){
-            tau_vdw[i][j]=tau_lj[i][j]; /* + other nonbonded contributions */
+            tau_vdw[i][j] = tau_lj[i][j] + tau_bhmftd[i][j];
+            tau_tot[i][j] = tau_vdw[i][j] + tau_coul[i][j];
         }
     }
-
-
     if ( key == 0 ) { /* stdout */
         if (ionode) {
             printf("\n");
@@ -54,10 +56,11 @@ void info_thermo(int key, FILE* fp){
             printf("  Etot                  = "EE"\n"            ,e_tot);
             printf("  Htot                  = "EE"\n"            ,h_tot);
             printf("\n");
-            if (lnonbonded) {
+            if ( (lnonbonded) && (lcoulombic) && (lpstress) ) {
                 printf("  ---------------------------------------------\n" );
-                printf("  non_bonded stress tensor :\n"                    );
+                printf("  non_bonded stress tensor :                   \n" );
                 printf("  ---------------------------------------------\n" );
+                iso=0.0;
                 for (int i=0;i<3;i++){
                     printf("  "ee3"\n",tau_vdw[i][0],tau_vdw[i][1],tau_vdw[i][2]);
                         iso+=tau_vdw[i][i];
@@ -65,11 +68,10 @@ void info_thermo(int key, FILE* fp){
                 printf("  ---------------------------------------------\n" );
                 printf("  iso = "ee "("ee")\n",iso*onethird,iso*onethirdnion);
                 putchar('\n');
-            }
-            if (lcoulombic) {
                 printf("  ---------------------------------------------\n" );
-                printf("  electrostatic stress tensor :\n"                    );
+                printf("  electrostatic stress tensor :                \n" );
                 printf("  ---------------------------------------------\n" );
+                iso=0.0;
                 for (int i=0;i<3;i++){
                     printf("  "ee3"\n",tau_coul[i][0],tau_coul[i][1],tau_coul[i][2]);
                         iso+=tau_coul[i][i];
@@ -77,7 +79,32 @@ void info_thermo(int key, FILE* fp){
                 printf("  ---------------------------------------------\n" );
                 printf("  iso = "ee "("ee")\n",iso*onethird,iso*onethirdnion);
                 putchar('\n');
+                printf("  ---------------------------------------------\n" );
+                printf("  total stress tensor :                \n" );
+                printf("  ---------------------------------------------\n" );
+                iso=0.0;
+                for (int i=0;i<3;i++){
+                    printf("  "ee3"\n",tau_tot[i][0],tau_tot[i][1],tau_tot[i][2]);
+                    iso+=tau_tot[i][i];
+                }
+                printf("  ---------------------------------------------\n" );
+                printf("  iso = "ee "("ee")\n",iso*onethird,iso*onethirdnion);
+                putchar('\n');
             }
+            else {
+                printf("  ---------------------------------------------\n" );
+                printf("  total stress tensor :                \n" );
+                printf("  ---------------------------------------------\n" );
+                iso=0.0;
+                for (int i=0;i<3;i++){
+                    printf("  "ee3"\n",tau_tot[i][0],tau_tot[i][1],tau_tot[i][2]);
+                    iso+=tau_tot[i][i];
+                }
+                printf("  ---------------------------------------------\n" );
+                printf("  iso = "ee "("ee")\n",iso*onethird,iso*onethirdnion);
+                putchar('\n');
+            }
+
         }
     }
     else if (key==1) { /* OSZIFF */
