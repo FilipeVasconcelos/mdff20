@@ -92,7 +92,6 @@ int main(int argc, char *argv[])
         run_md();
     }
     else {
-        double tempi;
         e_kin=calc_kin();
         io_node printf("static properties\n");
         /* energie, force and pressure */
