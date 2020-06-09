@@ -12,14 +12,14 @@
 /******************************************************************************/
 int read_global(char* controlfn)
 {
-   char buffer[MAX_LEN+1];
-   FILE * fp;
-   fp = fopen (controlfn, "r");
-   if (NULL == fp )  {
-       perror("opening database file");
-       return (-1);
-   }
-   while (EOF != fscanf(fp, "%s\n", buffer)) { 
+    char buffer[MAX_LEN+1];
+    FILE * fp;
+    fp = fopen (controlfn, "r");
+    if (NULL == fp ) {
+        pError("opening control file");
+        return (-1);
+    }
+    while (EOF != fscanf(fp, "%s\n", buffer)) { 
         if (strcmp(buffer,"lverletL") == 0 ) {
             fscanf(fp,"%s",buffer);
             lverletL=check_boolstring("lverletL",buffer); 
@@ -28,6 +28,10 @@ int read_global(char* controlfn)
             fscanf(fp,"%s",buffer);
             lstatic=check_boolstring("lstatic",buffer); 
         } 
+        if (strcmp(buffer,"lpstress") == 0 ) {
+            fscanf(fp,"%s",buffer);
+            lpstress=check_boolstring("lpstress",buffer); 
+        } 
         if (strcmp(buffer,"cutshortrange") == 0 ) {
             fscanf(fp,"%lf",&cutshortrange);
         } 
@@ -35,7 +39,8 @@ int read_global(char* controlfn)
             fscanf(fp,"%lf",&cutlongrange);
         } 
         if (strcmp(buffer,"Fposff") == 0 ) {
-            fscanf(fp,"%d",&Fposff);
+            fscanf(fp,"%s",buffer);
+            Fposff=check_string("Fposff",buffer,allwd_Fposff,ALLWD_FORMAT_POSFF_STR);
         } 
         if (strcmp(buffer,"skindiff") == 0 ) {
             fscanf(fp,"%lf",&skindiff);
@@ -44,13 +49,14 @@ int read_global(char* controlfn)
             fscanf(fp,"%s",buffer);
             lreduced=check_boolstring("lreduced",buffer); 
         } 
-   }
-   fclose(fp);
-   return(0);
+    }
+    fclose(fp);
+    return(0);
 }
 
 /******************************************************************************/
 void info_global(){
+
     if (ionode){
         SEPARATOR;
         printf("global info\n");
@@ -64,11 +70,29 @@ void info_global(){
 }
 
 /******************************************************************************/
+void default_global(){
+    /* gen allowed input strings for integrator */
+    strcpy(allwd_Fposff[0],"rnn"); /* only positions */
+    strcpy(allwd_Fposff[1],"rvn"); /* positions + velocities */
+    strcpy(allwd_Fposff[2],"rvf"); /* positions + velocities + forces */
+    lverletL=true;
+    skindiff=0.15;
+    lstatic=false;
+    lpstress=false;
+    Fposff=2;
+}
+
+/******************************************************************************/
+void check_global(){
+    if (lreduced) reduced_units(); 
+}
+
+/******************************************************************************/
 void init_global(char* controlfn){
     /* default values */
-    skindiff=0.15;
+    default_global();
     read_global(controlfn);
-    if (lreduced) reduced_units(); 
+    check_global();
     info_global();
 }
 
