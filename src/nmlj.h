@@ -1,8 +1,6 @@
 #ifndef NMLJ_H
 #define NMLJ_H
 #define NTYPEMAX 16
-#include <stdbool.h>
-bool   lsymmetric                   ;
 /* -------------------------------*/
 // from input 
 double qlj     [NTYPEMAX][NTYPEMAX] ;
@@ -21,13 +19,12 @@ double uc      [NTYPEMAX][NTYPEMAX] ;
 double c1      [NTYPEMAX][NTYPEMAX] ;
 double c2      [NTYPEMAX][NTYPEMAX] ;
 // global 
-double rcutsq                       ; /* cutshortrange^2 */
 int  trunctype                      ;  
 double utail                        ; /* long range correction to energy   */
 double ptail                        ; /* long range correction to pressure */
 
 /* function prototypes */
-void init_nmlj()                    ;
+void init_nmlj(char * controlfn)                    ;
 void info_nmlj()                    ;
 void engforce_nmlj_pbc(double *u, double *pvir, double tau[3][3])            ;
 #endif
