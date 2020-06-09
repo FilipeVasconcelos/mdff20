@@ -191,7 +191,8 @@ void chain_nhcn ( double *kin , double vxi[nhc_n] , double xi[nhc_n] , double Q[
 
     switch ( nhc_yosh_order ) {
         default : 
-            io_node printf("value of yoshida order not available");
+            io_node pError("value of yoshida order not available\n");
+            exit(-1);
             break;
         case 1:
             yosh_w[0]=1.0;
@@ -238,7 +239,7 @@ void chain_nhcn ( double *kin , double vxi[nhc_n] , double xi[nhc_n] , double Q[
             vxi[nhc_n-1] += G[nhc_n-1] * dts4;
             for (int inh=nhc_n-2;inh>-1;inh--){
                 //scale thermo momentum
-                vxi[inh] *= exp ( -vxi [inh+1] * dts8 / Q [inh+1] );
+                vxi[inh] *= exp (-vxi[inh+1] * dts8 / Q [inh+1] );
                 //propagate thermo momentum
                 vxi[inh] += G[inh]*dts4;
                 //scale thermo momentum
@@ -254,7 +255,7 @@ void chain_nhcn ( double *kin , double vxi[nhc_n] , double xi[nhc_n] , double Q[
             G[0] = 2.0*(*kin)*s*s - L * temp;
             for (int inh=0;inh<nhc_n-2;inh++){
                 //scale thermo momentum
-                vxi[inh] *= exp ( -vxi [inh+1] * dts8 / Q [inh+1] );
+                vxi[inh] *= exp(-vxi[inh+1] * dts8 / Q [inh+1] );
                 //propagate thermo momentum
                 vxi[inh] += G[inh]*dts4;
                 //scale thermo momentum
