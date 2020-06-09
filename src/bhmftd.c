@@ -86,6 +86,22 @@ void init_bhmftd(char* controlfn) {
     //default_bhmftd();
     /* read parameters */
     read_bhmftd(controlfn);
+
+    for ( int it=0;it<ntype; it++) {
+        for ( int jt=0; jt<ntype; jt++) {
+            // symmetric pot
+            if (jt>=it){
+                Abhmftd[jt][it] =Abhmftd[it][jt];
+                Bbhmftd[jt][it] =Bbhmftd[it][jt];
+                Cbhmftd[jt][it] =Cbhmftd[it][jt];
+                Dbhmftd[jt][it] =Dbhmftd[it][jt];
+                BDbhmftd[jt][it]=BDbhmftd[it][jt];
+            }
+        }
+    }
+    
+
+
     info_bhmftd();
 }
 /******************************************************************************/
@@ -150,10 +166,6 @@ void engforce_bhmftd_pbc(double *u, double *pvir, double tau[3][3])
                     rzij = rzi - rz[ja];
                     pbc(&rxij,&ryij,&rzij);
                     rijsq = rxij * rxij + ryij * ryij + rzij * rzij;
-#ifdef DEBUG_BHMFTD
-                    counttest+=1;
-                    io_node printf("in bhmft main loop %d %d %d %d %f %f\n",ia,ja,jb,je,rijsq,srcutsq);
-#endif
 
                     if ( rijsq < srcutsq ) {
                         ir2 = 1.0 / rijsq;
@@ -179,6 +191,10 @@ void engforce_bhmftd_pbc(double *u, double *pvir, double tau[3][3])
                         }
                         ir7 = 6.0 * ir6d / d;
                         ir9 = 8.0 * ir8d / d;
+#ifdef DEBUG_BHMFTD
+                    counttest+=1;
+                    io_node printf("in bhmft main loop %d %d %e %e %e %e\n",ia,ja,uu,erh - ir6d - ir8d,sqrt(rijsq),Abhmftd[p1][p2]);
+#endif
                         uu += erh - ir6d - ir8d;
                         wij  =  Bbhmftd[p1][p2] * erh - ir7 - ir9 + ir6 * fdiff6 + ir8 * fdiff8;
                         wij  = wij / d;
@@ -215,6 +231,7 @@ void engforce_bhmftd_pbc(double *u, double *pvir, double tau[3][3])
     /* Potential energy */
     *u=uu;
     /* Pvirial */
+    *pvir=0.0;
     for (int i=0;i<3;i++){
         *pvir+=tau[i][i]*onethird;
     }
