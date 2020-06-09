@@ -17,6 +17,7 @@ DEC                  kptDec;
 } KMESH;
 
 void init_kspace();
+void free_kspace();
 void set_param_kmesh(KMESH *km,double alpha);
 void reorder_kmesh(KMESH *km);
 #endif
