@@ -21,17 +21,17 @@
 /******************************************************************************/
 int read_md (char * controlfn) 
 {
-   char buffer[MAX_LEN+1];
-   FILE * fp;
+    char buffer[MAX_LEN+1];
+    FILE * fp;
 
-   fp = fopen (controlfn, "r");
+    fp = fopen (controlfn, "r");
 
-   if (NULL == fp ) {
-       perror("opening database file");
-       return (-1);
-   }
+    if (NULL == fp ) {
+        pError("opening control file (reading md) ");
+        return (-1);
+    }
 
-   while (EOF != fscanf(fp, "%s\n", buffer)) {
+    while (EOF != fscanf(fp, "%s\n", buffer)) {
         if (strcmp(buffer,"integrator") == 0 ) {
             fscanf(fp,"%s",buffer);
             egrator=check_string("integrator",buffer,allwd_integrator,ALLWD_INTEGRATOR_STR); 
@@ -50,6 +50,9 @@ int read_md (char * controlfn)
         } 
         if (strcmp(buffer,"fprint") == 0 ) {
             fscanf(fp,"%d",&fprint);
+        } 
+        if (strcmp(buffer,"cprint") == 0 ) {
+            fscanf(fp,"%d",&cprint);
         } 
         if (strcmp(buffer,"nequil") == 0 ) {
             fscanf(fp,"%d",&nequil);
@@ -79,9 +82,8 @@ int read_md (char * controlfn)
    fclose(fp);
    return 0;
 }
-
 /******************************************************************************/
-void init_md(char * controlfn){
+void default_md(){
     /* gen allowed input strings for integrator */
     strcpy(allwd_integrator[0],"nve-lf");
     strcpy(allwd_integrator[1],"nve-vv");
@@ -92,13 +94,10 @@ void init_md(char * controlfn){
     }
     /* gen allowed rescale integrator */
     allwd_rescale_integrator[0]=1; /*nve-vv*/
-
-
-    /* default values */
     egrator=1; /* nve-vv */
-    read_md(controlfn);
-    //printf("integrator%d\n",egrator);
-    //exit(-1);
+}
+/******************************************************************************/
+void check_md(){
     /* tauTberendsen == dt => simple velocity rescale */ 
     if ( (nequil > 0 ) && (tauTberendsen==0.0)) tauTberendsen=dt;
 
@@ -114,8 +113,20 @@ void init_md(char * controlfn){
     for (int i =0;i<ALLWD_RESCALE_INTEGRATOR;i++){
         if ( egrator == allwd_rescale_integrator[i] ) rescale_allowed=true; 
     }
+}
 
+/******************************************************************************/
+void init_md(char * controlfn){
+
+    /* default values */
+    default_md();
+    /* read parameters */
+    read_md(controlfn);
+    /* check parameters */
+    check_md();
+    /* alloc memory */
     alloc_md();
+    /* print information */
     info_md();
 
 }
@@ -186,7 +197,7 @@ void run_md()
     FILE *fpOSZIFF;
     fpOSZIFF = fopen ("OSZIFF", "w");
     if (NULL == fpOSZIFF ) {
-        perror("openning OSZIFF");
+        pError("opening OSZIFF file");
         exit(-1);
     }
 
@@ -229,6 +240,15 @@ void run_md()
         if ( iopnode(istep,npas,fprint) ) {
             info_thermo(1,fpOSZIFF);   /*OSZIFF*/
         }
+
+        /* --------------------------------- */
+        /*          CONTFF info              */
+        /* --------------------------------- */
+        if ( iopnode(istep,npas,cprint) ) {
+            write_config();
+        }
+
+
     }
     /* ----------------------------------------------------*/
     write_config();
