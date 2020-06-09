@@ -1,6 +1,7 @@
 bin/mdff20.x
 bin/POSFF
 bin/__pycache__/
+bin/*.pyc
 
 src/CONTFF
 src/POSFF
@@ -9,3 +10,6 @@ src/control.s
 src/mdff20.x
 src/log
 src/rx
+src/OSZIFF
+
+examples/ex*/
