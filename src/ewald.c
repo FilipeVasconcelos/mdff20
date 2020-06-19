@@ -63,7 +63,7 @@ void alloc_multipole(){
 /******************************************************************************/
 /* Ewald Summation */
 void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, double *pvir, double tau[3][3],
-                             double (*ef)[3], double (*efg)[3][3]){
+                             double (*ef)[3], double (*efg)[3][3], bool lq, bool ld){
 
     double u_dir, u_rec;
     double (*ef_dir)[3], (*ef_rec)[3], (*ef_self)[3];
@@ -97,8 +97,8 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
             }
         }
     }
-//    multipole_ES_dir(q, mu, theta, &u_dir, ef_dir, efg_dir, fx_dir, fy_dir, fz_dir, tau_dir, &lqch, &ldip );
-    multipole_ES_dir(q, mu, theta, &u_dir, ef_dir, efg_dir, fx_dir, fy_dir, fz_dir, tau_dir, true, true );
+    multipole_ES_dir(q, mu, theta, &u_dir, ef_dir, efg_dir, fx_dir, fy_dir, fz_dir, tau_dir, lq, ld );
+//    multipole_ES_dir(q, mu, theta, &u_dir, ef_dir, efg_dir, fx_dir, fy_dir, fz_dir, tau_dir, true, true );
     statime(19);
     mestime(&ewaldDirCPUtime,19,18);
 
@@ -127,8 +127,8 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
         }
     }
 
-    //multipole_ES_rec(q, mu, theta, &u_rec, ef_rec, efg_rec, fx_rec, fy_rec, fz_rec, tau_rec, &lqch, &ldip);
-    multipole_ES_rec(q, mu, theta, &u_rec, ef_rec, efg_rec, fx_rec, fy_rec, fz_rec, tau_rec, true, true);
+    multipole_ES_rec(q, mu, theta, &u_rec, ef_rec, efg_rec, fx_rec, fy_rec, fz_rec, tau_rec, lq, ld);
+//    multipole_ES_rec(q, mu, theta, &u_rec, ef_rec, efg_rec, fx_rec, fy_rec, fz_rec, tau_rec, true, true);
     statime(20);
     mestime(&ewaldRecCPUtime,20,19);
 
@@ -136,11 +136,8 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
     /*                SELF AND SURFACE                           */
     /*************************************************************/
     double alpha2;
-//    double tpi_V,alpha2;
-//    double tpi_3V;
     double qsq,musq,selfa,selfa2;
     double u_self_qq,u_self_dd,u_self;
-//    double u_surf_qq;
     double qt[3];
 
     qsq=0.0;
@@ -153,11 +150,6 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
         qsq  += q[ia]*q[ia];
         musq += mu[ia][0]*mu[ia][0] + mu[ia][1]*mu[ia][1] + mu[ia][2]*mu[ia][2];
     }
-    //tpi_V  = TPI    * simuCell.inveOmega;  // 2pi / V 
-//    tpi_3V = tpi_V  / 3.0;                 // 2pi / 3V
-
-    //u_surf_qq = qt[0]*qt[0] + qt[1]*qt[1] + qt[2]*qt[2]; 
-    //u_surf_qq *= tpi_3V; 
 
     alpha2 = alphaES * alphaES;
     selfa  = alphaES / piroot ;
@@ -186,12 +178,12 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
         /* electric field at ions    */
         /* --------------------------*/
         for (int i=0;i<3;i++){
-            ef[ia][i]=(ef_dir[ia][i]+ef_rec[ia][i]+ef_self[ia][i]) * coul_unit;
+            ef[ia][i]=(ef_dir[ia][i]+ef_rec[ia][i]+ef_self[ia][i]);
         /* ------------------------- */
         /* electric field gradient   */
         /* ------------------------- */
             for (int j=0;j<3;j++){
-                efg[ia][i][j]=(efg_dir[ia][i][j]+efg_rec[ia][i][j]+efg_self[ia][i][j]) * coul_unit;
+                efg[ia][i][j]=(efg_dir[ia][i][j]+efg_rec[ia][i][j]+efg_self[ia][i][j]);
             }
         }
         /* ---------------------------- */
@@ -224,7 +216,7 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
     putchar('\n');
     printf("fx_dir  %f\n",fx_dir[100]);
     printf("fx_rec  %f\n",fx_rec[100]);
-    */
+*/
     free(ef_dir);
     free(ef_rec);
     free(ef_self);
@@ -630,10 +622,11 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
     double rxi,ryi,rzi;
     double fxij,fyij,fzij;
     double qi;
-    double k_dot_r;
+    double k_dot_r,k_dot_mu;
     double ckria,skria;
     double rhonk_R,rhonk_I,str;
     double recarg;
+    double recarg2;
 
     double ttau[3][3];
     for (int i=0;i<3;i++){
@@ -646,7 +639,7 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
     uu=0;
 
     #pragma omp parallel shared(rx,ry,rz) \
-                         private(ik,qi,kx,ky,kz,Ak,kcoe,rxi,ryi,rzi,k_dot_r,rhonk_R,rhonk_I,str,fxij,fyij,fzij,ckria,skria)
+                         private(ik,qi,kx,ky,kz,Ak,kcoe,rxi,ryi,rzi,k_dot_r,k_dot_mu,rhonk_R,rhonk_I,str,fxij,fyij,fzij,ckria,skria)
     { 
         #pragma omp for reduction (+:uu,ttau,fx_rec[:nion],fy_rec[:nion],fz_rec[:nion]) schedule(dynamic,8) 
         for (ik=kcoul.kptDec.iaStart;ik<kcoul.kptDec.iaEnd;ik++){
@@ -670,12 +663,12 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
                 skria  = sin(k_dot_r);
                 rhonk_R  += qi * ckria;
                 rhonk_I  += qi * skria;
-        /*
+        
                 if ( ! ldiptask ) continue;
                 k_dot_mu = ( mu[ia][0] * kx + mu[ia][1] * ky + mu[ia][2] * kz );
                 rhonk_R += -k_dot_mu * skria;
                 rhonk_I +=  k_dot_mu * ckria;
-        */
+        
                 
             } /* sum to get charge density */
 
@@ -697,7 +690,7 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
                 fxij = kx * recarg;
                 fyij = ky * recarg;
                 fzij = kz * recarg;
-   /* 
+    
                 ef_rec[ia][0] += -fxij ;
                 ef_rec[ia][1] += -fyij ;
                 ef_rec[ia][2] += -fzij ;
@@ -709,18 +702,16 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
                 efg_rec[ia][0][1] += kx * ky * recarg2; 
                 efg_rec[ia][0][2] += kx * kz * recarg2; 
                 efg_rec[ia][1][2] += ky * kz * recarg2; 
-    */
+    
     
                 fx_rec[ia] += -qi * fxij;
                 fy_rec[ia] += -qi * fyij;
                 fz_rec[ia] += -qi * fzij;
-    /*
                 if (! ldiptask ) continue ;
                 k_dot_mu = ( mu[ia][0] * kx + mu[ia][1] * ky + mu[ia][2] * kz ) * recarg2;
                 fx_rec[ia] += kx * k_dot_mu;
                 fy_rec[ia] += ky * k_dot_mu;
                 fz_rec[ia] += kz * k_dot_mu;
-    */
     
     
             }
