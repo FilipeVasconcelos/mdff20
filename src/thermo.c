@@ -19,7 +19,7 @@ void info_thermo(int key, FILE* fp){
     double bcell=simuCell.Anorm[1];
     double ccell=simuCell.Anorm[2];
     double u_vdw=u_lj+u_bhmftd;
-    double u_tot=u_vdw+u_coul;
+    double u_tot=u_vdw+u_coul+u_pol;
     double e_tot=u_tot+e_kin;
     double h_tot = e_tot + e_nvt;
     double pvir_vdw = pvir_lj + pvir_bhmftd;
@@ -45,6 +45,7 @@ void info_thermo(int key, FILE* fp){
             printf("  Utot                  = "EE"\n"            ,u_tot);
             printf("  Uvdw                  = "EE"\n"            ,u_vdw);
             printf("  Ucoul                 = "EE"\n"           ,u_coul);
+            printf("  Upol                  = "EE"\n"            ,u_pol);
             printf("  Pressure              = "EE"\n"         ,pressure);
             printf("  Pvirvdw               = "EE"\n"         ,pvir_vdw);
             printf("  Pvircoul              = "EE"\n"        ,pvir_coul);
