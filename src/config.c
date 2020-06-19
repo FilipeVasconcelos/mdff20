@@ -13,7 +13,9 @@
 #include "verlet.h"
 #include "kinetic.h"
 #include "field.h"
+#include "inverse_matrix.h"
 
+#define DEBUG_CONFIG
 void pre_alloc_config(){
     for (int it=0;it<NTYPEMAX;it++)
     {
@@ -96,6 +98,7 @@ void free_config(){
     free(rys);
     free(rzs);
     if (lverletL) free_verletlist("vnlnb");
+    
 
 }
 
@@ -114,6 +117,9 @@ bool config_input_ok(){
 //-----------------------------------------------------------------------------
 void init_config()
 {
+#ifdef DEBUG_CONFIG
+        printf("in init_config\n");
+#endif
     if ( ! config_input_ok() ) {
         exit(1);
     }
@@ -121,6 +127,9 @@ void init_config()
     typia=malloc(nion*sizeof*typia);
     cc=0;
     for ( int it=0; it <= ntype-1;it++) {
+#ifdef DEBUG_CONFIG
+        printf("it %d\n",it);
+#endif
         invenionit[it]=1./nionit[it];
         ccs = cc;
         cc  = cc + nionit[it];
@@ -142,6 +151,36 @@ void init_config()
                         quadia[ia][i][j]=quadit[it][i][j];
                     }
                 }
+            }
+            /***********************************/
+            /*       pim field                 */
+            /***********************************/
+            if (lpolar[it]) {
+                for (int i=0;i<3;i++){
+                    for (int j=0;j<3;j++){
+                        polia[ia][i][j]=polit[it][i][j];
+                        invepolia[ia][i][j]=polia[ia][i][j];
+                    }
+                }
+                invertmatrix3x3(invepolia[ia]);
+                /*
+                printf("ia %d polia\n",ia);
+                for (int i=0;i<3;i++){
+                    for (int j=0;j<3;j++){
+                        printf("%f ",polia[ia][i][j]);
+                    }
+                    putchar('\n');
+                }
+                putchar('\n');
+                printf("ia %d invert polia\n",ia);
+                for (int i=0;i<3;i++){
+                    for (int j=0;j<3;j++){
+                        printf("%f ",invepolia[ia][i][j]);
+                    }
+                    putchar('\n');
+                }
+                putchar('\n');
+                */
             }
             /***********************************/
         }
