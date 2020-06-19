@@ -18,13 +18,13 @@ $(info CC  $(shell which $(CC) ))
 CFLAGS=-O2 -msse4 -mavx2 -ffast-math -fopenmp -Ofast
 CFLAGS+=-I/usr/lib/gcc/x86_64-linux-gnu/6.3.0/include/
 $(info CFLAGS   $(CFLAGS))
-LDFLAGS = -lm -fopenmp # bibliotheque math 
+LDFLAGS = -lm -fopenmp -lblas -llapack -llapacke # bibliotheque math 
 #LDFLAGS = -lm 
 $(info LDFLAGS   $(LDFLAGS))
 #INC= constants.h rand.h read_posff.h \
     cell.h config.h md.h kinetic.h thermo.h field.h
 
-OBJ=mdff20.o io.o mpi_mdff.o functions.o timing.o constants.o \
+OBJ=mdff20.o io.o mpi_mdff.o functions.o inverse_matrix.o timing.o constants.o \
     global.o pbc.o verlet.o config.o cell.o kspace.o \
     nonbonded.o nmlj.o bhmftd.o pim.o coulombic.o ewald.o integration.o field.o md.o rand.o\
     cell.o thermo.o tools.o kinetic.o
