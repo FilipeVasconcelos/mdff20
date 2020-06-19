@@ -7,11 +7,20 @@
 #include "kspace.h"
 #include "pim.h"
 
+#define DEBUG_COUL
 /******************************************************************************/
 void allocate_coulombic(){
+#ifdef DEBUG_COUL
+    printf("inside allocate_coulombic\n");
+#endif
     qia=malloc(nion*sizeof(*qia));
     dipia=malloc(nion*sizeof(*dipia));
     quadia=malloc(nion*sizeof(*quadia));
+    if (lpim) {
+        polia     = malloc(nion*sizeof(*polia));
+        invepolia = malloc(nion*sizeof(*invepolia));
+        dipia_ind = malloc(nion*sizeof(*dipia_ind));
+    }
 }
 /******************************************************************************/
 void free_coulombic(){
@@ -19,20 +28,30 @@ void free_coulombic(){
     free(dipia);
     free(quadia);
     free_kspace();
+    if (lpim) {
+        free(polia);
+        free(invepolia);
+        free(dipia_ind);
+    }
 }
 /******************************************************************************/
-void get_dipoles(double (*mu)[3]){
+void get_dipoles(double (*mu)[3],double *upol){
 
+    printf("inside get_dipoles %d\n",algo_pim);
     double (*dipia_ind)[3];
     dipia_ind=malloc(nion*sizeof(*dipia_ind));
     switch (algo_pim) {
         case 0 :
-            momentpolaSCF(dipia_ind);
+            momentpolaSCF(dipia_ind,&upol);
            break; 
         case 1 :
            break; 
     }
-
+    for (int ia=0;ia<nion;ia++){
+        for (int i=0;i<3;i++){
+            mu[ia][i] = dipia_ind[ia][i];
+        }
+    }
     free(dipia_ind);
 }
 /******************************************************************************/
@@ -79,7 +98,7 @@ void sample_field_coulombic(double (*ef)[3],double (*efg)[3][3]){
     if (nion < mia ) mia=nion;
     if (ionode ) {
         LSEPARATOR;
-        printf("              coulombic fiedl sample (first 10)\n");
+        printf("              coulombic field sample (first 10)\n");
         LSEPARATOR;
         printf("   ia atype              Ex              Ex              Ez\n");
         for (int ia=0;ia<mia;ia++){
@@ -94,17 +113,3 @@ void sample_field_coulombic(double (*ef)[3],double (*efg)[3][3]){
     }
 }
 
-/******************************************************************************/
-bool is_induced(){
-    for(int it=0;it<ntype;it++){
-        if ( lpolar[it] )  return true;
-    }
-    return false;
-}
-/******************************************************************************/
-/*bool is_damping(){
-    for(int it=0;it<ntype;it++){
-        if ( lpolar[it] )  return true;
-    }
-    return false    
-}*/
