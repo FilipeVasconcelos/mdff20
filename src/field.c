@@ -17,15 +17,18 @@
 #include "io.h"
 #include "tools.h"
 #include "coulombic.h"
+#include "pim.h"
 
 /******************************************************************************/
 int read_field(char* controlfn)
 {
-    int kqch,kdip,kqua,kmass;
-    kqch=0;
-    kdip=0;
-    kqua=0;
-    kmass=0;
+    int kmas,kqch,kdip,kqua,kpol,kpolit;
+    kmas=0;   /* mass           */
+    kqch=0;   /* charges        */
+    kdip=0;   /* dipoles        */
+    kqua=0;   /* quadrupoles    */
+    kpol=0;   /* polarizability */
+    kpolit=0; /* polarizability tensor on type */
 
     char buffer[MAX_LEN+1];
     FILE * fp;
@@ -53,8 +56,8 @@ int read_field(char* controlfn)
         } 
         // mass of type
         if (strcmp(buffer,"massit") == 0 ) {
-            fscanf(fp,"%lf",&massit[kmass]);
-            kmass+=1;
+            fscanf(fp,"%lf",&massit[kmas]);
+            kmas+=1;
         } 
         // charges on type
         if (strcmp(buffer,"qit") == 0 ) {
@@ -73,6 +76,20 @@ int read_field(char* controlfn)
                   &quadit[kqua][1][0],&quadit[kqua][1][1],&quadit[kqua][1][2],
                   &quadit[kqua][2][0],&quadit[kqua][2][1],&quadit[kqua][2][2]);
             kqua+=1;
+        } 
+        // pola on type
+        if (strcmp(buffer,"lpolar") == 0 ) {
+            fscanf(fp,"%s",buffer);
+            lpolar[kpol]=check_boolstring("lpolar",buffer); 
+            kpol+=1;
+        } 
+        // poldip tensor on type
+        if (strcmp(buffer,"polit") == 0 ) {
+            fscanf(fp,"%lf %lf %lf %lf %lf %lf %lf %lf %lf",
+                    &polit[kpolit][0][0],&polit[kpolit][0][1],&polit[kpolit][0][2],
+                    &polit[kpolit][1][0],&polit[kpolit][1][1],&polit[kpolit][1][2],
+                    &polit[kpolit][2][0],&polit[kpolit][2][1],&polit[kpolit][2][2]);
+            kpolit+=1;
         } 
         //ewald sum param 
         if (strcmp(buffer,"alphaES") == 0 ) {
@@ -95,24 +112,36 @@ int read_field(char* controlfn)
         } 
 
     }
-    if ( (kmass != ntype) && (kmass !=0) ) {
-        pError("massit not found\n");
-        printf("kmass %d != ntype %d\n",kmass,ntype);
+    if ( (kmas != ntype) && (kmas !=0) ) {
+        pError("massit, some are missing\n");
+        printf("kmas %d != ntype %d\n",kmas,ntype);
         exit(-1);
     } 
+    /*
     if ( (kqch != ntype) && (kqch !=0) ) {
-        pError("qit not found\n");
-        printf("kdip %d != ntype %d\n",kqch,ntype);
+        pError("qit, some are missing\n");
+        printf("kqch %d != ntype %d\n",kqch,ntype);
         exit(-1);
     } 
     if ( (kdip != ntype) && (kdip !=0) ) {
-        pError("dipit not found\n");
+        pError("dipit, some are missing\n");
         printf("kdip %d != ntype %d\n",kdip,ntype);
         exit(-1);
     } 
     if ( (kqua != ntype) && (kqua !=0) ) {
-        pError("quadit not found\n");
+        pError("quadit, some are missing\n");
         printf("kdip %d != ntype %d\n",kqua,ntype);
+        exit(-1);
+    } 
+    if ( (kpolit != ntype) && (kpolit !=0) ) {
+        pError("polit, some are missing\n");
+        printf("kpolit %d != ntype %d\n",kpolit,ntype);
+        exit(-1);
+    } 
+    */
+    if ( (kpol != ntype) && (kpol !=0) ) {
+        pError("lpolar, some are missing\n");
+        printf("kpol %d != ntype %d\n",kpol,ntype);
         exit(-1);
     } 
 
@@ -217,10 +246,26 @@ void init_field(char* controlfn){
     if (lcoulombic) {
         lrcutsq=cutlongrange*cutlongrange;
         if (lautoES) set_autoES();
+        if ( is_pim() ) lpim=true;
         init_coulombic();
+        init_pim(controlfn);
     }
 }
 
+/******************************************************************************/
+bool is_pim(){
+    for(int it=0;it<ntype;it++){
+        if ( lpolar[it] )  return true;
+    }
+    return false;
+}
+/******************************************************************************/
+bool is_damping(){
+    for(int it=0;it<ntype;it++){
+        if ( lpolar[it] )  return true;
+    }
+    return false;
+}
 /******************************************************************************/
 void engforce()
 {
@@ -244,7 +289,8 @@ void engforce()
         double (*efg)[3][3];
         ef=malloc(nion*sizeof(*ef));
         efg=malloc(nion*sizeof(*efg));
-        multipole_ES(qia,dipia,quadia,&u_coul,&pvir_coul,tau_coul,ef,efg);
+        get_dipoles(dipia,&u_pol);
+        multipole_ES(qia,dipia,quadia,&u_coul,&pvir_coul,tau_coul,ef,efg,&lqch,&ldip);
         free(ef);
         free(efg);
     }
