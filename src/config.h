@@ -24,10 +24,14 @@ double     dipit[NTYPEMAX][3]; /* dipole type */
 double quadit[NTYPEMAX][3][3]; /* quadrupole type */
 double  polit[NTYPEMAX][3][3]; /* dipole polarizability tensor if lpolar[it] = true*/
 /* dipole damping */
-//bool         lpoldamping[NTYPEMAX][NTYPEMAX][NTYPEMAX];
+bool   lpoldamping[NTYPEMAX][NTYPEMAX][NTYPEMAX];
 /*
   lpoldamping[i][j][k] for type i and interaction bewteen type j and k
 */ 
+double  pol_damp_b[NTYPEMAX][NTYPEMAX][NTYPEMAX];
+double  pol_damp_c[NTYPEMAX][NTYPEMAX][NTYPEMAX];
+int     pol_damp_k[NTYPEMAX][NTYPEMAX][NTYPEMAX];
+
 /* ****************************************************************************/
 /*                           on ion quantities                                */
 /* ****************************************************************************/
