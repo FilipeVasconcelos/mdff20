@@ -6,6 +6,8 @@ typedef struct TENSOR_RK1 {
 }TENSOR_RK1;
 typedef struct TENSOR_RK2 {
     double ab[3][3];
+    double abD[3][3];  // damping 1
+    double abD2[3][3]; // damping 2
 }TENSOR_RK2;
 typedef struct TENSOR_RK3 {
     double abc[3][3][3];
