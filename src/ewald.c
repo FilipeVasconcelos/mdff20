@@ -18,6 +18,8 @@
 #include "functions.h"
 #include "thermo.h"
 
+//#define DEBUG_EWALD
+//#define DEBUG_EWALD_DIR
 
 /******************************************************************************/
 void set_autoES(){
@@ -97,8 +99,25 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
             }
         }
     }
+/*
+#ifdef DEBUG_EWALD
+    for (int i=0;i<3;i++){
+        printf("ef_dir  %f\n",ef_dir[0][i]);
+        printf("ef_dir  %f\n",ef_dir[1][i]);
+        printf("\n");
+    }
+#endif 
+*/
     multipole_ES_dir(q, mu, theta, &u_dir, ef_dir, efg_dir, fx_dir, fy_dir, fz_dir, tau_dir, lq, ld );
-//    multipole_ES_dir(q, mu, theta, &u_dir, ef_dir, efg_dir, fx_dir, fy_dir, fz_dir, tau_dir, true, true );
+/*
+#ifdef DEBUG_EWALD
+    for (int i=0;i<3;i++){
+        printf("ef_dir  %f\n",ef_dir[0][i]);
+        printf("ef_dir  %f\n",ef_dir[1][i]);
+        printf("\n");
+    }
+#endif 
+*/
     statime(19);
     mestime(&ewaldDirCPUtime,19,18);
 
@@ -128,7 +147,7 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
     }
 
     multipole_ES_rec(q, mu, theta, &u_rec, ef_rec, efg_rec, fx_rec, fy_rec, fz_rec, tau_rec, lq, ld);
-//    multipole_ES_rec(q, mu, theta, &u_rec, ef_rec, efg_rec, fx_rec, fy_rec, fz_rec, tau_rec, true, true);
+    
     statime(20);
     mestime(&ewaldRecCPUtime,20,19);
 
@@ -164,6 +183,9 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
         for (int i=0;i<3;i++){
             ef_self[ia][i]= 2.0 * selfa2 *mu[ia][i];
             efg_self[ia][i][i]=- 2.0 * selfa2 * q[ia];
+            for (int j=0;j<3;j++){
+                if (j!=i) efg_self[ia][i][j]=0.0;
+            }
         }
     }
 
@@ -179,11 +201,17 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
         /* --------------------------*/
         for (int i=0;i<3;i++){
             ef[ia][i]=(ef_dir[ia][i]+ef_rec[ia][i]+ef_self[ia][i]);
+#ifdef DEBUG_EWALD
+            printf("EF : %d %d dir: %e rec: %e self : %e tot : %e\n",ia,i,ef_dir[ia][i],ef_rec[ia][i],ef_self[ia][i],ef[ia][i]);
+#endif 
         /* ------------------------- */
         /* electric field gradient   */
         /* ------------------------- */
             for (int j=0;j<3;j++){
                 efg[ia][i][j]=(efg_dir[ia][i][j]+efg_rec[ia][i][j]+efg_self[ia][i][j]);
+#ifdef DEBUG_EWALD
+        printf("EFG : %d %d %d dir: %e rec: %e self : %e tot : %e\n",ia,i,j,efg_dir[ia][i][j],efg_rec[ia][i][j],efg_self[ia][i][j],efg[ia][i][j]);
+#endif 
             }
         }
         /* ---------------------------- */
@@ -205,18 +233,16 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
         *pvir+= tau[i][i] * onethird ;
     }
 
-/*
-    sample_field_coulombic(ef,efg);
-    sample_config(0);
-    */
     /*
-    printf("u_dir  %f\n",u_dir);
-    printf("u_rec  %f\n",u_rec);
-    printf("u_self %f\n",u_self);
+    printf("u_dir  %e\n",u_dir);
+    printf("u_rec  %e\n",u_rec);
+    printf("u_self %e\n",u_self);
+    printf("u_coul %e\n",*u);
     putchar('\n');
-    printf("fx_dir  %f\n",fx_dir[100]);
-    printf("fx_rec  %f\n",fx_rec[100]);
-*/
+    printf("fx_dir  %e\n",fx_dir[100]);
+    printf("fx_rec  %e\n",fx_rec[100]);
+    */
+    
     free(ef_dir);
     free(ef_rec);
     free(ef_self);
@@ -252,12 +278,29 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
     //double thetai[3][3];
     double qj;
     double muj[3];
+    bool qch_i,qch_j,qch_iETj,qch_iOUj;
     bool dip_i,dip_j,dip_iETj,dip_iOUj;
     //double thetaj[3][3];
-    double (*tef)[3];
-    tef=malloc(nion*sizeof(*tef));
+    /*
+    double *ef_x,*ef_y,*ef_z;
+    double ef_xi,ef_yi,ef_zi;
+    double ef_xj,ef_yj,ef_zj;
+    ef_x=malloc(nion*sizeof(ef_x));
+    ef_y=malloc(nion*sizeof(ef_y));
+    ef_z=malloc(nion*sizeof(ef_z));
     double (*tefg)[3][3];
     tefg=malloc(nion*sizeof(*tefg));
+    for (int ia=0;ia<nion;ia++){
+        ef_x[ia]=0.0;
+        ef_y[ia]=0.0;
+        ef_z[ia]=0.0;
+        for (int i=0;i<3;i++){
+            for (int j=0;j<3;j++){
+                tefg[ia][i][j]=0.0;
+            }
+        }
+    }
+    */
 
     double expon;
     double qij;
@@ -294,14 +337,15 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
     kardir ( nion , rx , ry , rz , simuCell.B ) ;
 
     #pragma omp parallel shared(lrcutsq,rx,ry,rz) \
-                         private(ia,j1,jb,je,ja,qi,qj,qij,mui,muj,rij,rxi,ryi,rzi,fxij,fyij,fzij,d2,T0,T1,T2,T3, F0, F1, F2, F3, F4) 
+                      private(ia,j1,jb,je,ja,qi,qj,qij,mui,muj,rij,rxi,ryi,rzi,fxij,fyij,fzij,d2,T0,T1,T2,T3,F0,F1,F2,F3,F4,F2_dm5) 
     {
-        #pragma omp for reduction (+:uu,ttau,fx_dir[:nion],fy_dir[:nion],fz_dir[:nion],tef[:nion],tefg[:nion]) schedule(dynamic,8) 
+        #pragma omp for reduction (+:uu,ttau,fx_dir[:nion],fy_dir[:nion],fz_dir[:nion],ef_dir[:nion],efg_dir[:nion]) schedule(dynamic,8) 
         for(ia=atomDec.iaStart;ia<atomDec.iaEnd;ia++) {
             rxi = rx[ia];
             ryi = ry[ia];
             rzi = rz[ia];
             qi  = q[ia];
+            qch_i= (qi == 0.0) ? false : true; 
             dip_i=false;
             for(int i=0;i<3;i++){
                 mui[i] = mu[ia][i];
@@ -329,6 +373,7 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                 if ( ( (( ja <= ia ) && !lverletL ) || (( ja == ia ) && lverletL) ) ) continue;
     
                 qj  = q[ja];
+                qch_j= (qj == 0.0) ? false : true; 
                 fxij = 0.0;
                 fyij = 0.0;
                 fzij = 0.0;
@@ -349,6 +394,8 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                 if ( d2 > lrcutsq ) continue ;
                 dip_iETj = dip_i && dip_j;
                 dip_iOUj = dip_i || dip_j;
+                qch_iETj = qch_i && qch_j;
+                qch_iOUj = qch_i || qch_j;
                 d    = sqrt(d2);
                 d3   = d2 * d  ;
                 d5   = d3 * d2 ;
@@ -363,8 +410,8 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
     
 
                 expon = exp( - alpha2 * d2 )/ piroot;              
-                F0    = erfc( alphaES * d );
-                //F0    = errfc( alphaES * d );
+                //F0    = erfc( alphaES * d );
+                F0    = errfc( alphaES * d );
                 F1    = F0 +  2.0 * alphaES * d  * expon;            
                 F2    = F1 +  4.0 * alpha3  * d3 * expon / 3.0;   
                 F3    = F2 +  8.0 * alpha5  * d5 * expon / 15.0;
@@ -453,23 +500,27 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
             	                      charge-charge interaction                                
                     ===========================================================  
                 */
-                if ( lqchtask ) {
-    	    
+                if ( (lqchtask) && (qch_iOUj) ) {
+#ifdef DEBUG_EWALD_DIR
+                    printf("inside charge-charge interaction %d %d\n",ia,ja);
+#endif
                     /*  potential energy */
                     uu += qij * T0.sca;
-        
-                    /* electric field */
+                    
+                    // electric field 
                     for(int i=0; i<3;i++){
-            	        tef[ia][i] += -qj * T1.a[i] ;
-                        tef[ja][i] +=  qi * T1.a[i] ;
+            	        ef_dir[ia][i] += -qj * T1.a[i];
+                        ef_dir[ja][i] +=  qi * T1.a[i];
                     }
-                    /* electric field gradient */
+                    
+                    // electric field gradient 
                     for(int i=0; i<3;i++){
                         for(int j=0; j<3;j++){
-                            tefg[ia][i][j] += -qj * T2.ab[i][j];
-                            tefg[ja][i][j] += -qi * T2.ab[i][j];
+                            efg_dir[ia][i][j] += -qj * T2.ab[i][j];
+                            efg_dir[ja][i][j] += -qi * T2.ab[i][j];
                         }
                     }
+
                     /* forces */
                     fxij = qij * T1.a[0];
                     fyij = qij * T1.a[1];
@@ -480,7 +531,10 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
     	                      dipole-dipole interaction                                
                    ===========================================================  
                 */
-                if ( ( ldiptask ) && (dip_iETj) ) {
+                if ( ( ldiptask ) && (dip_iOUj) ) {
+#ifdef DEBUG_EWALD_DIR
+                    printf("inside dipole-dipole interaction  %d %d\n",ia,ja);
+#endif
                     /*  potential energy */
                     for(int i=0; i<3;i++){
                         for(int j=0; j<3;j++){
@@ -490,16 +544,16 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                     /* electric field */
                     for(int i=0; i<3;i++){
                         for(int j=0; j<3;j++){
-            	            tef[ia][i] += muj[j] * T2.ab[i][j] ;
-                            tef[ja][i] += mui[j] * T2.ab[i][j] ;
+            	            ef_dir[ia][i] += muj[j] * T2.ab[i][j] ;
+                            ef_dir[ja][i] += mui[j] * T2.ab[i][j] ;
                         }
                     }
                     /* electric field gradient */
                     for(int i=0; i<3;i++){
                         for(int j=0; j<3;j++){
                             for(int k=0; k<3;k++){
-                                tefg[ia][i][j] +=  muj[k] * T3.abc[i][j][k];
-                                tefg[ja][i][j] += -mui[k] * T3.abc[i][j][k];
+                                efg_dir[ia][i][j] +=  muj[k] * T3.abc[i][j][k];
+                                efg_dir[ja][i][j] += -mui[k] * T3.abc[i][j][k];
                             }
                         }
                     }
@@ -518,6 +572,9 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                    ===========================================================  
                 */
                 if ( ( lqchdiptask ) && (dip_iOUj) ) {
+#ifdef DEBUG_EWALD_DIR
+                    printf("inside charge-dipole interaction %d %d\n",ia,ja);
+#endif
                     /*  potential energy */
                     for(int i=0; i<3;i++){
                         uu += - qi * T1.a[i] * muj[i];
@@ -591,22 +648,27 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
     }
     putchar('\n');
     */
-    for(int ia = 0; ia < nion; ia ++){
-        for(int i=0; i<3;i++){
-            ef_dir[ia][i]=tef[ia][i];
-            for(int j=0; j<3;j++){
-                efg_dir[ia][i][j]=tefg[ia][i][j];
-            }
-        }
-    }
+//    for(int ia = 0; ia < nion; ia ++){
+//        ef_dir[ia][0]=ef_x[ia];
+//        ef_dir[ia][1]=ef_y[ia];
+//        ef_dir[ia][2]=ef_z[ia];
+//        for(int i=0; i<3;i++){
+//            ef_dir[ia][i]=tef[ia][i];
+//            for(int j=0; j<3;j++){
+//                efg_dir[ia][i][j]=tefg[ia][i][j];
+//            }
+//        }
+//    }
 
     /*************************************** 
             direct to cartesian                   
      ***************************************/
     dirkar ( nion , rx , ry , rz , simuCell.A ) ;
 
-    free(tef);
-    free(tefg);
+//    free(ef_x);
+//    free(ef_y);
+//    free(ef_z);
+//    free(tefg);
 }
 
 /******************************************************************************/
@@ -641,7 +703,7 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
     #pragma omp parallel shared(rx,ry,rz) \
                          private(ik,qi,kx,ky,kz,Ak,kcoe,rxi,ryi,rzi,k_dot_r,k_dot_mu,rhonk_R,rhonk_I,str,fxij,fyij,fzij,ckria,skria)
     { 
-        #pragma omp for reduction (+:uu,ttau,fx_rec[:nion],fy_rec[:nion],fz_rec[:nion]) schedule(dynamic,8) 
+        #pragma omp for reduction (+:uu,ttau,fx_rec[:nion],fy_rec[:nion],fz_rec[:nion],ef_rec[:nion],efg_rec[:nion]) schedule(dynamic,8) 
         for (ik=kcoul.kptDec.iaStart;ik<kcoul.kptDec.iaEnd;ik++){
             //if (kcoul.kk[ik] == 0.0) continue;
             kx   = kcoul.kx[ik];
@@ -664,7 +726,7 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
                 rhonk_R  += qi * ckria;
                 rhonk_I  += qi * skria;
         
-                if ( ! ldiptask ) continue;
+         //       if ( ! ldiptask ) continue;
                 k_dot_mu = ( mu[ia][0] * kx + mu[ia][1] * ky + mu[ia][2] * kz );
                 rhonk_R += -k_dot_mu * skria;
                 rhonk_I +=  k_dot_mu * ckria;
@@ -703,11 +765,10 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
                 efg_rec[ia][0][2] += kx * kz * recarg2; 
                 efg_rec[ia][1][2] += ky * kz * recarg2; 
     
-    
                 fx_rec[ia] += -qi * fxij;
                 fy_rec[ia] += -qi * fyij;
                 fz_rec[ia] += -qi * fzij;
-                if (! ldiptask ) continue ;
+        //        if (! ldiptask ) continue ;
                 k_dot_mu = ( mu[ia][0] * kx + mu[ia][1] * ky + mu[ia][2] * kz ) * recarg2;
                 fx_rec[ia] += kx * k_dot_mu;
                 fy_rec[ia] += ky * k_dot_mu;
