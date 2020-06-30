@@ -22,13 +22,13 @@
 /******************************************************************************/
 int read_field(char* controlfn)
 {
-    int kmas,kqch,kdip,kqua,kpol,kpolit;
+    int type,it,jt;
+    int kmas,kqch,kdip,kqua,kpol;
     kmas=0;   /* mass           */
     kqch=0;   /* charges        */
     kdip=0;   /* dipoles        */
     kqua=0;   /* quadrupoles    */
     kpol=0;   /* polarizability */
-    kpolit=0; /* polarizability tensor on type */
 
     char buffer[MAX_LEN+1];
     FILE * fp;
@@ -77,20 +77,44 @@ int read_field(char* controlfn)
                   &quadit[kqua][2][0],&quadit[kqua][2][1],&quadit[kqua][2][2]);
             kqua+=1;
         } 
+        /*
         // pola on type
         if (strcmp(buffer,"lpolar") == 0 ) {
             fscanf(fp,"%s",buffer);
             lpolar[kpol]=check_boolstring("lpolar",buffer); 
-            kpol+=1;
         } 
+        */
         // poldip tensor on type
         if (strcmp(buffer,"polit") == 0 ) {
             fscanf(fp,"%lf %lf %lf %lf %lf %lf %lf %lf %lf",
-                    &polit[kpolit][0][0],&polit[kpolit][0][1],&polit[kpolit][0][2],
-                    &polit[kpolit][1][0],&polit[kpolit][1][1],&polit[kpolit][1][2],
-                    &polit[kpolit][2][0],&polit[kpolit][2][1],&polit[kpolit][2][2]);
-            kpolit+=1;
+                    &polit[kpol][0][0],&polit[kpol][0][1],&polit[kpol][0][2],
+                    &polit[kpol][1][0],&polit[kpol][1][1],&polit[kpol][1][2],
+                    &polit[kpol][2][0],&polit[kpol][2][1],&polit[kpol][2][2]);
+            for(int i=0;i<3;i++){
+                for(int j=0;j<3;j++){
+                    if (polit[kpol][i][j] != 0.0) lpolar[kpol]=true; 
+                }
+            }
+            kpol+=1;
         } 
+        // pola on type
+        if (strcmp(buffer,"lpoldamping") == 0 ) {
+            fscanf(fp,"%d %d %d %s",type,it,jt,buffer);
+            lpoldamping[type][it][jt]=check_boolstring("lpoldamping",buffer); 
+        } 
+        if (strcmp(buffer,"pol_damp_b,") == 0 ) {
+            fscanf(fp,"%d %d %d",type,it,jt);
+            fscanf(fp,"%f",pol_damp_b[type][it][jt]);
+        } 
+        if (strcmp(buffer,"pol_damp_c,") == 0 ) {
+            fscanf(fp,"%d %d %d",type,it,jt);
+            fscanf(fp,"%f",pol_damp_c[type][it][jt]);
+        } 
+        if (strcmp(buffer,"pol_damp_k,") == 0 ) {
+            fscanf(fp,"%d %d %d",type,it,jt);
+            fscanf(fp,"%d",pol_damp_k[type][it][jt]);
+        } 
+// ldip_damping, pol_damp_b, pol_damp_c, pol_damp_k
         //ewald sum param 
         if (strcmp(buffer,"alphaES") == 0 ) {
             fscanf(fp,"%lf",&alphaES);
@@ -138,12 +162,12 @@ int read_field(char* controlfn)
         printf("kpolit %d != ntype %d\n",kpolit,ntype);
         exit(-1);
     } 
-    */
     if ( (kpol != ntype) && (kpol !=0) ) {
         pError("lpolar, some are missing\n");
         printf("kpol %d != ntype %d\n",kpol,ntype);
         exit(-1);
     } 
+    */
 
     fclose(fp);
     return(0);
@@ -159,13 +183,17 @@ void info_field(){
     double rho; /* mass density */
     rho = totalMass * simuCell.inveOmega;
 
-    lqch = false; ldip= false; lqua = false;
+    lqch = false; ldip= false; lqua = false; lpol;
     for(int it=0; it< ntype ; it++){
         if (qit[it] != 0.0 ) lqch = true;
         for (int j=0;j<3;j++){
             if (dipit[it][j] != 0.0 ) ldip = true;
             for(int k=0;k<3;k++){
                 if (quadit[it][j][k] != 0.0 ) lqua = true;
+                if (polit[it][j][k] != 0.0 )  {
+                    lpol = true;
+                    ldip = true;
+                }
             }
         }
     } 
@@ -221,6 +249,23 @@ void info_field(){
                     putchar('\n');
                 }
                 putchar('\n');
+            }
+        }
+        if (lpol) {
+            printf("polarizabilities :\n");
+            printf("------------\n");
+            for (int it=0;it<ntype;it++) {
+                if ( lpolar[it] ) {
+                    printf("a_%s              = \n",atypit[it]);
+                    for(int j=0;j<3;j++){
+                        printf("                      ");
+                        for(int k=0;k<3;k++){
+                            printf(" %8.5f",polit[it][j][k]);
+                        }
+                        putchar('\n');
+                    }
+                    putchar('\n');
+                }
             }
         }
     }
@@ -285,12 +330,23 @@ void engforce()
     mestime(&engforce_bhmftdCPUtime,15,2);
 
     if (lcoulombic) {
+        double (*mu)[3];
         double (*ef)[3];
         double (*efg)[3][3];
+        mu=malloc(nion*sizeof(*mu));
         ef=malloc(nion*sizeof(*ef));
         efg=malloc(nion*sizeof(*efg));
-        get_dipoles(dipia,&u_pol);
-        multipole_ES(qia,dipia,quadia,&u_coul,&pvir_coul,tau_coul,ef,efg,&lqch,&ldip);
+
+
+        get_dipoles(mu,&u_pol);
+        multipole_ES(qia,mu,quadia,&u_coul,&pvir_coul,tau_coul,ef,efg,&lqch,&ldip);
+        printf("u_coul %e\n",u_coul);
+        printf("u_pol %e\n",u_pol);
+        sample_config(0);
+        sample_field_coulombic(ef,efg);
+
+
+        free(mu);
         free(ef);
         free(efg);
     }
