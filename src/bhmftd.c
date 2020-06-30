@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include "tt_damp.h"
 #include "global.h"
 #include "field.h"
 #include "config.h"
@@ -100,7 +101,7 @@ void init_bhmftd(char* controlfn) {
         }
     }
     
-
+    if (lbhmftd) get_TT_damp();
 
     info_bhmftd();
 }
@@ -117,7 +118,7 @@ void engforce_bhmftd_pbc(double *u, double *pvir, double tau[3][3])
     double uu =0.0;
     double ttau[3][3];
     int ia,j1,ja,jb,je;
-    double ir2,d,erh,ir6,ir8,ir6d,ir8d,fdiff6,fdiff8,ir7,ir9;
+    double ir2,d,erh,ir6,ir8,ir6d,ir8d,f6,f8,fdiff6,fdiff8,ir7,ir9;
 
     for (int i=0;i<3;i++){
         for(int j=0;j<3;j++){
@@ -177,10 +178,10 @@ void engforce_bhmftd_pbc(double *u, double *pvir, double tau[3][3])
                         ir8 = ir8 * Dbhmftd[p1][p2];
                         /* damping TT */
                         if (lbhmftd) {
-                            fdiff6 = 0.0;
-                            fdiff8 = 0.0;
-                            ir6d=ir6;
-                            ir8d=ir8;
+                            TT_damping_functions(BDbhmftd[p1][p2],1.0 ,d ,&f6 ,&fdiff6, 6 );
+                            TT_damping_functions(BDbhmftd[p1][p2],1.0 ,d ,&f8 ,&fdiff8, 8 );
+                            ir6d=ir6*f6;
+                            ir8d=ir8*f8;
                         }
                         else
                         {
