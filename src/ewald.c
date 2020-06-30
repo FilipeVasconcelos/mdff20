@@ -17,6 +17,7 @@
 #include "kspace.h"
 #include "functions.h"
 #include "thermo.h"
+#include "tt_damp.h"
 
 //#define DEBUG_EWALD
 //#define DEBUG_EWALD_DIR
@@ -278,6 +279,7 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
     //double thetai[3][3];
     double qj;
     double muj[3];
+    bool ldamp;
     bool qch_i,qch_j,qch_iETj,qch_iOUj;
     bool dip_i,dip_j,dip_iETj,dip_iOUj;
     //double thetaj[3][3];
@@ -304,15 +306,18 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
 
     double expon;
     double qij;
-    double d , d2 , d3  , d5 , d7;
+    double d , d2 , d3  , d5 , d7, d9;
     double dm1 , dm3 , dm5  , dm7 , dm9;
-    double F0, F1, F2, F3, F4;
+    double F0, F1, F2, F3, F4, F5;
     double F1_dm3 ,F2_dm5 , F3_dm7 , F4_dm9; 
 
-    //double alpha2, alpha3, alpha5, alpha7, alpha9;
-    double alpha2, alpha3, alpha5, alpha7;
+    // damping related
+    double fdamp1,fdamp2,fdampdiff1,fdampdiff2;
+    double F1d1, F2d1, F1d2, F2d2;
+
+    double alpha2, alpha3, alpha5, alpha7, alpha9;
     double uu = 0;
-    int ia,j1,ja,jb,je;
+    int ia,j1,ja,jb,je,ita,jta;
     double ttau[3][3];
     for (int i=0;i<3;i++){
         mui[i]=0.0;
@@ -329,7 +334,7 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
     alpha3 = alpha2  * alphaES;
     alpha5 = alpha3  * alpha2;
     alpha7 = alpha5  * alpha2;
-//    alpha9 = alpha7  * alpha2;
+    alpha9 = alpha7  * alpha2;
 
     /*************************************** 
             cartesian to direct                    
@@ -337,7 +342,7 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
     kardir ( nion , rx , ry , rz , simuCell.B ) ;
 
     #pragma omp parallel shared(lrcutsq,rx,ry,rz) \
-                      private(ia,j1,jb,je,ja,qi,qj,qij,mui,muj,rij,rxi,ryi,rzi,fxij,fyij,fzij,d2,T0,T1,T2,T3,F0,F1,F2,F3,F4,F2_dm5) 
+                      private(ita,jta,ia,j1,jb,je,ja,qi,qj,qij,mui,muj,rij,rxi,ryi,rzi,fxij,fyij,fzij,d2,T0,T1,T2,T3,F0,F1,F2,F3,F4,F2_dm5) 
     {
         #pragma omp for reduction (+:uu,ttau,fx_dir[:nion],fy_dir[:nion],fz_dir[:nion],ef_dir[:nion],efg_dir[:nion]) schedule(dynamic,8) 
         for(ia=atomDec.iaStart;ia<atomDec.iaEnd;ia++) {
@@ -347,6 +352,7 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
             qi  = q[ia];
             qch_i= (qi == 0.0) ? false : true; 
             dip_i=false;
+            ita=typia[ia];
             for(int i=0;i<3;i++){
                 mui[i] = mu[ia][i];
                 if (mui[i] != 0.0) dip_i=true;
@@ -378,6 +384,7 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                 fyij = 0.0;
                 fzij = 0.0;
                 dip_j=false;
+                jta=typia[ia];
                 for(int i=0;i<3;i++){
                     muj[i] = mu[ja][i];
                     if (muj[i] != 0.0) dip_j=true;
@@ -400,7 +407,7 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                 d3   = d2 * d  ;
                 d5   = d3 * d2 ;
                 d7   = d5 * d2 ;
-                //d9   = d7 * d2 ;
+                d9   = d7 * d2 ;
                 dm1  = 1.0 / d ; 
                 dm3  = dm1 / d2;
                 dm5  = dm3 / d2;
@@ -408,6 +415,25 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                 dm9  = dm7 / d2;
    //             dm11 = dm9 / d2;
     
+		// damping function 
+		ldamp = false;
+ 		if ( lpoldamping[ita][ita][jta] || lpoldamping[jta][ita][jta] ) ldamp = true;
+//                if ( ! damp_ind ) ldamp = false;
+                if ( ldamp ) {
+                    //printf("DAMPING IN ELECTRIC FIELD\n");
+                TT_damping_functions(pol_damp_b[ita][ita][jta],
+                                     pol_damp_c[ita][ita][jta],d,&fdamp1,&fdampdiff1,
+                                     pol_damp_k[ita][ita][jta]);
+                TT_damping_functions(pol_damp_b[jta][ita][jta],
+                                     pol_damp_c[jta][ita][jta],d,&fdamp2,&fdampdiff2,
+                                     pol_damp_k[jta][ita][jta]);             
+                }
+                else {
+                    fdamp1     = 1.0;
+                    fdamp2     = 1.0;
+                    fdampdiff1 = 0.0;
+                    fdampdiff2 = 0.0;
+                }
 
                 expon = exp( - alpha2 * d2 )/ piroot;              
                 //F0    = erfc( alphaES * d );
@@ -416,8 +442,14 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                 F2    = F1 +  4.0 * alpha3  * d3 * expon / 3.0;   
                 F3    = F2 +  8.0 * alpha5  * d5 * expon / 15.0;
                 F4    = F3 + 16.0 * alpha7  * d7 * expon / 105.0; 
-                //F5    = F4 + 32.0 * alpha9  * d9 * expon / 945.0; 
-    
+                F5    = F4 + 32.0 * alpha9  * d9 * expon / 945.0; 
+   
+                // damping if no damping fdamp == 1 and fdampdiff == 0                                                    
+                // recursive relation (10) in J. Chem. Phys. 133, 234101 (2010)
+                F1d1  = - fdamp1 + 1.0;
+                F1d2  = - fdamp2 + 1.0;
+                F2d1  = F1d1 + ( d / 3.0 ) * fdampdiff1;
+                F2d2  = F1d2 + ( d / 3.0 ) * fdampdiff2;
 
                 /*****************************************/
                 /* multipole interaction tensor rank = 0 */
@@ -429,6 +461,10 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                 /*****************************************/
                 for (int i=0; i<3;i++){
                     T1.a[i] = - rij[i] * dm3 * F1;
+                    if ( ldamp ) {
+                        T1.aD1[i] = T1.a[i] * F1d1;
+                        T1.aD2[i] = T1.a[i] * F1d2;
+                    }  
                 }
     
                 /*****************************************/
@@ -511,6 +547,10 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                     for(int i=0; i<3;i++){
             	        ef_dir[ia][i] += -qj * T1.a[i];
                         ef_dir[ja][i] +=  qi * T1.a[i];
+                        if ( ldamp ) {
+                            ef_dir[ia][i] +=  qj * T1.aD1[i];
+                            ef_dir[ia][i] += -qi * T1.aD2[i];
+                        }
                     }
                     
                     // electric field gradient 

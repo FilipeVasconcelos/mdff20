@@ -99,19 +99,21 @@ int read_field(char* controlfn)
         } 
         // pola on type
         if (strcmp(buffer,"lpoldamping") == 0 ) {
-            fscanf(fp,"%d %d %d %s",type,it,jt,buffer);
+            printf("reading lpoldamping\n");
+            fscanf(fp,"%d %d %d %s",&type,&it,&jt,buffer);
+            printf("%d %d %d %s\n",type,it,jt,buffer);
             lpoldamping[type][it][jt]=check_boolstring("lpoldamping",buffer); 
         } 
         if (strcmp(buffer,"pol_damp_b,") == 0 ) {
-            fscanf(fp,"%d %d %d",type,it,jt);
+            fscanf(fp,"%d %d %d",&type,&it,&jt);
             fscanf(fp,"%f",pol_damp_b[type][it][jt]);
         } 
         if (strcmp(buffer,"pol_damp_c,") == 0 ) {
-            fscanf(fp,"%d %d %d",type,it,jt);
+            fscanf(fp,"%d %d %d",&type,&it,&jt);
             fscanf(fp,"%f",pol_damp_c[type][it][jt]);
         } 
         if (strcmp(buffer,"pol_damp_k,") == 0 ) {
-            fscanf(fp,"%d %d %d",type,it,jt);
+            fscanf(fp,"%d %d %d",&type,&it,&jt);
             fscanf(fp,"%d",pol_damp_k[type][it][jt]);
         } 
 // ldip_damping, pol_damp_b, pol_damp_c, pol_damp_k
