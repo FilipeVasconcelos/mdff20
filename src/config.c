@@ -15,7 +15,7 @@
 #include "field.h"
 #include "inverse_matrix.h"
 
-#define DEBUG_CONFIG
+//#define DEBUG_CONFIG
 void pre_alloc_config(){
     for (int it=0;it<NTYPEMAX;it++)
     {
@@ -163,7 +163,7 @@ void init_config()
                     }
                 }
                 invertmatrix3x3(invepolia[ia]);
-                /*
+#ifdef DEBUG_POLIA                
                 printf("ia %d polia\n",ia);
                 for (int i=0;i<3;i++){
                     for (int j=0;j<3;j++){
@@ -180,7 +180,7 @@ void init_config()
                     putchar('\n');
                 }
                 putchar('\n');
-                */
+#endif
             }
             /***********************************/
         }
@@ -227,6 +227,7 @@ void sample_config(int key){
                 printf("%5d %5s "ee3"\n",ia,atypia[ia],rz[ia],vz[ia],fz[ia]);
             }
             LSEPARATOR;
+            putchar('\n');
         }
     }
 }
