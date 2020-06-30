@@ -8,6 +8,7 @@
 #include "pim.h"
 
 #define DEBUG_COUL
+#define DEBUG_mu_ind
 /******************************************************************************/
 void allocate_coulombic(){
 #ifdef DEBUG_COUL
@@ -37,22 +38,66 @@ void free_coulombic(){
 /******************************************************************************/
 void get_dipoles(double (*mu)[3],double *upol){
 
-    printf("inside get_dipoles %d\n",algo_pim);
-    double (*dipia_ind)[3];
-    dipia_ind=malloc(nion*sizeof(*dipia_ind));
-    switch (algo_pim) {
-        case 0 :
-            momentpolaSCF(dipia_ind,&upol);
-           break; 
-        case 1 :
-           break; 
+    //printf("inside get_dipoles\n");
+
+    // save current forces
+    double *fx_s,*fy_s,*fz_s;
+    fx_s=malloc(nion*sizeof(*fx_s));
+    fy_s=malloc(nion*sizeof(*fy_s));
+    fz_s=malloc(nion*sizeof(*fz_s));
+    for (int ia=0;ia<nion;ia++){
+        fx_s[ia]=fx[ia];
+        fy_s[ia]=fy[ia];
+        fz_s[ia]=fz[ia];
     }
+
+    // static dipoles
     for (int ia=0;ia<nion;ia++){
         for (int i=0;i<3;i++){
-            mu[ia][i] = dipia_ind[ia][i];
+            mu[ia][i] = dipia[ia][i];
         }
     }
-    free(dipia_ind);
+
+    // induced dipoles from polarizabilities
+    if (lpol) {
+        // allocate and set to zero
+        double (*mu_ind)[3];
+        mu_ind=malloc(nion*sizeof(*mu_ind));
+        for (int ia=0;ia<nion;ia++){
+            for (int i=0;i<3;i++){
+               mu_ind[ia][i]=0.0;
+            }
+        }
+        //pim algo !
+        switch (algo_pim) {
+            case 0 :
+                momentpolaSCF(mu_ind,upol);
+               break; 
+            case 1 :
+               break; 
+        }
+        for (int ia=0;ia<nion;ia++){
+            for (int i=0;i<3;i++){
+                mu[ia][i] += mu_ind[ia][i]; 
+            }
+#ifdef DEBUG_mu_ind
+            printf("ia %d mu_ind %e %e %e\n",ia,mu_ind[ia][0],mu_ind[ia][1],mu_ind[ia][2]);
+#endif
+        }
+        free(mu_ind);
+    }
+
+
+    //restore current forces
+    for (int ia=0;ia<nion;ia++){
+        fx[ia]=fx_s[ia];
+        fy[ia]=fy_s[ia];
+        fz[ia]=fz_s[ia];
+    }
+
+    free(fx_s);
+    free(fy_s);
+    free(fz_s);
 }
 /******************************************************************************/
 void init_coulombic(){
@@ -69,10 +114,36 @@ void info_coulombic(){
         printf("coulombic potential\n");
         LSEPARATOR;
         putchar('\n');
-        printf("        qi qj   \n");
-        printf(" Vij = -------  \n");
-        printf("         rij    \n");
-        putchar('\n');
+        if ( (ldip) || (lqch) ) {
+            if (lqch) {
+                printf("charge-charge interaction : \n");
+                putchar('\n');
+                printf("        qi qj   \n");
+                printf(" Vij = -------  \n");
+                printf("         rij    \n");
+                putchar('\n');
+            }
+            if (ldip) {
+                printf("dipole-dipole interaction : \n");
+                putchar('\n');
+                printf("                /                  -->  -->     -->   -->   \\\n"); 
+                printf("           1    | -->   -->      ( mui .rij ) ( rij . muj )  |\n");
+                printf(" Vij =  ------- | mui . muj - 3 ---------------------------  |\n");
+                printf("         rij^3  \\                            rij^2          /\n"); 
+                putchar('\n');
+            }
+            if ( (ldip) && (lqch) ) {
+                printf("charge-dipole interaction : \n");
+                putchar('\n');
+                printf("             -->   -->   \n");  
+                printf("          qi muj . rij   \n"); 
+                printf(" Vij =  ---------------- \n"); 
+                printf("             rij^3       \n");  
+                putchar('\n');
+            }
+        }
+
+
         if (lautoES) {
             printf("ewald summation parameters (from espw) \n");
         }
@@ -110,6 +181,7 @@ void sample_field_coulombic(double (*ef)[3],double (*efg)[3][3]){
                                                    efg[ia][0][1],efg[ia][0][2],efg[ia][0][2]);
         }
         LSEPARATOR;
+        putchar('\n');
     }
 }
 
