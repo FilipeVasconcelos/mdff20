@@ -1,10 +1,10 @@
 # ------------
 #   global 
 # ------------
-Fposff rvf
+Fposff rnn
 #lverletL false
 lverletL true 
-cutshortrange  5.5 
+cutshortrange  5.0 
 cutlongrange   5.0 
 skindiff  1.0 
 lstatic false 
@@ -15,7 +15,7 @@ lpstress false
 # ------------
 lcoulombic true 
 lautoES true 
-epsw 1e-6
+epsw 1e-7
 
 #--------------
 # NMLJ
@@ -28,7 +28,7 @@ trunc no
 #--------------
 #  BHMFTD
 #--------------
-lbhmft true 
+lbhmftd true 
 massit 15.99994 # O
 massit 28.084   # Si
 qit -2.0 #O     
@@ -40,6 +40,7 @@ Abhmftd 7902.1862   1311.5888
 Bbhmftd    4.54668     3.18568
 Cbhmftd   13.145548    0.0
 Dbhmftd   71.279951    0.0
+BDbmhftd  2.64562      0.0
 # ------------
 #    PIM 
 # ------------
@@ -49,9 +50,21 @@ algo_extrapolate_dipole aspc
 extrapolate_order 4   
 
 # Oxygen type 
-lpolar true
 polit 1.59150 0.0 0.0 0.0 1.59150 0.0 0.0 0.0 1.59150
-lpolar false 
+# Si type
+polit 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
+
+# Oxygen  O-O
+lpoldampint 1 1 1 false 
+pol_damp_b 1 1 1 4.74888 
+pol_damp_c 1 1 1 2.227   
+pol_damp_k 1 1 1 4
+
+# Oxygen  O-Si
+lpoldampint 1 1 2 false
+pol_damp_b 1 1 2 3.66480 
+pol_damp_c 1 1 2 1.44589 
+pol_damp_k 1 1 2 4       
 
 # ------------
 #    md  
