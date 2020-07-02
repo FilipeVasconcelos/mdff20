@@ -60,7 +60,7 @@ void init_io(){
 
 /******************************************************************************/
 int iopnode(int step,int npas,int nprint){
-    return ( (step % nprint==0 || step == npas ) && (step > 0) );
+    return ( (step % nprint==0 || step == npas ) && (step >= 0) );
 }
 
 
