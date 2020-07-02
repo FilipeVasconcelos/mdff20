@@ -104,17 +104,21 @@ int read_field(char* controlfn)
             printf("%d %d %d %s\n",type,it,jt,buffer);
             lpoldamping[type][it][jt]=check_boolstring("lpoldamping",buffer); 
         } 
-        if (strcmp(buffer,"pol_damp_b,") == 0 ) {
+        if (strcmp(buffer,"pol_damp_b") == 0 ) {
             fscanf(fp,"%d %d %d",&type,&it,&jt);
-            fscanf(fp,"%f",pol_damp_b[type][it][jt]);
+            printf("type %d it %d jt %d \n",type,it,jt);
+            fscanf(fp,"%lf",&pol_damp_b[type][it][jt]);
+            printf("type %d it %d jt %d b %e\n",type,it,jt,pol_damp_b[type][it][jt]);
         } 
-        if (strcmp(buffer,"pol_damp_c,") == 0 ) {
+        if (strcmp(buffer,"pol_damp_c") == 0 ) {
             fscanf(fp,"%d %d %d",&type,&it,&jt);
-            fscanf(fp,"%f",pol_damp_c[type][it][jt]);
+            printf("type %d it %d jt %d \n",type,it,jt);
+            fscanf(fp,"%lf",&pol_damp_c[type][it][jt]);
         } 
-        if (strcmp(buffer,"pol_damp_k,") == 0 ) {
+        if (strcmp(buffer,"pol_damp_k") == 0 ) {
             fscanf(fp,"%d %d %d",&type,&it,&jt);
-            fscanf(fp,"%d",pol_damp_k[type][it][jt]);
+            fscanf(fp,"%d",&pol_damp_k[type][it][jt]);
+            printf("type %d it %d jt %d k %d\n",type,it,jt,pol_damp_k[type][it][jt]);
         } 
 // ldip_damping, pol_damp_b, pol_damp_c, pol_damp_k
         //ewald sum param 
@@ -185,7 +189,7 @@ void info_field(){
     double rho; /* mass density */
     rho = totalMass * simuCell.inveOmega;
 
-    lqch = false; ldip= false; lqua = false; lpol;
+    lqch = false; ldip= false; lqua = false; lpol=false; ldmp = false;
     for(int it=0; it< ntype ; it++){
         if (qit[it] != 0.0 ) lqch = true;
         for (int j=0;j<3;j++){
@@ -293,7 +297,7 @@ void init_field(char* controlfn){
     if (lcoulombic) {
         lrcutsq=cutlongrange*cutlongrange;
         if (lautoES) set_autoES();
-        if ( is_pim() ) lpim=true;
+        lpim=is_pim();
         init_coulombic();
         init_pim(controlfn);
     }
@@ -341,13 +345,13 @@ void engforce()
 
 
         get_dipoles(mu,&u_pol);
-        multipole_ES(qia,mu,quadia,&u_coul,&pvir_coul,tau_coul,ef,efg,&lqch,&ldip);
+        multipole_ES(qia,mu,quadia,&u_coul,&pvir_coul,tau_coul,ef,efg,&lqch,&ldip,true);
+/*
         printf("u_coul %e\n",u_coul);
         printf("u_pol %e\n",u_pol);
         sample_config(0);
         sample_field_coulombic(ef,efg);
-
-
+*/
         free(mu);
         free(ef);
         free(efg);
