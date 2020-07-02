@@ -6,7 +6,7 @@
 void invertmatrix3x3(double A[3][3]){
     int n = 3;
     int nn= n*n;
-    int pivotarr[3];
+//    int pivotarr[3];
     int ierr;
     double WORK[9];
     int ipiv[3];
