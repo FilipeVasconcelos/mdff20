@@ -135,7 +135,7 @@ void engforce_bhmftd_pbc(double *u, double *pvir, double tau[3][3])
 #endif
 
     #pragma omp parallel shared(srcutsq,rx,ry,rz,vx,vy,vz,fx,fy,fz,typia) \
-                         private(ia,j1,jb,je,ja,rxi,ryi,rzi,rxij,ryij,rzij,rijsq,p1,p2,wij,fxij,fyij,fzij,ir2,d,erh,ir6,ir8,ir6d,ir8d,fdiff6,fdiff8,ir7,ir9)
+                         private(ia,j1,jb,je,ja,rxi,ryi,rzi,rxij,ryij,rzij,rijsq,p1,p2,wij,fxij,fyij,fzij,ir2,d,erh,ir6,ir8,ir6d,ir8d,f6,f8,fdiff6,fdiff8,ir7,ir9)
     {
         #pragma omp for reduction (+:uu,ttau,fx[:nion],fy[:nion],fz[:nion]) schedule(dynamic,16)
         for(ia=atomDec.iaStart;ia<atomDec.iaEnd;ia++) {
@@ -178,8 +178,8 @@ void engforce_bhmftd_pbc(double *u, double *pvir, double tau[3][3])
                         ir8 = ir8 * Dbhmftd[p1][p2];
                         /* damping TT */
                         if (lbhmftd) {
-                            TT_damping_functions(BDbhmftd[p1][p2],1.0 ,d ,&f6 ,&fdiff6, 6 );
-                            TT_damping_functions(BDbhmftd[p1][p2],1.0 ,d ,&f8 ,&fdiff8, 8 );
+                            TT_damping_functions(BDbhmftd[p1][p2],1.0 ,d ,&f6 ,&fdiff6, 6);
+                            TT_damping_functions(BDbhmftd[p1][p2],1.0 ,d ,&f8 ,&fdiff8, 8);
                             ir6d=ir6*f6;
                             ir8d=ir8*f8;
                         }
@@ -193,8 +193,8 @@ void engforce_bhmftd_pbc(double *u, double *pvir, double tau[3][3])
                         ir7 = 6.0 * ir6d / d;
                         ir9 = 8.0 * ir8d / d;
 #ifdef DEBUG_BHMFTD
-                    counttest+=1;
-                    io_node printf("in bhmft main loop %d %d %e %e %e %e\n",ia,ja,uu,erh - ir6d - ir8d,sqrt(rijsq),Abhmftd[p1][p2]);
+            counttest+=1;
+            io_node printf("in bhmft main loop %d %d %e %e %e %e\n",ia,ja,uu,erh - ir6d - ir8d,sqrt(rijsq),Abhmftd[p1][p2]);
 #endif
                         uu += erh - ir6d - ir8d;
                         wij  =  Bbhmftd[p1][p2] * erh - ir7 - ir9 + ir6 * fdiff6 + ir8 * fdiff8;
