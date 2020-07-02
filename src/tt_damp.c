@@ -1,8 +1,6 @@
 #include <math.h>
 #include "tt_damp.h"
 
-
-
 /******************************************************************************/
 /* Tang-Toennies damping function                                             */
 /* fmv adapted from fortran code (Feb 2014)                                   */
@@ -11,7 +9,6 @@
 /******************************************************************************/
 void TT_damping_functions(double b,double c,double r,double *f,double *fd,int order){
 
-    int k;
     double expbdr, br;
     double ff;
                                                                  
@@ -29,10 +26,8 @@ void TT_damping_functions(double b,double c,double r,double *f,double *fd,int or
 }
 
 void get_TT_damp(){
-    int k;
     E_TT[0] = 1.0;
     for(int i=1;i<(MAX_TT_EXPANSION);i++){
         E_TT[i] = E_TT[i-1] / ( (double) i );
     }
 }
-
