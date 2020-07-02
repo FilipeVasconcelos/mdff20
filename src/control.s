@@ -15,7 +15,7 @@ lpstress true
 # ------------
 lcoulombic true 
 lautoES true 
-epsw 1e-7
+epsw 1e-5
 
 #--------------
 # NMLJ
@@ -41,7 +41,7 @@ Abhmftd 7902.1862   1311.5888
 Bbhmftd    4.54668     3.18568
 Cbhmftd   13.145548    0.0
 Dbhmftd   71.279951    0.0
-BDbmhftd   2.64562     0.0
+BDbhmftd   2.64562     0.0
 # ------------
 #    PIM 
 # ------------
@@ -49,14 +49,16 @@ algo_pim scf
 conv_tol_ind  1e-6    
 algo_extrapolate_dipole aspc
 extrapolate_order 4   
+min_scf_pim_iter 10  
+max_scf_pim_iter 50
 
 # Oxygen type 
-polit 1.59150 0.0 0.0 0.0 1.59150 0.0 0.0 0.0 1.59150
+polit 1.59150 0.0 0.0   0.0 1.59150 0.0   0.0 0.0 1.59150
 # Si type
 polit 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
 
 # Oxygen  O-O
-lpoldamping 0 0 0 true
+lpoldamping 0 0 0 true 
 pol_damp_b 0 0 0 4.74888
 pol_damp_c 0 0 0 2.227
 pol_damp_k 0 0 0 4
@@ -65,20 +67,20 @@ pol_damp_k 0 0 0 4
 lpoldamping 0 0 1 true
 pol_damp_b 0 0 1 3.66480
 pol_damp_c 0 0 1 1.44589
-pol_damp_k 0 0 1  4
+pol_damp_k 0 0 1 4
 
 # ------------
 #    md  
 # ------------
 integrator nvt-nhcn
 #integrator nve-vv
-nhc_n          4
-nhc_yosh_order 5
-nhc_mults      4
+nhc_n          3
+nhc_yosh_order 3
+nhc_mults      2
 timesca_thermo 1.0
 temp 2500.0
-npas 0
-nprint 1000
+npas 100 
+nprint 1
 fprint 10
 cprint 100000
 dt .0005
