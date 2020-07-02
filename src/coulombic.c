@@ -8,7 +8,7 @@
 #include "pim.h"
 
 #define DEBUG_COUL
-#define DEBUG_mu_ind
+//#define DEBUG_mu_ind
 /******************************************************************************/
 void allocate_coulombic(){
 #ifdef DEBUG_COUL
@@ -30,6 +30,7 @@ void free_coulombic(){
     free(quadia);
     free_kspace();
     if (lpim) {
+        printf("LPIM \n");
         free(polia);
         free(invepolia);
         free(dipia_ind);
@@ -50,14 +51,12 @@ void get_dipoles(double (*mu)[3],double *upol){
         fy_s[ia]=fy[ia];
         fz_s[ia]=fz[ia];
     }
-
     // static dipoles
     for (int ia=0;ia<nion;ia++){
         for (int i=0;i<3;i++){
             mu[ia][i] = dipia[ia][i];
         }
     }
-
     // induced dipoles from polarizabilities
     if (lpol) {
         // allocate and set to zero
@@ -86,15 +85,12 @@ void get_dipoles(double (*mu)[3],double *upol){
         }
         free(mu_ind);
     }
-
-
     //restore current forces
     for (int ia=0;ia<nion;ia++){
         fx[ia]=fx_s[ia];
         fy[ia]=fy_s[ia];
         fz[ia]=fz_s[ia];
     }
-
     free(fx_s);
     free(fy_s);
     free(fz_s);
@@ -142,8 +138,6 @@ void info_coulombic(){
                 putchar('\n');
             }
         }
-
-
         if (lautoES) {
             printf("ewald summation parameters (from espw) \n");
         }

@@ -5,6 +5,7 @@ bool lqch;
 bool ldip;
 bool lqua;
 bool lpol;
+bool ldmp;
 
 /* ****************************************************************************/
 /*                                prototypes                                  */
