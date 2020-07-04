@@ -1,0 +1,6 @@
+massit 15.99994 # O
+massit 28.084   # Si
+massit 10.811   # B
+qit    -2.0     # O     
+qit     4.0     # Si 
+qit     3.0     # B 

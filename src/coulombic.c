@@ -59,7 +59,7 @@ void free_coulombic(){
 /******************************************************************************/
 void get_dipoles(double (*mu)[3],double *upol){
 
-    //printf("inside get_dipoles\n");
+    printf("inside get_dipoles\n");
 
     // save current forces
     double *fx_s,*fy_s,*fz_s;
@@ -114,6 +114,7 @@ void get_dipoles(double (*mu)[3],double *upol){
     free(fx_s);
     free(fy_s);
     free(fz_s);
+    printf("out of get_dipoles\n");
 }
 /******************************************************************************/
 void init_coulombic(){

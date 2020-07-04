@@ -101,8 +101,9 @@ int main(int argc, char *argv[])
             printf("properties at t=0\n");
             SEPARATOR;
             putchar('\n');
+            write_config();
+            info_thermo(0,NULL); 
         }
-        info_thermo(0,NULL); 
     }
    
     /* ------------------------------------- */ 

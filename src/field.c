@@ -19,7 +19,7 @@
 #include "coulombic.h"
 #include "pim.h"
 
-#define DEBUG_CONGIG_FIELD_COUL
+//#define DEBUG_CONGIG_FIELD_COUL
 /******************************************************************************/
 int read_field(char* controlfn)
 {
@@ -372,10 +372,12 @@ void engforce()
         mu=malloc(nion*sizeof(*mu));
         ef=malloc(nion*sizeof(*ef));
         efg=malloc(nion*sizeof(*efg));
-
+        printf("here!\n");
 
         get_dipoles(mu,&u_pol);
+        printf("here 2!\n");
         multipole_ES(qia,mu,quadia,&u_coul,&pvir_coul,tau_coul,ef,efg,&lqch,&ldip,true);
+        printf("here 3!\n");
 
 #ifdef DEBUG_CONGIG_FIELD_COUL
         printf("u_coul %e\n",u_coul);

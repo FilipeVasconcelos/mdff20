@@ -1,0 +1,8 @@
+include()
+{
+sed -e '\_!INCLUDE <'"$1"'>_{
+        r '"$1"'
+        d
+}'
+}
+include IONS.POT < control_template.s | include BMHFTD.POT | include PIMD.POT > tmp1
