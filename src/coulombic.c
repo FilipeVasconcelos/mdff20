@@ -22,6 +22,26 @@ void allocate_coulombic(){
         invepolia = malloc(nion*sizeof(*invepolia));
         dipia_ind = malloc(nion*sizeof(*dipia_ind));
     }
+    for(int ia=0;ia<nion;ia++){
+        qia[ia]=0.0;
+        for(int i=0;i<3;i++){
+            dipia[ia][i]=0.0;
+            for(int j=0;j<3;j++){
+                quadia[ia][i][j]=0.0;
+            }
+            if (lpim){
+                for(int i=0;i<3;i++){
+                    for(int k=0;k<MAX_EXTRAPOLATE_ORDER+1;k++){
+                        dipia_ind[ia][k][i]=0.0;
+                    }
+                    for(int j=0;j<3;j++){
+                        polia[ia][i][j]=0.0;
+                        invepolia[ia][i][j]=0.0;
+                    }
+                }
+            }
+        }
+    }
 }
 /******************************************************************************/
 void free_coulombic(){
