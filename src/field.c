@@ -19,6 +19,7 @@
 #include "coulombic.h"
 #include "pim.h"
 
+#define DEBUG_CONGIG_FIELD_COUL
 /******************************************************************************/
 int read_field(char* controlfn)
 {
@@ -203,6 +204,20 @@ void info_field(){
             }
         }
     } 
+    for (int it =0; it<ntype; it++){
+        for (int jt =0; jt<ntype; jt++){
+            for (int kt =0; kt<ntype; kt++){
+                if(lpoldamping[jt][it][kt]) ldmp=true; 
+                lpoldamping[jt][kt][it] = lpoldamping[jt][it][kt];
+                pol_damp_b[jt][kt][it] = pol_damp_b[jt][it][kt];
+                pol_damp_c[jt][kt][it] = pol_damp_c[jt][it][kt];
+                pol_damp_k[jt][kt][it] = pol_damp_k[jt][it][kt];
+            }
+        }
+    }
+
+
+
     if ( ( lcoulombic ) && ! ( ( lqch)  || ( ldip ) || ( lqua ) ) ) {
         pError("with lcoulombic :  charges, dipoles or quadrupoles need to be set\n");
         exit(-1);
@@ -234,7 +249,7 @@ void info_field(){
             printf("dipoles :\n");
             printf("--------\n");
             for (int it=0;it<ntype;it++) {
-                printf("mu_%s                 = ",atypit[it]);
+                printf("mu_%-2s                 = ",atypit[it]);
                 for(int k=0;k<3;k++){
                     printf("%8.5f ",dipit[it][k]);
                 }
@@ -246,7 +261,7 @@ void info_field(){
             printf("quadrupoles :\n");
             printf("------------\n");
             for (int it=0;it<ntype;it++) {
-                printf("theta_%s              = \n",atypit[it]);
+                printf("theta_%-2s              = \n",atypit[it]);
                 for(int j=0;j<3;j++){
                     printf("                      ");
                     for(int k=0;k<3;k++){
@@ -262,9 +277,9 @@ void info_field(){
             printf("------------\n");
             for (int it=0;it<ntype;it++) {
                 if ( lpolar[it] ) {
-                    printf("a_%s              = \n",atypit[it]);
+                    printf("a_%-2s                  = \n",atypit[it]);
                     for(int j=0;j<3;j++){
-                        printf("                      ");
+                        printf("                       ");
                         for(int k=0;k<3;k++){
                             printf(" %8.5f",polit[it][j][k]);
                         }
@@ -272,6 +287,21 @@ void info_field(){
                     }
                     putchar('\n');
                 }
+            }
+            if (ldmp) {
+                printf("damping functions :\n");
+                printf("------------\n");
+                printf("               b          c       k   (   b          c       k)\n");
+                for (int it=0;it<ntype;it++) {
+                    if ( lpolar[it] ) {
+                        for (int jt=0;jt<ntype;jt++) {
+                            printf("%2s - %2s  :  %-10.4f %-10.4f %d   (%-10.4f %-10.4f %d)\n",atypit[it],atypit[jt],
+                                    pol_damp_b[it][it][jt],pol_damp_c[it][it][jt],pol_damp_k[it][it][jt],
+                                    pol_damp_b[it][jt][it],pol_damp_c[it][jt][it],pol_damp_k[it][jt][it]);
+                        }
+                    }
+                }
+                putchar('\n');
             }
         }
     }
@@ -346,12 +376,14 @@ void engforce()
 
         get_dipoles(mu,&u_pol);
         multipole_ES(qia,mu,quadia,&u_coul,&pvir_coul,tau_coul,ef,efg,&lqch,&ldip,true);
-/*
+
+#ifdef DEBUG_CONGIG_FIELD_COUL
         printf("u_coul %e\n",u_coul);
         printf("u_pol %e\n",u_pol);
         sample_config(0);
         sample_field_coulombic(ef,efg);
-*/
+#endif
+
         free(mu);
         free(ef);
         free(efg);
