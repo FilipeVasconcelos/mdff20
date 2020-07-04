@@ -95,6 +95,10 @@ void default_md(){
     /* gen allowed rescale integrator */
     allwd_rescale_integrator[0]=1; /*nve-vv*/
     egrator=1; /* nve-vv */
+
+    nprint=1;
+    fprint=1;
+    cprint=1;
 }
 /******************************************************************************/
 void check_md(){
