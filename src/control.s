@@ -1,7 +1,7 @@
 # ------------
 #   global 
 # ------------
-Fposff rnn
+Fposff rvf
 #lverletL false
 lverletL true 
 cutshortrange  5.0 
@@ -15,7 +15,7 @@ lpstress true
 # ------------
 lcoulombic true 
 lautoES true 
-epsw 1e-5
+epsw 1e-6
 
 #--------------
 # NMLJ
@@ -46,14 +46,15 @@ BDbhmftd   2.64562     0.0
 #    PIM 
 # ------------
 algo_pim scf
-conv_tol_ind  1e-6    
+conv_tol_ind  1e-5    
 algo_extrapolate_dipole aspc
 extrapolate_order 4   
 min_scf_pim_iter 10  
-max_scf_pim_iter 50
+max_scf_pim_iter 100
 
 # Oxygen type 
 polit 1.59150 0.0 0.0   0.0 1.59150 0.0   0.0 0.0 1.59150
+#polit 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
 # Si type
 polit 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
 
@@ -79,9 +80,9 @@ nhc_yosh_order 3
 nhc_mults      2
 timesca_thermo 1.0
 temp 2500.0
-npas 100 
-nprint 1
+npas 1000 
+nprint 10
 fprint 10
-cprint 100000
+cprint 10
 dt .0005
 tauTberendsen .0005
