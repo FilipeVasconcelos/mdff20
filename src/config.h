@@ -45,7 +45,7 @@ char                                 **atypia; /* string type of ion */
 int                                    *typia; /* type of ion */
 double                                   *qia; /* charge of ion */
 double                            (*dipia)[3]; /* dipole of ion */
-double (*dipia_ind)[MAX_EXTRAPOLATE_ORDER][3]; /* save induced dipole of ion */
+double (*dipia_ind)[MAX_EXTRAPOLATE_ORDER+1][3]; /* save induced dipole of ion */
 double                        (*quadia)[3][3]; /* quadrupole of ion */
 double                         (*polia)[3][3]; /* polarizability tensor on ion */
 double                     (*invepolia)[3][3]; /* inverse polarizability tensor on ion */
