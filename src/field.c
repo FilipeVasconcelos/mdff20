@@ -216,6 +216,8 @@ void info_field(){
         }
     }
 
+    if (ldmp)  get_TT_damp();
+
 
 
     if ( ( lcoulombic ) && ! ( ( lqch)  || ( ldip ) || ( lqua ) ) ) {

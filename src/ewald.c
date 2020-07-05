@@ -242,9 +242,9 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
     for (int ia=0;ia<nion;ia++){
         printf("mu  %e %e %e\n",mu[ia][0],mu[ia][1],mu[ia][2]);
     }
-    printf("u_dir  %e\n",u_dir);
-    printf("u_rec  %e\n",u_rec);
-    printf("u_self %e\n",u_self);
+    printf("u_dir  %e\n",u_dir*coul_unit);
+    printf("u_rec  %e\n",u_rec*coul_unit);
+    printf("u_self %e\n",u_self*coul_unit);
     printf("u_coul %e\n",*u);
     printf("fx_dir  %e %e %e \n",fx_dir[0],fy_dir[0],fz_dir[0]);
     printf("fx_rec  %e %e %e \n",fx_rec[0],fx_rec[0],fx_rec[0]);
@@ -313,6 +313,8 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
     }
     */
 
+
+
     double expon;
     double qij;
     double d , d2 , d3  , d5 , d7, d9;
@@ -327,6 +329,7 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
 
     double alpha2, alpha3, alpha5, alpha7, alpha9;
     double uu = 0;
+    double uudmp = 0;
     int ia,j1,ja,jb,je,ita,jta;
     double ttau[3][3];
     for (int i=0;i<3;i++){
@@ -350,10 +353,10 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
      ***************************************/
     kardir ( nion , rx , ry , rz , simuCell.B ) ;
 
-//#pragma omp parallel shared(srcutsq,rx,ry,rz,q,vx,vy,vz,fx,fy,fz,typia) \                                                                            private(ia,j1,jb,je,ja,rxi,ryi,rzi,rxij,ryij,rzij,rijsq,p1,p2,wij,fxij,fyij,fzij,ir2,d,erh,ir6,ir8,irf6,fdiff8,ir7,ir9)                                                                                                                {                                                                                                                                 #pragma omp for reduction (+:uu,ttau,fx[:nion],fy[:nion],fz[:nion]) schedule(dynamic,16)        
+//#pragma omp parallel shared(srcutsq,rx,ry,rz,q,vx,vy,vz,fx,fy,fz,typia) \                                                                            private(ia,j1,jb,je,ja,rxi,ryi,rzi,rxij,ryij,rzij,rijsq,p1,p2,wij,fxij,fyij,fzij,ir2,d,erh,ir6,ir8,irf6,fdiff8,ir7,ir9)                                                                                                                {                                                                                                                                 #pragma omp for reduction (+:uu,ttau,fx[:nion],fy[:nion],fz[:nion],uudmp) schedule(dynamic,16)        
 
     #pragma omp parallel default(none) \
-    shared(lrcutsq,q,mu,rx,ry,rz,typia,piroot,pol_damp_b,pol_damp_c,pol_damp_k,lpoldamping,nion,efg_dir,ef_dir,lqchdiptask,lqchtask,ldiptask,alphaES,alpha2,alpha3,alpha5,alpha7,alpha9,verlet_coul,fx_dir,fy_dir,fz_dir,ttau,uu,atomDec,lverletL,lcouldamp) \
+    shared(lrcutsq,q,mu,rx,ry,rz,typia,piroot,pol_damp_b,pol_damp_c,pol_damp_k,lpoldamping,nion,efg_dir,ef_dir,lqchdiptask,lqchtask,ldiptask,alphaES,alpha2,alpha3,alpha5,alpha7,alpha9,verlet_coul,fx_dir,fy_dir,fz_dir,ttau,uu,atomDec,lverletL,lcouldamp,uudmp) \
     private(ita,jta,ia,j1,jb,je,ja,qi,qj,qij,mui,muj,rij,rxi,ryi,rzi,d2,qch_i,dip_i,qch_j,dip_j,fxij,fyij,fzij,dip_iETj,dip_iOUj,qch_iETj,qch_iOUj,d,d3,d5,d7,d9,dm1,dm3,dm5,dm7,dm9,T0,T1,T2,T3,T4,fdamp1,fdamp2,fdampdiff1,fdampdiff2,expon,F0,F1,F2,F3,F4,F5,F1d1,F2d1, F1d2, F2d2,F1_dm3 ,F2_dm5 , F3_dm7 , F4_dm9, ldamp,F2d1_dm5,F2d2_dm5,F1d1_dm3,F1d2_dm3) 
     {
         #pragma omp for reduction (+:uu,ttau,fx_dir[:nion],fy_dir[:nion],fz_dir[:nion],ef_dir[:nion],efg_dir[:nion]) schedule(dynamic,16) 
@@ -461,6 +464,7 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                 F1d2  = - fdamp2 + 1.0;
                 F2d1  = F1d1 + ( d / 3.0 ) * fdampdiff1;
                 F2d2  = F1d2 + ( d / 3.0 ) * fdampdiff2;
+                //printf("F1d1 %e F1d2 %e F2d1 %e F2d2 %e %e %e %e %e %d\n",F1d1,F1d2,F2d1,F2d2,fdamp1,fdamp2,fdampdiff1,fdampdiff2,ldamp);
 
                 /***** set tensors to zeros */
                 for(int i=0; i<3;i++){
@@ -577,7 +581,7 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
             	                      charge-charge interaction                                
                     ===========================================================  
                 */
-                if ( (lqchtask) && (qch_iOUj) ) {
+                if ( (lqchtask) && (qch_iETj) ) {
 #ifdef DEBUG_EWALD_DIR
                     printf("inside charge-charge interaction %d %d\n",ia,ja);
 #endif
@@ -612,7 +616,7 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
     	                      dipole-dipole interaction                                
                    ===========================================================  
                 */
-                if ( ( ldiptask ) && (dip_iOUj) ) {
+                if ( ( ldiptask ) && (dip_iETj) ) {
 #ifdef DEBUG_EWALD_DIR
                     printf("inside dipole-dipole interaction  %d %d\n",ia,ja);
 #endif
@@ -661,8 +665,12 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                         uu += - qi * T1.a[i] * muj[i];
                         uu +=   qj * T1.a[i] * mui[i];
                         if (ldamp) {
+                        //    printf("LDAMP1 %e %e %e %e\n",qi,T1.aD2[i],muj[i],qi *  T1.aD2[i] * muj[i]);
+                        //    printf("LDAMP2 %e %e %e %e\n",qj,T1.aD1[i],mui[i],-qj *  T1.aD1[i] * mui[i]);
                             uu +=  qi *  T1.aD2[i] * muj[i]; 
                             uu += -qj *  T1.aD1[i] * mui[i]; 
+                            uudmp +=  qi *  T1.aD2[i] * muj[i]; 
+                            uudmp += -qj *  T1.aD1[i] * mui[i]; 
                         }
                     }
                     /* forces  
@@ -757,6 +765,7 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
 //        }
 //    }
 
+//    printf("Udmp %e\n",uudmp);
     /*************************************** 
             direct to cartesian                   
      ***************************************/
