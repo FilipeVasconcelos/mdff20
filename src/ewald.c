@@ -19,7 +19,7 @@
 #include "thermo.h"
 #include "tt_damp.h"
 
-//#define DEBUG_EWALD
+#define DEBUG_EWALD
 //#define DEBUG_EWALD_DIR
 
 /******************************************************************************/
@@ -356,7 +356,7 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
 //#pragma omp parallel shared(srcutsq,rx,ry,rz,q,vx,vy,vz,fx,fy,fz,typia) \                                                                            private(ia,j1,jb,je,ja,rxi,ryi,rzi,rxij,ryij,rzij,rijsq,p1,p2,wij,fxij,fyij,fzij,ir2,d,erh,ir6,ir8,irf6,fdiff8,ir7,ir9)                                                                                                                {                                                                                                                                 #pragma omp for reduction (+:uu,ttau,fx[:nion],fy[:nion],fz[:nion],uudmp) schedule(dynamic,16)        
 
     #pragma omp parallel default(none) \
-    shared(lrcutsq,q,mu,rx,ry,rz,typia,piroot,pol_damp_b,pol_damp_c,pol_damp_k,lpoldamping,nion,efg_dir,ef_dir,lqchdiptask,lqchtask,ldiptask,alphaES,alpha2,alpha3,alpha5,alpha7,alpha9,verlet_coul,fx_dir,fy_dir,fz_dir,ttau,uu,atomDec,lverletL,lcouldamp,uudmp) \
+    shared(lrcutsq,q,mu,rx,ry,rz,typia,piroot,pol_damp_b,pol_damp_c,pol_damp_k,lpoldamping,nion,efg_dir,ef_dir,lqchdiptask,lqchtask,ldiptask,alphaES,alpha2,alpha3,alpha5,alpha7,alpha9,verlet_coul,fx_dir,fy_dir,fz_dir,ttau,uu,atomDec,lverletL,lcouldamp,uudmp,atypia) \
     private(ita,jta,ia,j1,jb,je,ja,qi,qj,qij,mui,muj,rij,rxi,ryi,rzi,d2,qch_i,dip_i,qch_j,dip_j,fxij,fyij,fzij,dip_iETj,dip_iOUj,qch_iETj,qch_iOUj,d,d3,d5,d7,d9,dm1,dm3,dm5,dm7,dm9,T0,T1,T2,T3,T4,fdamp1,fdamp2,fdampdiff1,fdampdiff2,expon,F0,F1,F2,F3,F4,F5,F1d1,F2d1, F1d2, F2d2,F1_dm3 ,F2_dm5 , F3_dm7 , F4_dm9, ldamp,F2d1_dm5,F2d2_dm5,F1d1_dm3,F1d2_dm3) 
     {
         #pragma omp for reduction (+:uu,ttau,fx_dir[:nion],fy_dir[:nion],fz_dir[:nion],ef_dir[:nion],efg_dir[:nion]) schedule(dynamic,16) 
@@ -508,6 +508,7 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                 F1_dm3   = F1   * dm3;                                                 
                 F1d1_dm3 = F1d1 * dm3;                                                 
                 F1d2_dm3 = F1d2 * dm3;                                                 
+                //printf("%s-%s F2_dm5 %e F2d1_dm5 %e F2d2_dm5 %e F1_dm3 %e F1d1_dm3 %e F1d2_dm3 %e F1 %e F1d1 %e F1d2 %e F2 %e F2d1 %e F2d2 %e dm3 %e dm5 %e fdamp1 %e fdamp2 %e fdampdiff1 %e fdampdiff2 %e %d\n",atypia[ia],atypia[ja],F2_dm5,F2d1_dm5,F2d2_dm5,F1_dm3,F1d1_dm3,F1d2_dm3,F1,F1d1,F1d2,F2,F2d1,F2d2,dm3,dm5,fdamp1,fdamp2,fdampdiff1,fdampdiff2,ldamp);
     
 
                 for(int j=0; j<3;j++){
@@ -532,7 +533,6 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                     /*   nb of components = 27 => reduced = 10 */
                     /*******************************************/
                     F3_dm7 = F3 * dm7 * 15.0;
-     	            //T3.abc = 0.0;
     	            for(int i=0; i<3;i++){
     	    	        for(int j=0; j<3;j++){
 	    	    	    for(int k=0; k<3;k++){
@@ -594,7 +594,7 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                         ef_dir[ja][i] +=  qi * T1.a[i];
                         if ( ldamp ) {
                             ef_dir[ia][i] +=  qj * T1.aD1[i];
-                            ef_dir[ia][i] += -qi * T1.aD2[i];
+                            ef_dir[ja][i] += -qi * T1.aD2[i];
                         }
                     }
                     
@@ -689,22 +689,23 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                     thole functions only apply to fields not forces    
                     ----------------------------------------------------------------
                     */
-                    for(int j=0; j<3;j++){
-                        fxij += -qi * T2.ab[0][j] * muj[j];
-                        fyij += -qi * T2.ab[1][j] * muj[j];
-                        fzij += -qi * T2.ab[2][j] * muj[j];
-                        fxij +=  qj * T2.ab[0][j] * mui[j];
-                        fyij +=  qj * T2.ab[1][j] * mui[j];
-                        fzij +=  qj * T2.ab[2][j] * mui[j];
+                    for(int i=0; i<3;i++){
+                        fxij += -qi * T2.ab[0][i] * muj[i];
+                        fyij += -qi * T2.ab[1][i] * muj[i];
+                        fzij += -qi * T2.ab[2][i] * muj[i];
+                        fxij +=  qj * T2.ab[0][i] * mui[i];
+                        fyij +=  qj * T2.ab[1][i] * mui[i];
+                        fzij +=  qj * T2.ab[2][i] * mui[i];
                     }
                     if (ldamp) {
-                        for(int j=0; j<3;j++){
-                            fxij += -qj * T2.abD1[j][0] * mui[j];
-                            fyij += -qj * T2.abD1[j][1] * mui[j];
-                            fzij += -qj * T2.abD1[j][2] * mui[j];
-                            fxij +=  qi * T2.abD2[j][0] * muj[j];
-                            fyij +=  qi * T2.abD2[j][1] * muj[j];
-                            fzij +=  qi * T2.abD2[j][2] * muj[j];
+                        for(int i=0; i<3;i++){
+//                            printf("damping on forces q %e mu %e T2D1 %e %e %e T2D2 %e %e %e\n",qj,mui[i],T2.abD1[i][0],T2.abD1[i][1],T2.abD1[i][2],T2.abD2[i][0],T2.abD2[i][1],T2.abD2[i][2]);
+                            fxij += -qj * T2.abD1[i][0] * mui[i];
+                            fyij += -qj * T2.abD1[i][1] * mui[i];
+                            fzij += -qj * T2.abD1[i][2] * mui[i];
+                            fxij +=  qi * T2.abD2[i][0] * muj[i];
+                            fyij +=  qi * T2.abD2[i][1] * muj[i];
+                            fzij +=  qi * T2.abD2[i][2] * muj[i];
                         }
                     }
 
@@ -722,12 +723,12 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                 fy_dir[ja] +=  fyij;
                 fz_dir[ja] +=  fzij;
                 /* TOTAL STRESS TENSOR */
-                ttau[0][0] += - (rij[0] * fxij + rij[0] * fxij)*0.5;
-                ttau[1][1] += - (rij[1] * fyij + rij[1] * fyij)*0.5;
-                ttau[2][2] += - (rij[2] * fzij + rij[2] * fzij)*0.5;
-                ttau[0][1] += - (rij[0] * fyij + rij[1] * fxij)*0.5;
-                ttau[0][2] += - (rij[0] * fzij + rij[2] * fxij)*0.5;
-                ttau[1][2] += - (rij[1] * fzij + rij[2] * fyij)*0.5;
+                ttau[0][0] += - (rij[0] * fxij + rij[0] * fxij);
+                ttau[1][1] += - (rij[1] * fyij + rij[1] * fyij);
+                ttau[2][2] += - (rij[2] * fzij + rij[2] * fzij);
+                ttau[0][1] += - (rij[0] * fyij + rij[1] * fxij);
+                ttau[0][2] += - (rij[0] * fzij + rij[2] * fxij);
+                ttau[1][2] += - (rij[1] * fzij + rij[2] * fyij);
             } /* ja */
         } /* ia */
     } /* omp */ 
@@ -740,7 +741,7 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
     ttau[2][1]=ttau[1][2];
     for(int i=0; i<3;i++){
         for(int j=0; j<3;j++){
-            tau_dir[i][j] =  ttau[i][j] * simuCell.inveOmegaPU;
+            tau_dir[i][j] =  0.5*ttau[i][j] * simuCell.inveOmegaPU;
         }
     }
     /*
