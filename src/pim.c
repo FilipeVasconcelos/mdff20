@@ -507,7 +507,7 @@ void momentpolaSCFkO(double (*mu_ind)[3],double *upol){
     rmsd=DBL_MAX;
     if ( iopnode(istep,npas,nprint) ) {
         printf("  -----------------------------------------------------------\n");
-        printf("                 PIM :     self consistent                   \n");
+        printf("                 PIM :     self consistent (kOv1)            \n");
         printf("  -----------------------------------------------------------\n");
         printf("        iter          u_pol          u_coul            rmsd  \n");
         printf("  -----------------------------------------------------------\n");
@@ -716,9 +716,11 @@ void induced_moment_inner_kO(double (*mu_ind)[3], double (*ef_ext)[3]){
             }
         }
     }
+#ifdef DEBUG_INNER_KO 
     if ( iopnode(istep,npas,nprint ) )  {
-        printf("        inner loop converged in %d steps    rmsd_inner = %e\n",iscf_inner,rmsd_inner);
+        printf("  inner loop converged in %d steps   rmsd_inner = %e\n",iscf_inner,rmsd_inner);
     }
+#endif
     /* restore alphaES */
     alphaES = alphaES_save;
 
