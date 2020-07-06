@@ -369,7 +369,9 @@ void engforce()
         efg=malloc(nion*sizeof(*efg));
 
         get_dipoles(mu,&u_pol);
-        multipole_ES(qia,mu,quadia,&u_coul,&pvir_coul,tau_coul,ef,efg,lqch,ldip,true);
+        multipole_ES(qia,mu,quadia,&u_coul,&pvir_coul,tau_coul,ef,efg,lqch,ldip,lqua,ldmp,
+        /* do   forces stress ef    efg   dir   rec */
+                true,  true,  true, true, true, true);
 
 #ifdef DEBUG_CONGIG_FIELD_COUL
         printf("u_coul %e\n",u_coul);
