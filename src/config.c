@@ -155,7 +155,7 @@ void init_config()
             /***********************************/
             /*       pim field                 */
             /***********************************/
-            if (lpolar[it]) {
+            if (( lcoulombic) && (lpolar[it])) {
                 for (int i=0;i<3;i++){
                     for (int j=0;j<3;j++){
                         polia[ia][i][j]=polit[it][i][j];
