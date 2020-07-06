@@ -17,3 +17,6 @@ typedef struct TENSOR_RK3 {
 typedef struct TENSOR_RK4 {
     double abcd[3][3][3][3];
 } TENSOR_RK4;
+typedef struct TENSOR_RK5 {
+    double abcde[3][3][3][3][5];
+} TENSOR_RK5;
