@@ -9,19 +9,19 @@ cutlongrange   5.0
 skindiff  1.0 
 lstatic false 
 lreduced false 
-lpstress true
+lpstress false 
 # ------------
 #   field
 # ------------
 lcoulombic true 
 lautoES true 
-epsw 1e-6
+epsw 1e-5
 
 #--------------
 # NMLJ
 #--------------
 #lnmlj true
-trunc no 
+#trunc no 
 #massit 39.95
 #epslj .010323576
 #sigmalj 3.405
@@ -45,31 +45,31 @@ BDbhmftd   2.64562     0.0
 # ------------
 #    PIM 
 # ------------
-algo_pim scf
-conv_tol_ind  1e-4    
+algo_pim scfkO
+#algo_pim scf
+conv_tol_ind  1e-5    
 algo_extrapolate_dipole aspc
 extrapolate_order 4   
-min_scf_pim_iter 3  
+min_scf_pim_iter 4  
 max_scf_pim_iter 100
+omegakO 0.7
+
 
 # Oxygen type 
 polit 1.59150 0.0 0.0 0.0 1.59150 0.0 0.0 0.0 1.59150
 #polit 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
 # Si type
 polit 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
-
 # Oxygen  O-O
 lpoldamping 0 0 0 true 
 pol_damp_b 0 0 0 4.74888
 pol_damp_c 0 0 0 2.227
 pol_damp_k 0 0 0 4
-
 # Oxygen  O-Si
 lpoldamping 0 0 1 true
 pol_damp_b 0 0 1 3.66480
 pol_damp_c 0 0 1 1.44589
 pol_damp_k 0 0 1 4
-
 # ------------
 #    md  
 # ------------
@@ -81,7 +81,7 @@ nhc_mults      2
 timesca_thermo 1.0
 temp 2500.0
 npas 1000
-nprint 10
+nprint 100
 fprint 10
 cprint 10
 dt .0005

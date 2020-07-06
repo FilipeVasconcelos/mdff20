@@ -38,7 +38,7 @@ BDbhmftd  1.889           4.15739913          0.0
 #    PIM 
 # ------------
 algo_pim scf
-conv_tol_ind  1e-4
+conv_tol_ind  1e-5
 algo_extrapolate_dipole aspc
 extrapolate_order 4   
 min_scf_pim_iter 3  
