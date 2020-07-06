@@ -17,6 +17,7 @@
 #include "io.h"
 #include "tools.h"
 #include "coulombic.h"
+#include "tt_damp.h"
 #include "pim.h"
 
 //#define DEBUG_CONGIG_FIELD_COUL
@@ -100,26 +101,20 @@ int read_field(char* controlfn)
         } 
         // pola on type
         if (strcmp(buffer,"lpoldamping") == 0 ) {
-            printf("reading lpoldamping\n");
             fscanf(fp,"%d %d %d %s",&type,&it,&jt,buffer);
-            printf("%d %d %d %s\n",type,it,jt,buffer);
             lpoldamping[type][it][jt]=check_boolstring("lpoldamping",buffer); 
         } 
         if (strcmp(buffer,"pol_damp_b") == 0 ) {
             fscanf(fp,"%d %d %d",&type,&it,&jt);
-            printf("type %d it %d jt %d \n",type,it,jt);
             fscanf(fp,"%lf",&pol_damp_b[type][it][jt]);
-            printf("type %d it %d jt %d b %e\n",type,it,jt,pol_damp_b[type][it][jt]);
         } 
         if (strcmp(buffer,"pol_damp_c") == 0 ) {
             fscanf(fp,"%d %d %d",&type,&it,&jt);
-            printf("type %d it %d jt %d \n",type,it,jt);
             fscanf(fp,"%lf",&pol_damp_c[type][it][jt]);
         } 
         if (strcmp(buffer,"pol_damp_k") == 0 ) {
             fscanf(fp,"%d %d %d",&type,&it,&jt);
             fscanf(fp,"%d",&pol_damp_k[type][it][jt]);
-            printf("type %d it %d jt %d k %d\n",type,it,jt,pol_damp_k[type][it][jt]);
         } 
 // ldip_damping, pol_damp_b, pol_damp_c, pol_damp_k
         //ewald sum param 
@@ -217,8 +212,6 @@ void info_field(){
     }
 
     if (ldmp)  get_TT_damp();
-
-
 
     if ( ( lcoulombic ) && ! ( ( lqch)  || ( ldip ) || ( lqua ) ) ) {
         pError("with lcoulombic :  charges, dipoles or quadrupoles need to be set\n");
@@ -374,12 +367,9 @@ void engforce()
         mu=malloc(nion*sizeof(*mu));
         ef=malloc(nion*sizeof(*ef));
         efg=malloc(nion*sizeof(*efg));
-        printf("here!\n");
 
         get_dipoles(mu,&u_pol);
-        printf("here 2!\n");
-        multipole_ES(qia,mu,quadia,&u_coul,&pvir_coul,tau_coul,ef,efg,&lqch,&ldip,true);
-        printf("here 3!\n");
+        multipole_ES(qia,mu,quadia,&u_coul,&pvir_coul,tau_coul,ef,efg,lqch,ldip,true);
 
 #ifdef DEBUG_CONGIG_FIELD_COUL
         printf("u_coul %e\n",u_coul);
