@@ -173,11 +173,8 @@ void run_md()
 {
 
     e_kin=calc_kin();
-    printf("ekin %f\n",e_kin);
     sample_config(0);
 
-    io_node printf("in run_md\n");
-    io_node printf("after previous step (leap-frog)\n"); 
     engforce();
     if(ionode){
         SEPARATOR;
