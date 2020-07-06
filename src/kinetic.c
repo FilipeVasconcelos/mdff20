@@ -126,7 +126,7 @@ void rescale_velocities(int quiet)
     }
     ekin = calc_kin();
     T    = calc_temp(ekin);
-    if (ionode && istep%nprint==0) {
+    if (ionode && istep%nprint==0 && !istep) {
         printf("  rescaling  :  %f \n",lambda);
     }
 }
