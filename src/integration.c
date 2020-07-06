@@ -10,6 +10,8 @@
 #include "timing.h"
 #include "integration.h"
 
+//#define DEBUG_NVT_NHCN
+
 /******************************************************************************/
 void prop_velocity_verlet(){
 
@@ -163,7 +165,9 @@ void nhcn(){
         nvt4 += temp * xi[inhc];
     }
     e_nvt = nvt1 + nvt2 + nvt3 + nvt4;
+#ifdef DEBUG_NVT_NHCN
     io_pnode printf("  e_nvt"ff5"\n",e_nvt,nvt1,nvt2,nvt3,nvt4);
+#endif
 
     free(Q);
 }
