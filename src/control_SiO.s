@@ -13,7 +13,7 @@ lpstress true
 # ------------
 #   field
 # ------------
-lcoulombic false 
+lcoulombic true 
 lautoES true 
 epsw 1e-6
 
@@ -46,15 +46,15 @@ BDbhmftd   2.64562     0.0
 #    PIM 
 # ------------
 algo_pim scf
-conv_tol_ind  1e-5    
+conv_tol_ind  1e-4    
 algo_extrapolate_dipole aspc
 extrapolate_order 4   
-min_scf_pim_iter 10  
+min_scf_pim_iter 3  
 max_scf_pim_iter 100
 
 # Oxygen type 
-#polit 1.59150 0.0 0.0   0.0 1.59150 0.0   0.0 0.0 1.59150
-polit 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
+polit 1.59150 0.0 0.0 0.0 1.59150 0.0 0.0 0.0 1.59150
+#polit 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
 # Si type
 polit 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
 
@@ -80,7 +80,7 @@ nhc_yosh_order 3
 nhc_mults      2
 timesca_thermo 1.0
 temp 2500.0
-npas 0 
+npas 1000
 nprint 10
 fprint 10
 cprint 10
