@@ -63,7 +63,7 @@ void info_thermo(int key, FILE* fp){
                 printf("  ---------------------------------------------\n" );
                 iso=0.0;
                 for (int i=0;i<3;i++){
-                    printf("  "ee3"\n",tau_vdw[i][0],tau_vdw[i][1],tau_vdw[i][2]);
+                    printf("  "tt3"\n",tau_vdw[i][0],tau_vdw[i][1],tau_vdw[i][2]);
                         iso+=tau_vdw[i][i];
                 }
                 printf("  ---------------------------------------------\n" );
@@ -74,7 +74,7 @@ void info_thermo(int key, FILE* fp){
                 printf("  ---------------------------------------------\n" );
                 iso=0.0;
                 for (int i=0;i<3;i++){
-                    printf("  "ee3"\n",tau_coul[i][0],tau_coul[i][1],tau_coul[i][2]);
+                    printf("  "tt3"\n",tau_coul[i][0],tau_coul[i][1],tau_coul[i][2]);
                         iso+=tau_coul[i][i];
                 }
                 printf("  ---------------------------------------------\n" );
@@ -85,7 +85,7 @@ void info_thermo(int key, FILE* fp){
                 printf("  ---------------------------------------------\n" );
                 iso=0.0;
                 for (int i=0;i<3;i++){
-                    printf("  "ee3"\n",tau_tot[i][0],tau_tot[i][1],tau_tot[i][2]);
+                    printf("  "tt3"\n",tau_tot[i][0],tau_tot[i][1],tau_tot[i][2]);
                     iso+=tau_tot[i][i];
                 }
                 printf("  ---------------------------------------------\n" );
@@ -98,7 +98,7 @@ void info_thermo(int key, FILE* fp){
                 printf("  ---------------------------------------------\n" );
                 iso=0.0;
                 for (int i=0;i<3;i++){
-                    printf("  "ee3"\n",tau_tot[i][0],tau_tot[i][1],tau_tot[i][2]);
+                    printf("  "tt3"\n",tau_tot[i][0],tau_tot[i][1],tau_tot[i][2]);
                     iso+=tau_tot[i][i];
                 }
                 printf("  ---------------------------------------------\n" );
