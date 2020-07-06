@@ -53,7 +53,6 @@ void free_coulombic(){
     free(quadia);
     free_kspace();
     if (lpim) {
-        printf("LPIM \n");
         free(polia);
         free(invepolia);
         free(dipia_ind);
@@ -97,6 +96,7 @@ void get_dipoles(double (*mu)[3],double *upol){
                 momentpolaSCF(mu_ind,upol);
                break; 
             case 1 :
+                momentpolaSCFkO(mu_ind,upol);
                break; 
         }
         for (int ia=0;ia<nion;ia++){
