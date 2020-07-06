@@ -3,7 +3,7 @@ EXEMDFF=$1
 
 test_id=$2
 #mpirun -np 2 $EXEMDFF control.F > log
-export OMP_NUM_THREADS=1
+export OMP_NUM_THREADS=4
 $EXEMDFF control.s > log
 echo " mdff calc complete"
 echo ""  > frce
@@ -48,7 +48,7 @@ echo " ------------------------------------------------------"
 echo " TIMING"
 echo " "
 echo " (MDFF) :"
-grep Elapsed log
+grep "Elapsed" log | awk '{print "                           TOTAL :  cpu time    ",$(NF-1)}'
 echo " (CP2K) : "
 grep CP2K ../../cp2k/$test_id/output.cp2k | tail -n 1 | awk '{print "                           TOTAL :  cpu time    ",$NF}'
 echo " ------------------------------------------------------"
