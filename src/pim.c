@@ -12,6 +12,8 @@
 #include "ewald.h"
 #include "coulombic.h"
 
+//#define DEBUG_ASPC
+
 /******************************************************************************/
 int read_pim (char * controlfn) 
 {
@@ -195,11 +197,11 @@ void momentpolaSCF(double (*mu_ind)[3],double *upol){
     iscf=0;
     rmsd=DBL_MAX;
     if ( iopnode(istep,npas,nprint) ) {
-        printf("  -----------------------------------------------------\n");
-        printf("                     running scf algo                  \n");
-        printf("  -----------------------------------------------------\n");
-        putchar('\n');
-        printf(" iter            u_pol           u_ind            rmsd \n");
+        printf("  -----------------------------------------------------------\n");
+        printf("                 PIM :     self consistent                   \n");
+        printf("  -----------------------------------------------------------\n");
+        printf("        iter          u_pol          u_coul            rmsd  \n");
+        printf("  -----------------------------------------------------------\n");
     }
 //    printf("before (while)SCF LOOP \n");
 
@@ -251,15 +253,9 @@ void momentpolaSCF(double (*mu_ind)[3],double *upol){
         //print out
         rmsd=get_rmsd_scf(mu_ind, ef);
         if ( iopnode(istep,npas,nprint ) )  {
-            printf("%5d  "ee3 ee"\n",iscf,uupol*coul_unit,u_coul_ind,u_coul_pol,rmsd);
-//            for (int ia=0;ia<nion;ia++){
-//                printf("mu_ind %e %e %e\n",mu_ind[ia][0],mu_ind[ia][1],mu_ind[ia][2]);
-//            }
+            printf("  scf: %5d  "ee3"\n",iscf+1,uupol*coul_unit,u_coul_pol*coul_unit,rmsd);
         }
         iscf+=1;
-    }
-    if ( iopnode(istep,npas,nprint ) )  {
-        putchar('\n');
     }
 
     //store induced dipole at t
@@ -268,12 +264,18 @@ void momentpolaSCF(double (*mu_ind)[3],double *upol){
             dipia_ind[ia][0][i]=mu_ind[ia][i];
         }
     }
-    printf("ASPC scf dipia_ind ");
-    for (int k=0;k<extrapolate_order;k++){
-        printf("%e ",dipia_ind[0][k][0]);
+    if ( iopnode(istep,npas,nprint ) )  {
+        putchar('\n');
+        printf("  scf converged in %d iterations, rmsd %e\n",iscf,rmsd);
+        putchar('\n');
+#ifdef DEBUG_ASPC
+        printf("  ASPC scf dipia_ind ");
+        for (int k=0;k<extrapolate_order;k++){
+            printf("%e ",dipia_ind[0][k][0]);
+        }
+        printf("-> mu_ind %e\n",mu_ind[0][0]);
+#endif
     }
-    printf("-> mu_ind %e\n",mu_ind[0][0]);
-    printf("iterations %d, rmsd %e\n",iscf,rmsd);
 
 
     *upol=uupol*coul_unit;
