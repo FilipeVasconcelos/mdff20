@@ -19,8 +19,9 @@
 #include "thermo.h"
 #include "tt_damp.h"
 
-#define DEBUG_EWALD
+//#define DEBUG_EWALD
 //#define DEBUG_EWALD_DIR
+//#define DEBUG_EWALD_REC
 
 /******************************************************************************/
 void set_autoES(){
@@ -113,15 +114,15 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
 #endif 
 */
     multipole_ES_dir(q, mu, theta, &u_dir, ef_dir, efg_dir, fx_dir, fy_dir, fz_dir, tau_dir, lq, ld ,lcouldamp);
-/*
-#ifdef DEBUG_EWALD
+
+#ifdef DEBUG_EWALD_DIR
     for (int i=0;i<3;i++){
         printf("ef_dir  %f\n",ef_dir[0][i]);
         printf("ef_dir  %f\n",ef_dir[1][i]);
         printf("\n");
     }
 #endif 
-*/
+
     statime(19);
     mestime(&ewaldDirCPUtime,19,18);
 
@@ -154,6 +155,14 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
     
     statime(20);
     mestime(&ewaldRecCPUtime,20,19);
+
+#ifdef DEBUG_EWALD_REC
+    for (int i=0;i<3;i++){
+        printf("ef_rec  %f\n",ef_rec[0][i]);
+        printf("ef_rec  %f\n",ef_rec[1][i]);
+        printf("\n");
+    }
+#endif 
 
     /*************************************************************/
     /*                SELF AND SURFACE                           */
@@ -357,9 +366,9 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
 
     #pragma omp parallel default(none) \
     shared(lrcutsq,q,mu,rx,ry,rz,typia,piroot,pol_damp_b,pol_damp_c,pol_damp_k,lpoldamping,nion,efg_dir,ef_dir,lqchdiptask,lqchtask,ldiptask,alphaES,alpha2,alpha3,alpha5,alpha7,alpha9,verlet_coul,fx_dir,fy_dir,fz_dir,ttau,uu,atomDec,lverletL,lcouldamp,uudmp,atypia) \
-    private(ita,jta,ia,j1,jb,je,ja,qi,qj,qij,mui,muj,rij,rxi,ryi,rzi,d2,qch_i,dip_i,qch_j,dip_j,fxij,fyij,fzij,dip_iETj,dip_iOUj,qch_iETj,qch_iOUj,d,d3,d5,d7,d9,dm1,dm3,dm5,dm7,dm9,T0,T1,T2,T3,T4,fdamp1,fdamp2,fdampdiff1,fdampdiff2,expon,F0,F1,F2,F3,F4,F5,F1d1,F2d1, F1d2, F2d2,F1_dm3 ,F2_dm5 , F3_dm7 , F4_dm9, ldamp,F2d1_dm5,F2d2_dm5,F1d1_dm3,F1d2_dm3) 
+    private(ita,jta,ia,j1,jb,je,ja,qi,qj,qij,mui,muj,rij,rxi,ryi,rzi,d2,qch_i,dip_i,qch_j,dip_j,fxij,fyij,fzij,dip_iETj,dip_iOUj,qch_iETj,qch_iOUj,d,d3,d5,d7,d9,dm1,dm3,dm5,dm7,dm9,T0,T1,T2,T3,T4,fdamp1,fdamp2,fdampdiff1,fdampdiff2,expon,F0,F1,F2,F3,F4,F5,F1d1,F2d1,F1d2,F2d2,F1_dm3,F2_dm5,F3_dm7,F4_dm9,ldamp,F2d1_dm5,F2d2_dm5,F1d1_dm3,F1d2_dm3) 
     {
-        #pragma omp for reduction (+:uu,ttau,fx_dir[:nion],fy_dir[:nion],fz_dir[:nion],ef_dir[:nion],efg_dir[:nion]) schedule(dynamic,16) 
+        #pragma omp for reduction (+:uu,ttau,fx_dir[:nion],fy_dir[:nion],fz_dir[:nion],ef_dir[:nion],efg_dir[:nion]) schedule(dynamic,8) 
         for(ia=atomDec.iaStart;ia<atomDec.iaEnd;ia++) {
             rxi = rx[ia];
             ryi = ry[ia];
@@ -433,7 +442,9 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
 		// damping function 
                 ldamp = ( (lpoldamping[ita][ita][jta] || lpoldamping[jta][ita][jta] ) && ( lcouldamp ) );
                 if ( ldamp ) {
-//                        printf("DAMPING FUNCTIONS %d %d %d %d %d %e %e %d\n",ia,ja,ita,jta,lcouldamp,pol_damp_b[ita][ita][jta],pol_damp_c[ita][ita][jta],pol_damp_k[ita][ita][jta]);
+#ifdef DEBUG_DIPOLE_DAMPING
+        printf("damping: %d %d %d %d %d %e %e %d\n",ia,ja,ita,jta,lcouldamp,pol_damp_b[ita][ita][jta],pol_damp_c[ita][ita][jta],pol_damp_k[ita][ita][jta]);
+#endif
                         TT_damping_functions(pol_damp_b[ita][ita][jta],
                                              pol_damp_c[ita][ita][jta],d,&fdamp1,&fdampdiff1,
                                              pol_damp_k[ita][ita][jta]);
@@ -581,15 +592,14 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
             	                      charge-charge interaction                                
                     ===========================================================  
                 */
-                if ( (lqchtask) && (qch_iETj) ) {
+                if ( (lqchtask) && (qch_iOUj) ) {
 #ifdef DEBUG_EWALD_DIR
-                    printf("inside charge-charge interaction %d %d\n",ia,ja);
+                    printf("inside charge-charge interaction %d %d %d %d\n",ia,ja,atomDec.iaStart,atomDec.iaEnd);
 #endif
                     /*  potential energy */
                     uu += qij * T0.sca;
-                    
                     // electric field 
-                    for(int i=0; i<3;i++){
+                    for(int i=0;i<3;i++){
             	        ef_dir[ia][i] += -qj * T1.a[i];
                         ef_dir[ja][i] +=  qi * T1.a[i];
                         if ( ldamp ) {
@@ -597,15 +607,13 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                             ef_dir[ja][i] += -qi * T1.aD2[i];
                         }
                     }
-                    
                     // electric field gradient 
-                    for(int i=0; i<3;i++){
-                        for(int j=0; j<3;j++){
+                    for(int i=0;i<3;i++){
+                        for(int j=0;j<3;j++){
                             efg_dir[ia][i][j] += -qj * T2.ab[i][j];
                             efg_dir[ja][i][j] += -qi * T2.ab[i][j];
                         }
                     }
-
                     /* forces */
                     fxij = qij * T1.a[0];
                     fyij = qij * T1.a[1];
@@ -665,12 +673,8 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
                         uu += - qi * T1.a[i] * muj[i];
                         uu +=   qj * T1.a[i] * mui[i];
                         if (ldamp) {
-                        //    printf("LDAMP1 %e %e %e %e\n",qi,T1.aD2[i],muj[i],qi *  T1.aD2[i] * muj[i]);
-                        //    printf("LDAMP2 %e %e %e %e\n",qj,T1.aD1[i],mui[i],-qj *  T1.aD1[i] * mui[i]);
                             uu +=  qi *  T1.aD2[i] * muj[i]; 
                             uu += -qj *  T1.aD1[i] * mui[i]; 
-                            uudmp +=  qi *  T1.aD2[i] * muj[i]; 
-                            uudmp += -qj *  T1.aD1[i] * mui[i]; 
                         }
                     }
                     /* forces  
@@ -786,6 +790,9 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
                       double *fx_rec, double *fy_rec, double *fz_rec , double tau_rec[3][3],
                       bool lqchtask, bool ldiptask){
 
+#ifdef DEBUG_EWALD_REC
+    printf("inside multipole_ES_rec\n");
+#endif
     double uu;
     double kx,ky,kz,Ak,kcoe;
     double rxi,ryi,rzi;
@@ -807,12 +814,16 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
 
     uu=0;
 
-    #pragma omp parallel shared(rx,ry,rz) \
-                         private(ik,qi,kx,ky,kz,Ak,kcoe,rxi,ryi,rzi,k_dot_r,k_dot_mu,rhonk_R,rhonk_I,str,fxij,fyij,fzij,ckria,skria)
+    #pragma omp parallel default(none) shared(rx,ry,rz,q,mu,theta,u_rec,ef_rec,efg_rec,fx_rec,fy_rec,fz_rec,tau_rec,lqchtask,ldiptask,kcoul,uu,ttau,nion) \
+                         private(ik,ia,qi,kx,ky,kz,Ak,kcoe,rxi,ryi,rzi,k_dot_r,k_dot_mu,rhonk_R,rhonk_I,str,fxij,fyij,fzij,ckria,skria,recarg,recarg2)
     { 
         #pragma omp for reduction (+:uu,ttau,fx_rec[:nion],fy_rec[:nion],fz_rec[:nion],ef_rec[:nion],efg_rec[:nion]) schedule(dynamic,8) 
         for (ik=kcoul.kptDec.iaStart;ik<kcoul.kptDec.iaEnd;ik++){
-            //if (kcoul.kk[ik] == 0.0) continue;
+
+#ifdef DEBUG_EWALD_REC
+            printf("k %d %d %d\n",ik,kcoul.kptDec.iaStart,kcoul.kptDec.iaEnd);
+#endif
+            if (kcoul.kk[ik] == 0.0) continue;
             kx   = kcoul.kx[ik];
             ky   = kcoul.ky[ik];
             kz   = kcoul.kz[ik];
