@@ -14,9 +14,7 @@ lpstress false
 # ------------
 lcoulombic true 
 lautoES true 
-epsw     1e-5
-lbhmft  true
-lbhmftd false
+epsw     1e-6
 massit 15.99994 # O
 massit 28.084   # Si
 massit 10.811   # B
@@ -37,11 +35,13 @@ BDbhmftd  1.889           4.15739913          0.0
 # ------------
 #    PIM 
 # ------------
-algo_pim scf
-conv_tol_ind  1e-5
+#algo_pim scf
+algo_pim scfkO
+omegakO 0.9
+conv_tol_ind  1e-6
 algo_extrapolate_dipole aspc
 extrapolate_order 4   
-min_scf_pim_iter 3  
+min_scf_pim_iter 3 
 max_scf_pim_iter 50
 # ----------------------------
 # Polarizabilities
@@ -53,27 +53,25 @@ polit 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 # B type
 polit 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
 # ----------------------------
-#  DIPOLE Damping 
+#  Damping O
 # ----------------------------
-# Oxygen  O-O
+# O-O
 lpoldamping 0 0 0 true 
 pol_damp_b 0 0 0 5.58406251008641721012 
 pol_damp_c 0 0 0 2.8904937083E+00
 pol_damp_k 0 0 0 4
-
-# Oxygen  O-Si
+# O-Si
 lpoldamping 0 0 1 true
 pol_damp_b 0 0 1 3.66480
 pol_damp_c 0 0 1 1.44589
 pol_damp_k 0 0 1 4
-
-# Oxygen  O-B
+# O-B
 lpoldamping 0 0 2 true
 pol_damp_b 0 0 2 4.48243215408077070621
 pol_damp_c 0 0 2 1.3650000000E+00
 pol_damp_k 0 0 2 4
 # ------------
-#    md  
+#    MD  
 # ------------
 # NVE
 #integrator nve-vv
@@ -86,8 +84,8 @@ nhc_mults      2
 timesca_thermo 1.0
 
 temp 2500.0
-npas 100000
-nprint 50
+npas 100
+nprint 10
 fprint 10
 cprint 1000
 dt .0005
