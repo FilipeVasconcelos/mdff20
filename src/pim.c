@@ -13,7 +13,7 @@
 #include "coulombic.h"
 
 //#define DEBUG_ASPC
-
+//#define DEBUG_INNER_KO
 /******************************************************************************/
 int read_pim (char * controlfn) 
 {
@@ -49,6 +49,9 @@ int read_pim (char * controlfn)
         if (strcmp(buffer,"max_scf_pim_iter") == 0 ) {
             fscanf(fp,"%d",&max_scf_pim_iter);
         } 
+        if (strcmp(buffer,"omegakO") == 0 ) {
+            fscanf(fp,"%lf",&omegakO);
+        } 
    }
    fclose(fp);
    return 0;
@@ -58,8 +61,7 @@ int read_pim (char * controlfn)
 void default_pim(){
     /* gen allowed input strings for algoPIM */
     strcpy(allwd_algo_pim[0],"scf");
-    strcpy(allwd_algo_pim[1],"scfKO");
-
+    strcpy(allwd_algo_pim[1],"scfkO");
     /* gen allowed input strings for algo_ext_dipole */
     strcpy(allwd_algo_extrapolate_dipole[0],"poly");
     strcpy(allwd_algo_extrapolate_dipole[1],"aspc");
@@ -99,7 +101,11 @@ void info_pim(){
                 printf("maximum nb iterations : %d\n",max_scf_pim_iter);
                 break;
             case 1 :
-                printf("SCF algorithm KO\n");
+                printf("SCF algorithm by kO\n");
+                printf("minimum nb iterations : %d\n",min_scf_pim_iter);
+                printf("maximum nb iterations : %d\n",max_scf_pim_iter);
+                printf("omegakO               : %e\n",omegakO);
+
                 break;
         }
         switch (algo_extrapolate_dipole) {
@@ -131,10 +137,12 @@ double get_upol(double (*mu)[3]){
         for(int i=0;i<3;i++){
             for(int j=0;j<3;j++){
                 upol+= mu[ia][i]*invepolia[ia][i][j]*mu[ia][j]; 
-                //if ( fabs(polia[ia][i][j]) > 1e-12 ) {
-                   //printf("test invepolia %e\n",1.0/polia[ia][i][j]);
-                //    upol+= mu[ia][i]*(1.0/polia[ia][i][j])*mu[ia][j]; 
-                //}
+#ifdef NON_DIAGONAL_POLIA                
+                if ( fabs(polia[ia][i][j]) > 1e-12 ) {
+                   printf("test invepolia %e\n",1.0/polia[ia][i][j]);
+                    upol+= mu[ia][i]*(1.0/polia[ia][i][j])*mu[ia][j]; 
+                }
+#endif
             }
         }
     }
@@ -142,10 +150,24 @@ double get_upol(double (*mu)[3]){
 }
 
 /******************************************************************************/
+/* simple implementation of the self consistent algorithm :                   */
+/* 
+ * Main Goal is to get induced electric field self consistently               */
+/* Step 1 : Get the electrostatic field (ef_stat)
+ *          from static charges and dipoles                                   */
+/* Step 2 : Get the induced electric dipole (mu_ind) (self consistent)            
+ *          from electric field ef (ef=ef_stat) for the first iteration       */
+/* Step 3 : Get the induced electric field (ef_ind) from induced 
+ *          electric dipole only
+ * Step 4 : Calculate ef = ef_stat + ef_ind                                   */
+/* Step 5 : if not converged go to Step 2                                     */
+/*                                                                            */
+/******************************************************************************/
 void momentpolaSCF(double (*mu_ind)[3],double *upol){
 
-    //printf("inside momentpolaSCF \n");
-    int it;
+#ifdef DEBUG_SCF
+    printf("inside momentpolaSCF \n");
+#endif
     int iscf;
     double rmsd;
     double (*ef)[3];
@@ -153,16 +175,14 @@ void momentpolaSCF(double (*mu_ind)[3],double *upol){
     double (*ef_ind)[3];
     double u_coul_stat,u_coul_ind;
     double u_coul_pol;
-//    double alphaES_save;
     double uupol;
-    double ppvir;
-    double tau[3][3];
-    double (*efg)[3][3];
+    double pdummy;
+    double tdummy[3][3];
+    double (*efgdummy)[3][3];
     double (*zeroch);
-
     zeroch=malloc(nion*sizeof(*zeroch));
     ef=malloc(nion*sizeof(*ef));
-    efg=malloc(nion*sizeof(*efg));
+    efgdummy=malloc(nion*sizeof(*efgdummy));
     ef_stat=malloc(nion*sizeof(*ef_stat));
     ef_ind=malloc(nion*sizeof(*ef_ind));
     for(int ia=0;ia<nion;ia++){
@@ -172,27 +192,26 @@ void momentpolaSCF(double (*mu_ind)[3],double *upol){
             ef_stat[ia][i]=0.0;
             ef_ind[ia][i]=0.0;
             for(int j=0;j<3;j++){
-                efg[ia][i][j]=0.0;
+                efgdummy[ia][i][j]=0.0;
+                tdummy[i][j]=0.0;
             }
         }
     }
 
-    /* static electric field charges+dipoles+...*/
-    multipole_ES(qia,dipia,quadia,&u_coul_stat,&ppvir,tau,ef_stat,efg,true,true,true);
-
-  //  sample_config(0);
-   // sample_field_coulombic(ef_stat,efg);
-    //alphaES_save = alphaES;
+    /* static electric field from 
+     * charges+dipoles+quadrupoles 
+     * and damping
+    */
+    multipole_ES(qia,dipia,quadia,&u_coul_stat,&pdummy,tdummy,ef_stat,efgdummy,lqch,ldip,lqua,ldmp,
+                /* do   forces stress ef    efg    dir   rec */
+                        false, false, true, false, true, true);
 
     /* first electric field is static */
     for (int ia=0;ia<nion;ia++){
         for (int i=0;i<3;i++){
             ef[ia][i]=ef_stat[ia][i];
         }
-//        printf("ia %d ef : "ee3"\n",ia,ef[ia][0],ef[ia][1],ef[ia][2]);
     }
-    
-    //printf("before SCF LOOP %d\n",iopnode(istep,npas,nprint));
     /* SCF LOOP */
     iscf=0;
     rmsd=DBL_MAX;
@@ -203,7 +222,6 @@ void momentpolaSCF(double (*mu_ind)[3],double *upol){
         printf("        iter          u_pol          u_coul            rmsd  \n");
         printf("  -----------------------------------------------------------\n");
     }
-//    printf("before (while)SCF LOOP \n");
 
     while ( ( (iscf<max_scf_pim_iter) && (rmsd>conv_tol_ind))  || (iscf<min_scf_pim_iter) ) {
        
@@ -217,41 +235,33 @@ void momentpolaSCF(double (*mu_ind)[3],double *upol){
         }
         /* predictor */
         if ( ! iscf ) {
-        //    printf("predictor iscf %d \n",iscf);
-  //      printf("before predictor dipia_ind %e mu_ind %e\n",dipia_ind[0][0][0],mu_ind[0][0]);
             extrapolate_dipole_aspc(mu_ind,ef,1);
         }
         else {
             induced_moment(mu_ind,ef);
         }
-/*
-        printf("after predictor\n");
-        for (int ia=0;ia<nion;ia++){
-            printf("mu  %e %e %e\n",mu_ind[ia][0],mu_ind[ia][1],mu_ind[ia][2]);
-        }
-*/
         uupol=get_upol(mu_ind);
-      //  printf("after predictor\n");
 
         /* induced electric field from only induced dipoles */
-        // quadia should not be there */
-        multipole_ES(zeroch,mu_ind,quadia,&u_coul_ind,&ppvir,tau,ef_ind,efg,false,true,false);
+        /* quadia -> quad_ind if induce electric field gradient is wanted  */                
+        /*                                                                   qch   dip  quad  dmp */
+        multipole_ES(zeroch,mu_ind,quadia,&u_coul_ind,&pdummy,tdummy,ef_ind,efgdummy,false,true,false,false,
+        /* do   forces stress ef    efg    dir   rec  */
+                false, false, true, false, true, true);
 
         /* ef = ef_stat + ef_ind */
         for (int ia=0;ia<nion;ia++){
-            it = typia[ia];
             for (int i=0;i<3;i++){
                 ef[ia][i] = ef_stat[ia][i] + ef_ind[ia][i];
             }
-//        printf("ia %d it %d atypia %s lpolar[it] %d mu = %e %e %e ef = %e %e %e %e %e %e %e %e %e\n",ia,it,atypia[ia],lpolar[it],mu_ind[ia][0],mu_ind[ia][1],mu_ind[ia][2],ef[ia][0],ef[ia][1],ef[ia][2],ef_stat[ia][0],ef_stat[ia][1],ef_stat[ia][2],ef_ind[ia][0],ef_ind[ia][1],ef_ind[ia][2]);
         }
         u_coul_pol = u_coul_stat - u_coul_ind;
         
         /* corrector */
         if (!iscf) extrapolate_dipole_aspc(mu_ind,ef,2);
 
-        //print out
-        rmsd=get_rmsd_scf(mu_ind, ef);
+
+        rmsd=get_rmsd_mu(mu_ind, ef);
         if ( iopnode(istep,npas,nprint ) )  {
             printf("  scf: %5d  "ee3"\n",iscf+1,uupol*coul_unit,u_coul_pol*coul_unit,rmsd);
         }
@@ -277,10 +287,9 @@ void momentpolaSCF(double (*mu_ind)[3],double *upol){
 #endif
     }
 
-
     *upol=uupol*coul_unit;
     free(ef);
-    free(efg);
+    free(efgdummy);
     free(ef_stat);
     free(ef_ind);
     free(zeroch);
@@ -303,7 +312,6 @@ void extrapolate_dipole_aspc(double (*mu_ind)[3] , double (*ef)[3], int key ){
 
     // switch to lower order of extrapolation
     // if time step is not large enough to store previous dipoles steps
-    //
     if ( istep >= extrapolate_order+1 ) {
         ext_ord = extrapolate_order;
     }
@@ -315,7 +323,6 @@ void extrapolate_dipole_aspc(double (*mu_ind)[3] , double (*ef)[3], int key ){
           ext_ord = istep - 1;
         }
     }
-//    printf("ext_ord %d\n",ext_ord);
     switch (ext_ord) {
         default:
             io_node pError("value of aspc extrapolation order not available should be 0<= extrapolate_order <= 4\n");
@@ -361,7 +368,6 @@ void extrapolate_dipole_aspc(double (*mu_ind)[3] , double (*ef)[3], int key ){
             W_ASPC    =  6.0/11.0;
             break;
     }
-    //printf("after switch\n");
 
     /* predictor */
     if (key == 1) {
@@ -371,14 +377,12 @@ void extrapolate_dipole_aspc(double (*mu_ind)[3] , double (*ef)[3], int key ){
                 mu_ind[ia][i]=0.0;
             }
             for (int k=0;k<ext_ord+1;k++){
-            //    if ( !ia ) printf("(pred) ext_ord %d k %d\n",ext_ord,k);
                 for (int i=0;i<3;i++){
                     mu_ind[ia][i]+=B_ASPC[k]*dipia_ind[ia][k][i];
                 }
             }
             if (ext_ord != extrapolate_order) ext_ord+=1;
             for (int k=ext_ord;k>0;k--){ 
-            //    if ( !ia ) printf("(save prev) ext_ord %d k %d => %d\n",ext_ord,k-1,k);
                 for (int i=0;i<3;i++){
                     dipia_ind[ia][k][i]=dipia_ind[ia][k-1][i];
                 }
@@ -409,6 +413,188 @@ void extrapolate_dipole_aspc(double (*mu_ind)[3] , double (*ef)[3], int key ){
     free(mu_save);
 
 }
+
+/******************************************************************************/
+/* Root mean square deviation :                                               */
+/*          mu = alpha E                                                      */  
+/*      rmsd = sqrt ((mu/alpha -E)^2/ npol )                                  */
+/******************************************************************************/
+double get_rmsd_mu(double (*mu)[3], double (*ef)[3]){
+
+    double rmsd=0.0;
+    int npol=0;
+    int it;
+
+    for (int ia=0;ia<nion;ia++){
+        it = typia[ia];
+        if (!lpolar[it]) continue;
+        npol += 1;
+        for (int i=0;i<3;i++){
+            if (polia[ia][i][i] != 0.0 ){
+                rmsd+= (mu[ia][i] / polia[ia][i][i] - ef[ia][i])*
+                       (mu[ia][i] / polia[ia][i][i] - ef[ia][i]);
+            }
+        }
+    }
+    return sqrt(rmsd/(double)npol);
+}
+
+/******************************************************************************/
+/* SCF kO algo                                                                */
+/* by Kirill Okhotnikov  somewhere in 2014                                    */
+/* the main idea is to perform most of calculation in real space (ewal_dir)   */
+/* as the electric dipole are shorter ranged copare to charges                */
+/******************************************************************************/
+void momentpolaSCFkO(double (*mu_ind)[3],double *upol){
+
+#ifdef DEBUG_SCF
+    printf("inside momentpolaSCF \n");
+#endif
+    int it;
+    int iscf;
+    double rmsd;
+    double (*ef)[3];
+    double (*ef_stat)[3];
+    double (*ef_ind)[3];
+    double (*f_ind)[3];
+    double (*dmu_ind)[3];
+    double u_coul_stat,u_coul_ind;
+    double u_coul_pol;
+    double uupol;
+    double pdummy;
+    double tdummy[3][3];
+    double (*efgdummy)[3][3];
+    double (*zeroch);
+    zeroch=malloc(nion*sizeof(*zeroch));
+    ef=malloc(nion*sizeof(*ef));
+    efgdummy=malloc(nion*sizeof(*efgdummy));
+    ef_stat=malloc(nion*sizeof(*ef_stat));
+    ef_ind=malloc(nion*sizeof(*ef_ind));
+    f_ind=malloc(nion*sizeof(*f_ind));
+    dmu_ind=malloc(nion*sizeof(*dmu_ind));
+    for(int ia=0;ia<nion;ia++){
+        zeroch[ia]=0.0;
+        for(int i=0;i<3;i++){
+            ef[ia][i]=0.0;
+            ef_stat[ia][i]=0.0;
+            ef_ind[ia][i]=0.0;
+            f_ind[ia][i]=0.0;
+            dmu_ind[ia][i]=0.0;
+            for(int j=0;j<3;j++){
+                efgdummy[ia][i][j]=0.0;
+                tdummy[i][j]=0.0;
+            }
+        }
+    }
+
+    /* static electric field from 
+     * charges+dipoles+quadrupoles 
+     * and damping
+    */
+    multipole_ES(qia,dipia,quadia,&u_coul_stat,&pdummy,tdummy,ef_stat,efgdummy,lqch,ldip,lqua,ldmp,
+                /* do   forces stress ef    efg    dir   rec */
+                        false, false, true, false, true, true);
+
+    /* first electric field is static */
+    for (int ia=0;ia<nion;ia++){
+        for (int i=0;i<3;i++){
+            ef[ia][i]=ef_stat[ia][i];
+            f_ind[ia][i]=ef_stat[ia][i];
+        }
+    }
+    /* SCF LOOP */
+    iscf=0;
+    rmsd=DBL_MAX;
+    if ( iopnode(istep,npas,nprint) ) {
+        printf("  -----------------------------------------------------------\n");
+        printf("                 PIM :     self consistent                   \n");
+        printf("  -----------------------------------------------------------\n");
+        printf("        iter          u_pol          u_coul            rmsd  \n");
+        printf("  -----------------------------------------------------------\n");
+    }
+
+    while ( ( (iscf<max_scf_pim_iter) && (rmsd>conv_tol_ind))  || (iscf<min_scf_pim_iter) ) {
+       
+        /* predictor */
+        if ( ! iscf ) {
+            extrapolate_dipole_aspc(mu_ind,ef,1);
+        }
+        else {
+            induced_moment_inner_kO(dmu_ind,f_ind);
+            for (int ia=0;ia<nion;ia++){
+                for (int i=0;i<3;i++){
+                    mu_ind[ia][i] += dmu_ind[ia][i];
+                }
+            }
+        }
+        uupol=get_upol(mu_ind);
+
+        /* induced electric field from only induced dipoles */
+        /* quadia -> quad_ind if induce electric field gradient is wanted  */                
+        /*                                                                   qch   dip  quad  dmp */
+        multipole_ES(zeroch,mu_ind,quadia,&u_coul_ind,&pdummy,tdummy,ef_ind,efgdummy,false,true,false,false,
+        /* do   forces stress ef    efg    dir   rec  */
+                false, false, true, false, true, true);
+
+        /* ef = ef_stat + ef_ind */
+        for (int ia=0;ia<nion;ia++){
+            for (int i=0;i<3;i++){
+                ef[ia][i] = ef_stat[ia][i] + ef_ind[ia][i];
+            }
+        }
+        u_coul_pol = u_coul_stat - u_coul_ind;
+        
+        /* corrector */
+        if (!iscf) extrapolate_dipole_aspc(mu_ind,ef,2);
+
+
+        rmsd=get_rmsd_mu(mu_ind, ef);
+        /* kO */
+        for (int ia=0;ia<nion;ia++){
+            for (int i=0;i<3;i++){
+                it = typia[ia];
+                if (!lpolar[it]) continue;
+                f_ind[ia][i] = ef[ia][i] - mu_ind[ia][i]*invepolia[ia][i][i];
+            }
+        }
+        /* kO */
+        if ( iopnode(istep,npas,nprint ) )  {
+            printf("  scf: %5d  "ee3"\n",iscf+1,uupol*coul_unit,u_coul_pol*coul_unit,rmsd);
+        }
+        iscf+=1;
+    }
+
+    //store induced dipole at t
+    for (int ia=0;ia<nion;ia++){
+        for (int i=0;i<3;i++){
+            dipia_ind[ia][0][i]=mu_ind[ia][i];
+        }
+    }
+    if ( iopnode(istep,npas,nprint ) )  {
+        putchar('\n');
+        printf("  scf converged in %d iterations, rmsd %e\n",iscf,rmsd);
+        putchar('\n');
+#ifdef DEBUG_ASPC
+        printf("  ASPC scf dipia_ind ");
+        for (int k=0;k<extrapolate_order;k++){
+            printf("%e ",dipia_ind[0][k][0]);
+        }
+        printf("-> mu_ind %e\n",mu_ind[0][0]);
+#endif
+    }
+
+    *upol=uupol*coul_unit;
+    free(ef);
+    free(efgdummy);
+    free(ef_stat);
+    free(ef_ind);
+    free(f_ind);
+    free(dmu_ind);
+    free(zeroch);
+
+}
+
+
 /******************************************************************************/
 /* this subroutine calculates the induced moment from the total electric 
    field and the polarizability tensor
@@ -434,7 +620,6 @@ void induced_moment(double (*mu_ind)[3], double (*ef)[3]){
         [ mu_ind ] = e A 
     --------------------------------------------------------------- 
     */
-
     for (int ia=0;ia<nion;ia++){
         it = typia[ia];
         if (!lpolar[it]) continue;
@@ -448,25 +633,102 @@ void induced_moment(double (*mu_ind)[3], double (*ef)[3]){
 }
 
 /******************************************************************************/
+/* get induced electric dipole from real part sum only                        */
+/* author : kO                                                                */
 /******************************************************************************/
-double get_rmsd_scf(double (*mu)[3], double (*ef)[3]){
+void induced_moment_inner_kO(double (*mu_ind)[3], double (*ef_ext)[3]){
 
-    double rmsd=0.0;
-    int npol=0;
-    int it;
+#ifdef DEBUG_INNER_KO 
+    printf("inside induced_moment_inner_kO\n");
+#endif
+    double udummy; 
+    int iscf_inner;
+    double rmsd_inner,rmsd_ext;
+    double alphaES_save;
+    iscf_inner=0;
+    rmsd_inner=DBL_MAX;
+    alphaES_save = alphaES; 
+    double (*mu_prev)[3],(*zerovec)[3],(*ef_tot)[3],(*ef_ind)[3];
+    double (*zeroch);
+    double pdummy;
+    double tdummy[3][3];
+    double (*efgdummy)[3][3];
+    zeroch=malloc(nion*sizeof(*zeroch));
+    mu_prev=malloc(nion*sizeof(*mu_prev));
+    zerovec=malloc(nion*sizeof(*zerovec));
+    ef_tot=malloc(nion*sizeof(*ef_tot));
+    ef_ind=malloc(nion*sizeof(*ef_ind));
+    efgdummy=malloc(nion*sizeof(*efgdummy));
+    for(int ia=0;ia<nion;ia++){
+        zeroch[ia]=0.0;
+        for(int i=0;i<3;i++){
+            mu_prev[ia][i]=0.0;
+            zerovec[ia][i]=0.0;
+            ef_tot[ia][i]=ef_ext[ia][i];
+            ef_ind[ia][i]=0.0;
+            for(int j=0;j<3;j++){
+                efgdummy[ia][i][j]=0.0;
+            }
 
-    for (int ia=0;ia<nion;ia++){
-        it = typia[ia];
-        if (!lpolar[it]) continue;
-        npol += 1;
-        for (int i=0;i<3;i++){
-            if (polia[ia][i][i] != 0.0 ){
-                rmsd+= (mu[ia][i] / polia[ia][i][i] - ef[ia][i])*
-                       (mu[ia][i] / polia[ia][i][i] - ef[ia][i]);
+        }
+    }
+    rmsd_ext = get_rmsd_mu(zerovec, ef_tot);
+    induced_moment(mu_ind,ef_tot);
+
+    for(int ia=0;ia<nion;ia++){
+        for(int i=0;i<3;i++){
+            mu_ind[ia][i]*=omegakO;
+        }
+    }
+
+    /* inner loop */
+    while ((iscf_inner <=10) && (rmsd_inner > 0.1*rmsd_ext) ) {
+
+        iscf_inner+=1;
+        /* alpha is reduced for the short-range dipole-dipole interaction
+         only real part is calculated in the inner loop*/
+        alphaES = 0.001;
+    
+        for(int ia=0;ia<nion;ia++){
+            for(int i=0;i<3;i++){
+                mu_prev[ia][i]=mu_ind[ia][i];
+            }
+        }
+        
+        /* induced electric field from only induced dipoles */
+        /* quadia -> quad_ind if induce electric field gradient is wanted  */                
+        /*                                                                   qch   dip  quad  dmp */
+        multipole_ES(zeroch,mu_ind,quadia,&udummy,&pdummy,tdummy,ef_ind,efgdummy,false,true,false,false,
+        /* do   forces stress ef    efg    dir   rec  */
+                false, false, true, false, true, false);
+
+        for(int ia=0;ia<nion;ia++){
+            for(int i=0;i<3;i++){
+                ef_tot[ia][i] = ef_ext[ia][i] + ef_ind[ia][i];
+            } 
+        }
+        
+        rmsd_inner = get_rmsd_mu(mu_ind, ef_tot);
+        induced_moment(mu_ind,ef_tot);
+        for(int ia=0;ia<nion;ia++){
+            for(int i=0;i<3;i++){
+                mu_ind[ia][i]= (1-omegakO)*mu_prev[ia][i] + omegakO*mu_ind[ia][i] ;
             }
         }
     }
-    return sqrt(rmsd/(double)npol);
+    if ( iopnode(istep,npas,nprint ) )  {
+        printf("        inner loop converged in %d steps    rmsd_inner = %e\n",iscf_inner,rmsd_inner);
+    }
+    /* restore alphaES */
+    alphaES = alphaES_save;
+
+    free(mu_prev);
+    free(zeroch);
+    free(zerovec);
+    free(ef_tot);
+    free(ef_ind);
+    free(efgdummy);
+#ifdef DEBUG_INNER_KO 
+    printf("out of induced_moment_inner_kO\n");
+#endif
 }
-
-
