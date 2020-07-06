@@ -7,8 +7,11 @@
 #include "kspace.h"
 #include "pim.h"
 
+#ifdef DEBUG
 #define DEBUG_COUL
-//#define DEBUG_mu_ind
+#define DEBUG_DIPOLE
+#endif
+
 /******************************************************************************/
 void allocate_coulombic(){
 #ifdef DEBUG_COUL
@@ -59,8 +62,9 @@ void free_coulombic(){
 /******************************************************************************/
 void get_dipoles(double (*mu)[3],double *upol){
 
+#ifdef DEBUG_DIPOLE
     printf("inside get_dipoles\n");
-
+#endif
     // save current forces
     double *fx_s,*fy_s,*fz_s;
     fx_s=malloc(nion*sizeof(*fx_s));
@@ -99,7 +103,7 @@ void get_dipoles(double (*mu)[3],double *upol){
             for (int i=0;i<3;i++){
                 mu[ia][i] += mu_ind[ia][i]; 
             }
-#ifdef DEBUG_mu_ind
+#ifdef DEBUG_DIPOLE
             printf("ia %d mu_ind %e %e %e\n",ia,mu_ind[ia][0],mu_ind[ia][1],mu_ind[ia][2]);
 #endif
         }
@@ -114,7 +118,9 @@ void get_dipoles(double (*mu)[3],double *upol){
     free(fx_s);
     free(fy_s);
     free(fz_s);
+#ifdef DEBUG_DIPOLE
     printf("out of get_dipoles\n");
+#endif
 }
 /******************************************************************************/
 void init_coulombic(){

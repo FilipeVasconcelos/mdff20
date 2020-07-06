@@ -12,18 +12,19 @@
 #define xx6 xx3 xx3
 #define xx9 xx6 xx xx
 #define xx11 xx9 xx3
-#define ff "%15.8f " 
-#define ee "%15.8e " 
+#define ff "%15.7f " 
+#define ee "%15.7e " 
 #define FF "%19.12f " 
 #define EE "%19.12e " 
-#define ff3 "%15.8f %15.8f %15.8f " 
-#define ff5 "%15.8f %15.8f %15.8f %15.8f %15.8f " 
-#define ee3 "%15.8e %15.8e %15.8e " 
+#define ff3 "%15.7f %15.7f %15.7f " 
+#define ff5 "%15.7f %15.7f %15.7f %15.7f %15.7f " 
+#define ee3 "%15.7e %15.7e %15.7e " 
 #define FF3 "%19.12f %19.12f %19.12f " 
 #define EE3 "%19.12e %19.12e %19.12e " 
 #define ee6 ee3 ee3
 #define ee9 ee6 ee3 
 
+#define tt3 "%14.7e %14.7e %14.7e " 
 /*
 --------------------------------------------------
   Main constants and units definition of the code
