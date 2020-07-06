@@ -52,6 +52,14 @@ def read_OSZIFF(filename):
                 pvir_coul.append(float(l[4]))
                 volu.append(float(l[5]))
                 htot.append(float(l[6]))
+    if k%2 != 0:
+        step.pop()
+        time.pop()
+        etot.pop()
+        ekin.pop()
+        utot.pop()
+        uvdw.pop()
+        ucou.pop()
     f.close()
 
     alldata.append(step)
