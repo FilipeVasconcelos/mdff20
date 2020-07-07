@@ -8,13 +8,13 @@
 #define BSEPARATOR for(int i=0;i<105;i++) putchar('-');putchar('\n')
 #define BLANKLINE  putchar('\n');
 #define BSEPF(X) for(int i=0;i<105;i++) fprintf(X,"-");fprintf(X,"\n")
-#define io_node if ( ionode ) 
-#define io_pnode if ( ionode && iopnode(istep,npas,nprint) ) 
+#define io_node if ( ionode )
+#define io_pnode if ( ionode && iopnode(istep,npas,nprint) )
 #define pError(X) if (ionode) fprintf(stderr,RED"ERROR : "RES X)
 
 #define OSZHEADER "   step      Time/Temp   Etot/Pressure    Ekin/Pvir_nb  Utot/Pvir_coul      U_nb/Omega     U_coul/Htot\n"
 int oszcall;
-char *controlfn; 
+char *controlfn;
 bool ionode;
 
 void headerstdout(char* time ,int numprocs);

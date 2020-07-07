@@ -13,7 +13,13 @@
 #include "verlet.h"
 #include "bhmftd.h"
 
-//#define DEBUG_BHMFTD
+#ifdef DEBUG
+    #define DEBUG_BHMFTD
+#endif
+//#define DEBUG_
+#ifdef DEBUG_
+    #define DEBUG_BHMFTD
+#endif
 
 /******************************************************************************/
 int read_bhmftd(char* controlfn) {
@@ -100,7 +106,7 @@ void init_bhmftd(char* controlfn) {
             }
         }
     }
-    
+
     if (lbhmftd) get_TT_damp();
 
     info_bhmftd();
@@ -134,8 +140,11 @@ void engforce_bhmftd_pbc(double *u, double *pvir, double tau[3][3])
     int counttest=0;
 #endif
 
-    #pragma omp parallel shared(srcutsq,rx,ry,rz,vx,vy,vz,fx,fy,fz,typia) \
-                         private(ia,j1,jb,je,ja,rxi,ryi,rzi,rxij,ryij,rzij,rijsq,p1,p2,wij,fxij,fyij,fzij,ir2,d,erh,ir6,ir8,ir6d,ir8d,f6,f8,fdiff6,fdiff8,ir7,ir9)
+    #pragma omp parallel default(none)\
+                         shared(srcutsq,rx,ry,rz,vx,vy,vz,fx,fy,fz,ttau,uu,typia,nion,atomDec,lverletL,verlet_nb,\
+                                 Abhmftd,Bbhmftd,Cbhmftd,Dbhmftd,BDbhmftd,lbhmftd)\
+                         private(ia,j1,jb,je,ja,rxi,ryi,rzi,rxij,ryij,rzij,rijsq,p1,p2,wij,\
+                                 fxij,fyij,fzij,ir2,d,erh,ir6,ir8,ir6d,ir8d,f6,f8,fdiff6,fdiff8,ir7,ir9)
     {
         #pragma omp for reduction (+:uu,ttau,fx[:nion],fy[:nion],fz[:nion]) schedule(dynamic,16)
         for(ia=atomDec.iaStart;ia<atomDec.iaEnd;ia++) {

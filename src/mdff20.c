@@ -7,7 +7,7 @@
 #ifdef MPI
 #include <mpi.h>
 #endif
-#ifdef OMP 
+#ifdef OMP
 #include <omp.h>
 #endif
 #include "color_mdff.h"
@@ -37,8 +37,8 @@ int main(int argc, char *argv[])
 
 #ifdef MPI
     MPI_Init(NULL,NULL);
-    double startingTime, finishingTime; 
-    startingTime = MPI_Wtime(); 
+    double startingTime, finishingTime;
+    startingTime = MPI_Wtime();
     init_io();
     MPI_Comm_rank(MPI_COMM_WORLD,&myrank);
     MPI_Comm_size(MPI_COMM_WORLD,&numprocs);
@@ -59,13 +59,13 @@ int main(int argc, char *argv[])
 
     if(argc < 2)
     {
-        io_node printf(BLU"Usage :"RES" ./mdff20.x <filename>\n");
+        io_node printf(BLU"  Usage :"RES" ./mdff20.x <filename>\n");
         exit(-1);
     }
     //main control file
     controlfn=argv[1];
 
-    // header output à la MDFF 
+    // header output à la MDFF
     headerstdout(pstartingDate,numprocs);
 
     init_global(controlfn);
@@ -93,20 +93,20 @@ int main(int argc, char *argv[])
     }
     else {
         e_kin=calc_kin();
-        io_node printf("static properties\n");
+        io_node printf("  static properties\n");
         /* energie, force and pressure */
         engforce();
         if(ionode){
             SEPARATOR;
-            printf("properties at t=0\n");
+            printf("  properties at t=0\n");
             SEPARATOR;
             putchar('\n');
             write_config();
-            info_thermo(0,NULL); 
+            info_thermo(0,NULL);
         }
     }
-   
-    /* ------------------------------------- */ 
+
+    /* ------------------------------------- */
     info_timing();
     finishingDate = time(NULL);
     pfinishingDate=strdup(asctime(localtime(&finishingDate)));
@@ -115,15 +115,15 @@ int main(int argc, char *argv[])
         SEPARATOR;
 #ifdef MPI
         finishingTime = MPI_Wtime();
-        double elapsedTime=finishingTime-startingTime; 
+        double elapsedTime=finishingTime-startingTime;
 #elif OMP
         finishingTime = omp_get_wtime();
-        double elapsedTime=finishingTime-startingTime; 
+        double elapsedTime=finishingTime-startingTime;
 #else
         double elapsedTime=((double) clock()-startingTime)/CLOCKS_PER_SEC;
 #endif
-        printf("Elapsed time : %5.3f (s)\n", elapsedTime );
-        printf("Date         : %s", pfinishingDate);
+        printf("  Elapsed time : %5.3f (s)\n", elapsedTime );
+        printf("  Date         : %s", pfinishingDate);
     }
     free_config();
     free_md();

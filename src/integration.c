@@ -10,7 +10,13 @@
 #include "timing.h"
 #include "integration.h"
 
-//#define DEBUG_NVT_NHCN
+#ifdef DEBUG
+    #define DEBUG_NVT_NHCN
+#endif
+//#define DEBUG_
+#ifdef DEBUG_
+    #define DEBUG_NVT_NHCN
+#endif
 
 /******************************************************************************/
 void prop_velocity_verlet(){
@@ -20,7 +26,7 @@ void prop_velocity_verlet(){
     fxs=malloc(nion*sizeof(*fxs));
     fys=malloc(nion*sizeof(*fys));
     fzs=malloc(nion*sizeof(*fzs));
-    double dtsq2 = dt * dt * 0.5; 
+    double dtsq2 = dt * dt * 0.5;
     double dt2 = dt * 0.5;
 
     for(int ia=0;ia<nion;ia++){
@@ -43,7 +49,7 @@ void prop_velocity_verlet(){
         kin     += (vx [ia]* vx [ia]+ vy [ia]*vy [ia] + vz [ia]*vz [ia] )*massia[ia];
     }
     // -------------------------
-    // full t+dt kinetic energy 
+    // full t+dt kinetic energy
     // -------------------------
     e_kin=kin*0.5;
     free(fxs);
@@ -82,7 +88,7 @@ void prop_pos_vel_verlet(double* kin){
 
 /******************************************************************************/
 void prop_leap_frog(){
-    
+
     engforce();
 
     statime(12);
@@ -93,10 +99,10 @@ void prop_leap_frog(){
     urx=malloc(nion*sizeof(*urx));
     ury=malloc(nion*sizeof(*ury));
     urz=malloc(nion*sizeof(*urz));
-  
-    double kin=0.0; 
-    for (int ia=0; ia < nion ; ia++)    { 
-        // r(t+dt) = 2 r(t) - r (t-dt) + f(t)/m dt*dt 
+
+    double kin=0.0;
+    for (int ia=0; ia < nion ; ia++)    {
+        // r(t+dt) = 2 r(t) - r (t-dt) + f(t)/m dt*dt
         urx [ia] = 2.0 * rx [ ia ] - rxs [ ia ] + fx [ ia ] * dtsq * invemassia[ia];
         ury [ia] = 2.0 * ry [ ia ] - rys [ ia ] + fy [ ia ] * dtsq * invemassia[ia];
         urz [ia] = 2.0 * rz [ ia ] - rzs [ ia ] + fz [ ia ] * dtsq * invemassia[ia];
@@ -106,16 +112,16 @@ void prop_leap_frog(){
         vy [ia] = idt * ( ury [ ia ] - rys [ ia ] )  ;
         vz [ia] = idt * ( urz [ ia ] - rzs [ ia ] )  ;
         kin += (vx [ia]*vx [ia] + vy [ia] * vy [ia] + vz [ia]*vz [ia]) *massia[ia];
-        // updated positions r(t-dt) <= r(t)  and r(t) <= r (t+dt) 
-        rxs [ia] = rx  [ia] ;  
-        rys [ia] = ry  [ia] ;  
-        rzs [ia] = rz  [ia] ;  
-        rx  [ia] = urx [ia] ;  
-        ry  [ia] = ury [ia] ;  
-        rz  [ia] = urz [ia] ;  
+        // updated positions r(t-dt) <= r(t)  and r(t) <= r (t+dt)
+        rxs [ia] = rx  [ia] ;
+        rys [ia] = ry  [ia] ;
+        rzs [ia] = rz  [ia] ;
+        rx  [ia] = urx [ia] ;
+        ry  [ia] = ury [ia] ;
+        rz  [ia] = urz [ia] ;
     }
     // -------------------------
-    // full t+dt kinetic energy 
+    // full t+dt kinetic energy
     // -------------------------
     kin*=0.5;
     e_kin=kin;
@@ -194,7 +200,7 @@ void chain_nhcn ( double *kin , double vxi[nhc_n] , double xi[nhc_n] , double Q[
     //printf("here!!!\n");
 
     switch ( nhc_yosh_order ) {
-        default : 
+        default :
             io_node pError("value of yoshida order not available\n");
             exit(-1);
             break;
@@ -290,7 +296,7 @@ void prop_agate(int step){
 
     statime(12);
     /* ==========================================================
-       leap-frog algorithm set the first leap value for r(t-dt) 
+       leap-frog algorithm set the first leap value for r(t-dt)
        if first steps are equilibrated with a velocity-verlet
       ==========================================================*/
 /*    if ( lleapequi && istep >= nequil ) {
@@ -301,7 +307,7 @@ void prop_agate(int step){
             rys [ia]  = ry [ia] - vy[ia] * dt;
             rzs [ia]  = rz [ia] - vz[ia] * dt;
         }
-        printf("  switch to leap-frog %d\n",egrator);    
+        printf("  switch to leap-frog %d\n",egrator);
     }
     */
     statime(13);

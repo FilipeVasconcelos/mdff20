@@ -7,14 +7,14 @@
 /******************************************************************************/
 void gen_constants()
 {
-    boltz_unit = 8.61734229648141E-05;  // boltzmann constant ( energy in eV ) 
+    boltz_unit = 8.61734229648141E-05;  // boltzmann constant ( energy in eV )
     time_unit  = 98.2269514139276    ;  // unit of time picosecond => angstrom * ( atomicmassunit / eV ) ** 0.5
     press_unit = 0.00624150964712042 ;  // GPa => internal unit of pressure (eV/A^3)
     rho_unit   = 1.660538782         ;
     coul_unit  = 14.3996441494161    ;
 
 
-    radian     = 180. / PI           ;     
+    radian     = 180. / PI           ;
     onethird   = 1.   / 3.0          ;
     piroot     = sqrt(PI)            ;
 

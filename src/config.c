@@ -15,7 +15,13 @@
 #include "field.h"
 #include "inverse_matrix.h"
 
-//#define DEBUG_CONFIG
+#ifdef DEBUG
+    #define DEBUG_CONFIG
+#endif
+//#define DEBUG_
+#ifdef DEBUG_
+    #define DEBUG_CONFIG
+#endif
 void pre_alloc_config(){
     for (int it=0;it<NTYPEMAX;it++)
     {
@@ -63,12 +69,12 @@ void alloc_config(){
         fx[ia]=0.0;fy[ia]=0.0;fz[ia]=0.0;
         rxs[ia]=0.0;rys[ia]=0.0;rzs[ia]=0.0;
     }
-    if (lverletL) { 
+    if (lverletL) {
         verlet_nb=allocate_verletlist("vnlnb");
-        verlet_nb->cut=cutshortrange+skindiff; 
+        verlet_nb->cut=cutshortrange+skindiff;
         // even if lcoulombic not set
         verlet_coul=allocate_verletlist("vnlcoul");
-        verlet_coul->cut=cutlongrange+skindiff; 
+        verlet_coul->cut=cutlongrange+skindiff;
     }
 
 
@@ -98,13 +104,13 @@ void free_config(){
     free(rys);
     free(rzs);
     if (lverletL) free_verletlist("vnlnb");
-    
+
 
 }
 
 //-----------------------------------------------------------------------------
 bool config_input_ok(){
-    
+
     int sumnionit=sum(nionit,ntype);
     if ( sumnionit != nion) {
         pError("nionit and nion does not correspond\n");
@@ -144,10 +150,10 @@ void init_config()
             /*       coulombic field           */
             /***********************************/
             if ( lcoulombic ) {
-                qia[ia]= qit[it]; 
-                for (int i=0;i<3;i++){     
-                    dipia[ia][i] = dipit[it][i];  
-                    for (int j=0;j<3;j++){ 
+                qia[ia]= qit[it];
+                for (int i=0;i<3;i++){
+                    dipia[ia][i] = dipit[it][i];
+                    for (int j=0;j<3;j++){
                         quadia[ia][i][j]=quadit[it][i][j];
                     }
                 }
@@ -163,7 +169,7 @@ void init_config()
                     }
                 }
                 invertmatrix3x3(invepolia[ia]);
-#ifdef DEBUG_POLIA                
+#ifdef DEBUG_POLIA
                 printf("ia %d polia\n",ia);
                 for (int i=0;i<3;i++){
                     for (int j=0;j<3;j++){
@@ -193,7 +199,7 @@ void init_config()
 //-----------------------------------------------------------------------------
 void info_config(){
 
-    if (ionode) {  
+    if (ionode) {
         SEPARATOR;
         printf("config info (continue)\n");
         LSEPARATOR;
@@ -261,7 +267,7 @@ A
 Direct
 A 0.0 0.0 0.0
 ...
-B 0.5 0.5 0.5 
+B 0.5 0.5 0.5
 */
 int write_config(){
 
@@ -273,9 +279,9 @@ int write_config(){
         xxx[ia]=rx[ia];yyy[ia]=ry[ia];zzz[ia]=rz[ia];
     }
 
-    /***************************************/ 
+    /***************************************/
     /* Periodic Boundaries Conditions      */
-    /***************************************/ 
+    /***************************************/
     kardir ( nion , xxx , yyy , zzz , simuCell.B ) ;
     replace_pbc(nion,xxx,yyy,zzz);
     dirkar ( nion , xxx , yyy , zzz , simuCell.A ) ;
@@ -286,8 +292,8 @@ int write_config(){
         pError("opening CONTFF file");
         return -1;
     }
-    fprintf(fp,"%d\n",nion); 
-    fprintf(fp,"%s\n",configname); 
+    fprintf(fp,"%d\n",nion);
+    fprintf(fp,"%s\n",configname);
     for(int i=0;i<3;i++){
         for(int j=0;j<3;j++){
             fprintf(fp,FF,simuCell.A[i][j]);
@@ -342,8 +348,8 @@ int read_config()
         LSEPARATOR;
     }
     io_node printf("reading configuration from file POSFF\n");
-    
-    // reading nion number of ions in POSFF 
+
+    // reading nion number of ions in POSFF
     fscanf(fp, "%d", &nion);
     // reading config name
     fscanf(fp, "%s", configname);
@@ -357,12 +363,12 @@ int read_config()
     rhoN=(double)nion * simuCell.inveOmega;
 
     // ------------------
-    // type informations 
+    // type informations
     // ------------------
     //ntype : number of types in POSFF
     fscanf(fp, "%d", &ntype); //ntype
 
-    //atypit : types char 
+    //atypit : types char
     io_node printf("found type information on POSFF");
     for (int it=0;it<ntype;it++) {
         fscanf(fp,"%s",atypit[it]);
@@ -375,7 +381,7 @@ int read_config()
         io_node printf(" %d ",nionit[it]);
     }
     io_node putchar('\n');
-    //can be call only when nion and ntype 
+    //can be call only when nion and ntype
     //are known and  natmi,atypei readed
     alloc_config();
 
@@ -383,7 +389,7 @@ int read_config()
     fscanf(fp, "%s", cpos);
     //strcpy(cpos,buffer);
 
-    // reading positions of ions 
+    // reading positions of ions
     for (int ia=0;ia<nion;ia++) {
         fscanf(fp," %s ",atypia[ia]);
         fscanf(fp,"%lf %lf %lf ",&rx[ia],&ry[ia],&rz[ia]);
@@ -406,16 +412,16 @@ int read_config()
     io_node putchar('\n');
 
     //closing POSFF
-    if (fclose(fp))     { 
-       io_node printf("error closing file."); 
+    if (fclose(fp))     {
+       io_node printf("error closing file.");
 #ifdef MPI
         MPI_Finalize();
 #endif
-       return -1; 
+       return -1;
     }
 
     kardir(nion,rx,ry,rz,simuCell.B);
-    replace_pbc(nion,rx,ry,rz); 
+    replace_pbc(nion,rx,ry,rz);
     dirkar(nion,rx,ry,rz,simuCell.A);
     return 0;
 }

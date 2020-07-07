@@ -1,6 +1,6 @@
 #ifndef TOOLS_H
 #define TOOLS_H
-struct sort 
+struct sort
 {
     double value;
     int index;

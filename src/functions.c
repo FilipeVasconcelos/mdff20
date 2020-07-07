@@ -16,7 +16,7 @@ double errfc( double x){
         return 2-res;
     }
     else
-    {   
+    {
         return res;
     }
 }

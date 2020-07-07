@@ -16,10 +16,16 @@
 #include "timing.h"
 #include "verlet.h"
 
-//#define DEBUG_MD
+#ifdef DEBUG
+    #define DEBUG_MD
+#endif
+//#define DEBUG_
+#ifdef DEBUG_
+    #define DEBUG_MD
+#endif
 
 /******************************************************************************/
-int read_md (char * controlfn) 
+int read_md (char * controlfn)
 {
     char buffer[MAX_LEN+1];
     FILE * fp;
@@ -34,50 +40,50 @@ int read_md (char * controlfn)
     while (EOF != fscanf(fp, "%s\n", buffer)) {
         if (strcmp(buffer,"integrator") == 0 ) {
             fscanf(fp,"%s",buffer);
-            egrator=check_string("integrator",buffer,allwd_integrator,ALLWD_INTEGRATOR_STR); 
-        } 
+            egrator=check_string("integrator",buffer,allwd_integrator,ALLWD_INTEGRATOR_STR);
+        }
         if (strcmp(buffer,"dt") == 0 ) {
             fscanf(fp,"%lf",&dt);
-        } 
+        }
         if (strcmp(buffer,"temp") == 0 ) {
             fscanf(fp,"%lf",&temp);
-        } 
+        }
         if (strcmp(buffer,"npas") == 0 ) {
             fscanf(fp,"%d",&npas);
-        } 
+        }
         if (strcmp(buffer,"nprint") == 0 ) {
             fscanf(fp,"%d",&nprint);
-        } 
+        }
         if (strcmp(buffer,"fprint") == 0 ) {
             fscanf(fp,"%d",&fprint);
-        } 
+        }
         if (strcmp(buffer,"cprint") == 0 ) {
             fscanf(fp,"%d",&cprint);
-        } 
+        }
         if (strcmp(buffer,"nequil") == 0 ) {
             fscanf(fp,"%d",&nequil);
-        } 
+        }
         if (strcmp(buffer,"nequilT") == 0 ) {
             fscanf(fp,"%d",&nequilT);
-        } 
+        }
         if (strcmp(buffer,"tauTberendsen") == 0 ) {
             fscanf(fp,"%lf",&tauTberendsen);
-        } 
+        }
         if (strcmp(buffer,"nhc_n") == 0 ) {
             fscanf(fp,"%d",&nhc_n);
-        } 
+        }
         if (strcmp(buffer,"nhc_mults") == 0 ) {
             fscanf(fp,"%d",&nhc_mults);
-        } 
+        }
         if (strcmp(buffer,"nhc_yosh_order") == 0 ) {
             fscanf(fp,"%d",&nhc_yosh_order);
-        } 
+        }
         if (strcmp(buffer,"timesca_thermo") == 0 ) {
             fscanf(fp,"%lf",&timesca_thermo);
-        } 
+        }
         if (strcmp(buffer,"timesca_baro") == 0 ) {
             fscanf(fp,"%lf",&timesca_baro);
-        } 
+        }
    }
    fclose(fp);
    return 0;
@@ -102,20 +108,20 @@ void default_md(){
 }
 /******************************************************************************/
 void check_md(){
-    /* tauTberendsen == dt => simple velocity rescale */ 
+    /* tauTberendsen == dt => simple velocity rescale */
     if ( (nequil > 0 ) && (tauTberendsen==0.0)) tauTberendsen=dt;
 
-    temp           = temp           * boltz_unit ; // temp = kB * T 
+    temp           = temp           * boltz_unit ; // temp = kB * T
     dt             = dt             * time_unit  ; // angstrom*(atomicmassunit/eV)** 0.5  <= ps
     tauTberendsen  = tauTberendsen  * time_unit  ;
     timesca_thermo = timesca_thermo * time_unit  ;
     if (egrator == 0 && nequil >0 ){
         lleapequi=true;
-        egrator=1; /* switch to nve-vv */ 
+        egrator=1; /* switch to nve-vv */
     }
     rescale_allowed=false;
     for (int i =0;i<ALLWD_RESCALE_INTEGRATOR;i++){
-        if ( egrator == allwd_rescale_integrator[i] ) rescale_allowed=true; 
+        if ( egrator == allwd_rescale_integrator[i] ) rescale_allowed=true;
     }
 }
 
@@ -183,11 +189,11 @@ void run_md()
         putchar('\n');
     }
 
-    info_thermo(0,NULL); /* at t=0 */ 
+    info_thermo(0,NULL); /* at t=0 */
 
 #ifdef DEBUG_MD
     sample_config(0);
-#endif 
+#endif
 
     if( (ionode) && (npas>0)){
         SEPARATOR;
@@ -210,7 +216,7 @@ void run_md()
 
 #ifdef DEBUG_MD
     sample_config(0);
-#endif 
+#endif
         /* --------------------------------- */
         /*     integration / propagators     */
         /* --------------------------------- */
@@ -222,7 +228,9 @@ void run_md()
         /* --------------------------------- */
         /*     rescale velocities in "NVE"   */
         /* --------------------------------- */
-        if ( ( rescale_allowed) && (istep < nequil) && (istep%nequilT == 0)) rescale_velocities(1);
+        if ( ( rescale_allowed    ) &&
+             ( istep < nequil     ) &&
+             ( istep%nequilT == 0 ) )  rescale_velocities(1);
         /* --------------------------------- */
         /*          stdout info              */
         /* --------------------------------- */

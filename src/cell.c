@@ -12,13 +12,13 @@
 /******************************************************************************/
 void lattice(CELL * Cell)
 {
-    Cell->G[0][0] = Cell->A[0][0]*Cell->A[0][0] + 
-                    Cell->A[1][0]*Cell->A[1][0] + 
+    Cell->G[0][0] = Cell->A[0][0]*Cell->A[0][0] +
+                    Cell->A[1][0]*Cell->A[1][0] +
                     Cell->A[2][0]*Cell->A[2][0] ;
-    Cell->G[1][0] = Cell->A[1][0]*Cell->A[1][1] + 
+    Cell->G[1][0] = Cell->A[1][0]*Cell->A[1][1] +
                     Cell->A[2][0]*Cell->A[2][1];
     Cell->G[2][0] = Cell->A[2][0]*Cell->A[2][2];
-    Cell->G[1][1] = Cell->A[1][1]*Cell->A[1][1] + 
+    Cell->G[1][1] = Cell->A[1][1]*Cell->A[1][1] +
                     Cell->A[2][2]*Cell->A[2][2];
     Cell->G[2][1] = Cell->A[2][1]*Cell->A[2][2];
     Cell->G[0][2] = Cell->G[2][0];
@@ -28,21 +28,21 @@ void lattice(CELL * Cell)
     expro(Cell->B[0],Cell->A[1],Cell->A[2]);
     expro(Cell->B[1],Cell->A[2],Cell->A[0]);
     expro(Cell->B[2],Cell->A[0],Cell->A[1]);
-    
-    
+
+
     // volume ( direct )
     double omega;
     omega = Cell->B[0][0]*Cell->A[0][0] +
-            Cell->B[1][0]*Cell->A[1][0] + 
+            Cell->B[1][0]*Cell->A[1][0] +
             Cell->B[2][0]*Cell->A[2][0];
     Cell->Omega=omega;
     Cell->inveOmega=1.0/omega;
     Cell->inveOmegaPU=1.0/(omega*press_unit);
 
-    // shortest distance between opposite faces                                                                          
+    // shortest distance between opposite faces
     for(int i=0;i<3;i++){
-        Cell->w[i] = omega/sqrt(Cell->B[0][i]*Cell->B[0][i] + 
-                                Cell->B[1][i]*Cell->B[1][i] + 
+        Cell->w[i] = omega/sqrt(Cell->B[0][i]*Cell->B[0][i] +
+                                Cell->B[1][i]*Cell->B[1][i] +
                                 Cell->B[2][i]*Cell->B[2][i]);
     }
 
@@ -68,13 +68,13 @@ void lattice(CELL * Cell)
     }
     // volume ( reciprocal )
     Cell->ROmega = Cell->B[0][0]*Cell->A[0][0] +
-                   Cell->B[1][0]*Cell->A[1][0] + 
+                   Cell->B[1][0]*Cell->A[1][0] +
                    Cell->B[2][0]*Cell->A[2][0];
 
-    // shortest distance between opposite faces                                                                          
+    // shortest distance between opposite faces
     for(int i=0;i<3;i++){
         Cell->rw[i]=Cell->ROmega/sqrt(Cell->A[0][i]*Cell->A[0][i]+
-                                      Cell->A[1][i]*Cell->A[1][i]+ 
+                                      Cell->A[1][i]*Cell->A[1][i]+
                                       Cell->A[2][i]*Cell->A[2][i]);
     }
     // angles ( reciprocal )
@@ -95,7 +95,7 @@ void angles_(double *ang,double basis[3][3], double norm[3]){
 
     ang[0]=0.0;ang[1]=0.0;ang[2]=0.0;
     for(int i=0;i<3;i++){
-        ang[0] += basis[i][2] * basis[i][1]; 
+        ang[0] += basis[i][2] * basis[i][1];
         ang[1] += basis[i][0] * basis[i][2];
         ang[2] += basis[i][0] * basis[i][1];
     }
@@ -110,16 +110,16 @@ void angles_(double *ang,double basis[3][3], double norm[3]){
 
 /*******************************************************************************
  \brief
- transform a set of vectors from cartesian coordinates to                     
- ) direct lattice      (BASIS must be equal to B reciprocal lattice)          
- ) reciprocal lattice  (BASIS must be equal to A direct lattice)              
- \author                                                                      
- gK (VASP)                                                                    
- \note                                                                        
- adapted from VASP                                                            
- \param[in] NMAX dimension of vectors VX , VY , VZ                            
- \param[in,out] VX , VY , VZ vectors being transformed                        
- \param[in] BASIS basis vector ( direct or reciprocal lattice )               
+ transform a set of vectors from cartesian coordinates to
+ ) direct lattice      (BASIS must be equal to B reciprocal lattice)
+ ) reciprocal lattice  (BASIS must be equal to A direct lattice)
+ \author
+ gK (VASP)
+ \note
+ adapted from VASP
+ \param[in] NMAX dimension of vectors VX , VY , VZ
+ \param[in,out] VX , VY , VZ vectors being transformed
+ \param[in] BASIS basis vector ( direct or reciprocal lattice )
 *******************************************************************************/
 
 void kardir (int n, double *vx, double *vy, double *vz , double basis[3][3])

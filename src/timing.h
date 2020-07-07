@@ -12,7 +12,7 @@
 // 16 -> 17 coulomb
 // 18 -> 19 ewald dir
 // 19 -> 20 ewald rec
-// 15 -> 21 bhmftd
+// 15 -> 22 bhmftd
 #include <time.h>
 #if defined(MPI) || defined(OMP)
 double ttt[MAX_INDEX_TIME]; /* ttt[0] reference time */
@@ -24,8 +24,11 @@ double engforceCPUtime;
 double engforce_nmljCPUtime;
 double engforce_bhmftdCPUtime;
 double engforce_coulCPUtime;
+double engforce_getdipolesCPUtime;
 double ewaldDirCPUtime;
 double ewaldRecCPUtime;
+double ewaldDirpimCPUtime;
+double ewaldRecpimCPUtime;
 double dirkardirCPUtime;
 double CPUtime; /* tmp measure */
 double COMMCPUtime; /* tmp measure */
@@ -38,4 +41,5 @@ void statime(int x);
 void mestime(double* whole,int from,int to);
 void writime(char* label,int step, int from,int to);
 void writimewhole(char* label, double whole);
+void writimewholecount(char* label, double whole, int count);
 #endif

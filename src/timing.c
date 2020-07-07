@@ -2,11 +2,12 @@
 #ifdef MPI
 #include <mpi.h>
 #endif
-#ifdef OMP 
+#ifdef OMP
 #include <omp.h>
 #endif
 #include <time.h>
 #include "field.h"
+#include "ewald.h"
 #include "timing.h"
 #include "io.h"
 
@@ -40,6 +41,14 @@ void writimewhole(char* label, double whole){
     printf("  %-20s  : %12.3f\n",label,(double) (whole/CLOCKS_PER_SEC));
 #endif
 }
+/******************************************************************************/
+void writimewholecount(char* label, double whole, int count){
+#if defined(MPI) || defined(OMP)
+    printf("  %-20s  : %12.3f  [ %d ]\n",label,whole,count);
+#else
+    printf("  %-20s  : %12.3f  [ %d ]\n",label,(double) (whole/CLOCKS_PER_SEC),count);
+#endif
+}
 
 /******************************************************************************/
 void info_timing(){
@@ -49,16 +58,21 @@ void info_timing(){
         LSEPARATOR;
         printf("  Timing Info  \n");
         LSEPARATOR;
-        writimewhole("MD",mdstepCPUtime);
         writimewhole("Engforce",engforceCPUtime);
         if (lnmlj)   writimewhole("  -> nmlj",engforce_nmljCPUtime);
         if (lbhmft)  writimewhole("  -> bhmft",engforce_bhmftdCPUtime);
         if (lbhmftd) writimewhole("  -> bhmftd",engforce_bhmftdCPUtime);
         if (lcoulombic) {
+            if ( lpim ) {
+                writimewhole("  -> pim",engforce_getdipolesCPUtime);
+                writimewholecount("      -> ewald dir",ewaldDirpimCPUtime,cc_multipole_ES_dir_pim);
+                writimewholecount("      -> ewald rec",ewaldRecpimCPUtime,cc_multipole_ES_rec_pim);
+            }
             writimewhole("  -> coul",engforce_coulCPUtime);
-            writimewhole("      -> ewald dir",ewaldDirCPUtime);
-            writimewhole("      -> ewald rec",ewaldRecCPUtime);
+            writimewholecount("      -> ewald dir",ewaldDirCPUtime,cc_multipole_ES_dir);
+            writimewholecount("      -> ewald rec",ewaldRecCPUtime,cc_multipole_ES_rec);
         }
+        writimewhole("MD",mdstepCPUtime);
         writimewhole("Verlet List",verletLCPUtime);
         writimewhole("Integration ",propagatorCPUtime);
         writimewhole("Dir<->Kar",dirkardirCPUtime);

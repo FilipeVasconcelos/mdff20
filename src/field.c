@@ -20,7 +20,13 @@
 #include "tt_damp.h"
 #include "pim.h"
 
-//#define DEBUG_CONGIG_FIELD_COUL
+#ifdef DEBUG
+    #define DEBUG_CONGIG_FIELD_COUL
+#endif
+//#define DEBUG_
+#ifdef DEBUG_
+    #define DEBUG_CONGIG_FIELD_COUL
+#endif
 /******************************************************************************/
 int read_field(char* controlfn)
 {
@@ -39,38 +45,38 @@ int read_field(char* controlfn)
         pError("opening control file");
         return (-1);
     }
-    while (EOF != fscanf(fp, "%s\n", buffer)) { 
+    while (EOF != fscanf(fp, "%s\n", buffer)) {
         if (strcmp(buffer,"lbhmft") == 0 ) {
             fscanf(fp,"%s",buffer);
-            lbhmft=check_boolstring("lbhmft",buffer); 
-        } 
+            lbhmft=check_boolstring("lbhmft",buffer);
+        }
         if (strcmp(buffer,"lbhmftd") == 0 ) {
             fscanf(fp,"%s",buffer);
-            lbhmftd=check_boolstring("lbhmftd",buffer); 
-        } 
+            lbhmftd=check_boolstring("lbhmftd",buffer);
+        }
         if (strcmp(buffer,"lnmlj") == 0 ) {
             fscanf(fp,"%s",buffer);
-            lnmlj=check_boolstring("lnmlj",buffer); 
-        } 
+            lnmlj=check_boolstring("lnmlj",buffer);
+        }
         if (strcmp(buffer,"lcoulombic") == 0 ) {
             fscanf(fp,"%s",buffer);
-            lcoulombic=check_boolstring("lcoulombic",buffer); 
-        } 
+            lcoulombic=check_boolstring("lcoulombic",buffer);
+        }
         // mass of type
         if (strcmp(buffer,"massit") == 0 ) {
             fscanf(fp,"%lf",&massit[kmas]);
             kmas+=1;
-        } 
+        }
         // charges on type
         if (strcmp(buffer,"qit") == 0 ) {
             fscanf(fp,"%lf",&qit[kqch]);
             kqch+=1;
-        } 
+        }
         // dipole on type
         if (strcmp(buffer,"dipit") == 0 ) {
             fscanf(fp,"%lf %lf %lf",&dipit[kdip][0],&dipit[kdip][1],&dipit[kdip][2]);
             kdip+=1;
-        } 
+        }
         // quadrupole on type
         if (strcmp(buffer,"quadit") == 0 ) {
            fscanf(fp,"%lf %lf %lf %lf %lf %lf %lf %lf %lf",
@@ -78,13 +84,13 @@ int read_field(char* controlfn)
                   &quadit[kqua][1][0],&quadit[kqua][1][1],&quadit[kqua][1][2],
                   &quadit[kqua][2][0],&quadit[kqua][2][1],&quadit[kqua][2][2]);
             kqua+=1;
-        } 
+        }
         /*
         // pola on type
         if (strcmp(buffer,"lpolar") == 0 ) {
             fscanf(fp,"%s",buffer);
-            lpolar[kpol]=check_boolstring("lpolar",buffer); 
-        } 
+            lpolar[kpol]=check_boolstring("lpolar",buffer);
+        }
         */
         // poldip tensor on type
         if (strcmp(buffer,"polit") == 0 ) {
@@ -94,81 +100,81 @@ int read_field(char* controlfn)
                     &polit[kpol][2][0],&polit[kpol][2][1],&polit[kpol][2][2]);
             for(int i=0;i<3;i++){
                 for(int j=0;j<3;j++){
-                    if (polit[kpol][i][j] != 0.0) lpolar[kpol]=true; 
+                    if (polit[kpol][i][j] != 0.0) lpolar[kpol]=true;
                 }
             }
             kpol+=1;
-        } 
+        }
         // pola on type
         if (strcmp(buffer,"lpoldamping") == 0 ) {
             fscanf(fp,"%d %d %d %s",&type,&it,&jt,buffer);
-            lpoldamping[type][it][jt]=check_boolstring("lpoldamping",buffer); 
-        } 
+            lpoldamping[type][it][jt]=check_boolstring("lpoldamping",buffer);
+        }
         if (strcmp(buffer,"pol_damp_b") == 0 ) {
             fscanf(fp,"%d %d %d",&type,&it,&jt);
             fscanf(fp,"%lf",&pol_damp_b[type][it][jt]);
-        } 
+        }
         if (strcmp(buffer,"pol_damp_c") == 0 ) {
             fscanf(fp,"%d %d %d",&type,&it,&jt);
             fscanf(fp,"%lf",&pol_damp_c[type][it][jt]);
-        } 
+        }
         if (strcmp(buffer,"pol_damp_k") == 0 ) {
             fscanf(fp,"%d %d %d",&type,&it,&jt);
             fscanf(fp,"%d",&pol_damp_k[type][it][jt]);
-        } 
+        }
 // ldip_damping, pol_damp_b, pol_damp_c, pol_damp_k
-        //ewald sum param 
+        //ewald sum param
         if (strcmp(buffer,"alphaES") == 0 ) {
             fscanf(fp,"%lf",&alphaES);
-        } 
+        }
         if (strcmp(buffer,"kES") == 0 ) {
             for(int k=0;k<3;k++){
                 fscanf(fp,"%d",&kES[k]);
             }
-        } 
+        }
         if (strcmp(buffer,"epsw") == 0 ) {
             fscanf(fp,"%lf",&epsw);
-        } 
+        }
         if (strcmp(buffer,"epsw") == 0 ) {
             fscanf(fp,"%lf",&epsw);
-        } 
+        }
         if (strcmp(buffer,"lautoES") == 0 ) {
             fscanf(fp,"%s",buffer);
             lautoES=check_boolstring("lautoES",buffer);
-        } 
+        }
 
     }
     if ( (kmas != ntype) && (kmas !=0) ) {
         pError("massit, some are missing\n");
         printf("kmas %d != ntype %d\n",kmas,ntype);
         exit(-1);
-    } 
+    }
     /*
     if ( (kqch != ntype) && (kqch !=0) ) {
         pError("qit, some are missing\n");
         printf("kqch %d != ntype %d\n",kqch,ntype);
         exit(-1);
-    } 
+    }
     if ( (kdip != ntype) && (kdip !=0) ) {
         pError("dipit, some are missing\n");
         printf("kdip %d != ntype %d\n",kdip,ntype);
         exit(-1);
-    } 
+    }
     if ( (kqua != ntype) && (kqua !=0) ) {
         pError("quadit, some are missing\n");
         printf("kdip %d != ntype %d\n",kqua,ntype);
         exit(-1);
-    } 
+    }
     if ( (kpolit != ntype) && (kpolit !=0) ) {
         pError("polit, some are missing\n");
         printf("kpolit %d != ntype %d\n",kpolit,ntype);
         exit(-1);
-    } 
+    }
     if ( (kpol != ntype) && (kpol !=0) ) {
         pError("lpolar, some are missing\n");
         printf("kpol %d != ntype %d\n",kpol,ntype);
         exit(-1);
-    } 
+    }
     */
 
     fclose(fp);
@@ -198,11 +204,11 @@ void info_field(){
                 }
             }
         }
-    } 
+    }
     for (int it =0; it<ntype; it++){
         for (int jt =0; jt<ntype; jt++){
             for (int kt =0; kt<ntype; kt++){
-                if(lpoldamping[jt][it][kt]) ldmp=true; 
+                if(lpoldamping[jt][it][kt]) ldmp=true;
                 lpoldamping[jt][kt][it] = lpoldamping[jt][it][kt];
                 pol_damp_b[jt][kt][it] = pol_damp_b[jt][it][kt];
                 pol_damp_c[jt][kt][it] = pol_damp_c[jt][it][kt];
@@ -228,9 +234,9 @@ void info_field(){
             printf("m_%-2s                  = %.5f a.m\n",atypit[it],massit[it]);
         }
         LSEPARATOR;
-        printf("total mass            = %.5f a.m     \n",totalMass);               
+        printf("total mass            = %.5f a.m     \n",totalMass);
         printf("density               = %.5f g/cm^3  \n",rho*rho_unit);
-        printf("density(N)            = %.5f ions/A^3\n",rhoN); 
+        printf("density(N)            = %.5f ions/A^3\n",rhoN);
         putchar('\n');
         if (lqch) {
             printf("point charges :\n");
@@ -305,7 +311,7 @@ void info_field(){
 
 /******************************************************************************/
 void init_field(char* controlfn){
-    
+
     read_field(controlfn);
 
     info_field();
@@ -357,8 +363,8 @@ void engforce()
     if ( (lbhmft) || (lbhmftd) ) {
         engforce_bhmftd_pbc(&u_bhmftd,&pvir_bhmftd,tau_bhmftd);
     }
-    statime(15);
-    mestime(&engforce_bhmftdCPUtime,15,2);
+    statime(22);
+    mestime(&engforce_bhmftdCPUtime,22,15);
 
     if (lcoulombic) {
         double (*mu)[3];
@@ -368,14 +374,19 @@ void engforce()
         ef=malloc(nion*sizeof(*ef));
         efg=malloc(nion*sizeof(*efg));
 
+        statime(23);
         get_dipoles(mu,&u_pol);
+        statime(24);
+        mestime(&engforce_getdipolesCPUtime,24,23);
         multipole_ES(qia,mu,quadia,&u_coul,&pvir_coul,tau_coul,ef,efg,lqch,ldip,lqua,ldmp,
-        /* do   forces stress ef    efg   dir   rec */
-                true,  true,  true, true, true, true);
+        /* do   forces stress ef    efg   dir   rec  inpim */
+                true,  true,  true, true, true, true, false);
+        statime(25);
+        mestime(&engforce_coulCPUtime,25,24);
 
 #ifdef DEBUG_CONGIG_FIELD_COUL
-        printf("u_coul %e\n",u_coul);
-        printf("u_pol %e\n",u_pol);
+        printf("  u_coul %e\n",u_coul);
+        printf("  u_pol %e\n",u_pol);
         sample_config(0);
         sample_field_coulombic(ef,efg);
 #endif
@@ -386,7 +397,6 @@ void engforce()
     }
     statime(3);
     mestime(&engforceCPUtime,3,2);
-    mestime(&engforce_coulCPUtime,3,15);
 
 }
 

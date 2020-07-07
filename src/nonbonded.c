@@ -14,10 +14,10 @@ int read_nonbonded(char* controlfn){
         return (-1);
     }
     while (EOF != fscanf(fp, "%s", buffer)) {
-        //  lsymmetric 
+        //  lsymmetric
         if (strcmp(buffer,"lsymmetric") == 0 ) {
             lsymmetric=true;
-        } 
+        }
     }
     return 0;
 }

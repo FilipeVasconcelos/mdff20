@@ -8,8 +8,13 @@
 #include "pim.h"
 
 #ifdef DEBUG
-#define DEBUG_COUL
-#define DEBUG_DIPOLE
+    #define DEBUG_COUL
+    #define DEBUG_DIPOLE
+#endif
+//#define DEBUG_
+#ifdef DEBUG_
+    #define DEBUG_COUL
+    #define DEBUG_DIPOLE
 #endif
 
 /******************************************************************************/
@@ -94,14 +99,14 @@ void get_dipoles(double (*mu)[3],double *upol){
         switch (algo_pim) {
             case 0 :
                 momentpolaSCF(mu_ind,upol);
-               break; 
+               break;
             case 1 :
                 momentpolaSCFkO(mu_ind,upol);
-               break; 
+               break;
         }
         for (int ia=0;ia<nion;ia++){
             for (int i=0;i<3;i++){
-                mu[ia][i] += mu_ind[ia][i]; 
+                mu[ia][i] += mu_ind[ia][i];
             }
 #ifdef DEBUG_DIPOLE
             printf("ia %d mu_ind %e %e %e\n",ia,mu_ind[ia][0],mu_ind[ia][1],mu_ind[ia][2]);
@@ -149,19 +154,19 @@ void info_coulombic(){
             if (ldip) {
                 printf("dipole-dipole interaction : \n");
                 putchar('\n');
-                printf("                /                  -->  -->     -->   -->   \\\n"); 
+                printf("                /                  -->  -->     -->   -->   \\\n");
                 printf("           1    | -->   -->      ( mui .rij ) ( rij . muj )  |\n");
                 printf(" Vij =  ------- | mui . muj - 3 ---------------------------  |\n");
-                printf("         rij^3  \\                            rij^2          /\n"); 
+                printf("         rij^3  \\                            rij^2          /\n");
                 putchar('\n');
             }
             if ( (ldip) && (lqch) ) {
                 printf("charge-dipole interaction : \n");
                 putchar('\n');
-                printf("             -->   -->   \n");  
-                printf("          qi muj . rij   \n"); 
-                printf(" Vij =  ---------------- \n"); 
-                printf("             rij^3       \n");  
+                printf("             -->   -->   \n");
+                printf("          qi muj . rij   \n");
+                printf(" Vij =  ---------------- \n");
+                printf("             rij^3       \n");
                 putchar('\n');
             }
         }

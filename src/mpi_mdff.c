@@ -13,7 +13,7 @@ int do_split(int n,int np,int mrank, DEC* dec, char* lab){
     int isteps= (imax-imin)+1;
     x=isteps/np;
     y=isteps%np;
-    
+
     for (int me=0;me<np;me++) {
         if ((me==0) || (me>y)) {
             splitnumberV[me]=x;
@@ -47,7 +47,7 @@ int do_split(int n,int np,int mrank, DEC* dec, char* lab){
         }
         putchar('\n');
     }
-    return 0; 
+    return 0;
 }
 
 /******************************************************************************/

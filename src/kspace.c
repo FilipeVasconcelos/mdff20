@@ -94,7 +94,7 @@ void reorder_kmesh(KMESH *km){
     tAk=malloc(nk*sizeof(*tAk));
     tkcoe=malloc(nk*sizeof(*tkcoe));
 
-    /* sort index array according to k**2 module */ 
+    /* sort index array according to k**2 module */
     index=malloc(nk*sizeof(*index));
     mainsort(km->kk, nk, index);
 
@@ -126,4 +126,3 @@ void reorder_kmesh(KMESH *km){
     free(tkcoe);
 
 }
-

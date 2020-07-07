@@ -19,36 +19,36 @@ int read_global(char* controlfn)
         pError("opening control file");
         return (-1);
     }
-    while (EOF != fscanf(fp, "%s\n", buffer)) { 
+    while (EOF != fscanf(fp, "%s\n", buffer)) {
         if (strcmp(buffer,"lverletL") == 0 ) {
             fscanf(fp,"%s",buffer);
-            lverletL=check_boolstring("lverletL",buffer); 
-        } 
+            lverletL=check_boolstring("lverletL",buffer);
+        }
         if (strcmp(buffer,"lstatic") == 0 ) {
             fscanf(fp,"%s",buffer);
-            lstatic=check_boolstring("lstatic",buffer); 
-        } 
+            lstatic=check_boolstring("lstatic",buffer);
+        }
         if (strcmp(buffer,"lpstress") == 0 ) {
             fscanf(fp,"%s",buffer);
-            lpstress=check_boolstring("lpstress",buffer); 
-        } 
+            lpstress=check_boolstring("lpstress",buffer);
+        }
         if (strcmp(buffer,"cutshortrange") == 0 ) {
             fscanf(fp,"%lf",&cutshortrange);
-        } 
+        }
         if (strcmp(buffer,"cutlongrange") == 0 ) {
             fscanf(fp,"%lf",&cutlongrange);
-        } 
+        }
         if (strcmp(buffer,"Fposff") == 0 ) {
             fscanf(fp,"%s",buffer);
             Fposff=check_string("Fposff",buffer,allwd_Fposff,ALLWD_FORMAT_POSFF_STR);
-        } 
+        }
         if (strcmp(buffer,"skindiff") == 0 ) {
             fscanf(fp,"%lf",&skindiff);
-        } 
+        }
         if (strcmp(buffer,"lreduced") == 0 ) {
             fscanf(fp,"%s",buffer);
-            lreduced=check_boolstring("lreduced",buffer); 
-        } 
+            lreduced=check_boolstring("lreduced",buffer);
+        }
     }
     fclose(fp);
     return(0);
@@ -61,7 +61,7 @@ void info_global(){
         SEPARATOR;
         printf("global info\n");
         LSEPARATOR;
-        printf("verlet list           = %s \n",lverletL?"true":"false");               
+        printf("verlet list           = %s \n",lverletL?"true":"false");
         printf("cutshortrange         = %-6.2f \n",cutshortrange);
         printf("cutlongrange          = %-6.2f \n",cutlongrange);
         printf("skindiff              = %-6.2f \n",skindiff);
@@ -84,7 +84,7 @@ void default_global(){
 
 /******************************************************************************/
 void check_global(){
-    if (lreduced) reduced_units(); 
+    if (lreduced) reduced_units();
 }
 
 /******************************************************************************/

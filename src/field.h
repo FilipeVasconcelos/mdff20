@@ -6,9 +6,9 @@ bool       lnonbonded; /* non bonded pair potential nmlj bhmftd */
 bool       lsymmetric; /* are those non bonded potentials symmetric */
 bool            lnmlj; /* n-m lennard-jones potential */
 bool           lbhmft; /* Born Huggins-Meyer potential + Fumi-Tossi */
-bool          lbhmftd; /* Born Huggins-Meyer potential + Fumi-Tossi + Damping */ 
+bool          lbhmftd; /* Born Huggins-Meyer potential + Fumi-Tossi + Damping */
 bool       lcoulombic; /* Coulombic/Electrostatic potential */
-bool lpolar[NTYPEMAX]; /* induced moment from polarizability for type */ 
+bool lpolar[NTYPEMAX]; /* induced moment from polarizability for type */
 bool             lpim; /* true if one of the above is true */
 bool         lpoldamp; /* electric field damping applied to polarizable atoms*/
 /* ****************************************************************************/

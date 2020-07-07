@@ -2,8 +2,7 @@
 #define VERLET_H
 #define VNLMAX 500
 
-
-double *xvl,*yvl,*zvl; /* last positions when verlet list was updated */  
+double *xvl,*yvl,*zvl; /* last positions when verlet list was updated */
 int updatevl;
 
 struct VERLETL *verlet_nb;
@@ -11,7 +10,7 @@ struct VERLETL *verlet_coul;
 
 typedef struct VERLETL
 {
-    int *list,*point; 
+    int *list,*point;
     double cut;
     char* label;
 } VERLETL;

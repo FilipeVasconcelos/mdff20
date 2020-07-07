@@ -17,7 +17,13 @@
 #include "verlet.h"
 #include <omp.h>
 
-//#define DEBUG_NMLJ
+#ifdef DEBUG
+    #define DEBUG_NMLJ
+#endif
+//#define DEBUG_
+#ifdef DEBUG_
+    #define DEBUG_NMLJ
+#endif
 /******************************************************************************/
 double addtruncU(int p1 , int p2, double srp, double srq){
     if (trunctype == 0) {
@@ -50,7 +56,7 @@ int read_nmlj(char* controlfn){
                 }
             }
         }
-        // EPSLJ 
+        // EPSLJ
         if (strcmp(buffer,"epslj") == 0 ) {
             for(int it=0;it<ntype;it++){
                 for(int jt=0;jt<ntype;jt++){
@@ -59,8 +65,8 @@ int read_nmlj(char* controlfn){
                     }
                 }
             }
-        } 
-        // PLJ 
+        }
+        // PLJ
         if (strcmp(buffer,"plj") == 0 ) {
             for(int it=0;it<ntype;it++){
                 for(int jt=0;jt<ntype;jt++){
@@ -69,8 +75,8 @@ int read_nmlj(char* controlfn){
                     }
                 }
             }
-        } 
-        // QLJ 
+        }
+        // QLJ
         if (strcmp(buffer,"qlj") == 0 ) {
             for(int it=0;it<ntype;it++){
                 for(int jt=0;jt<ntype;jt++){
@@ -79,8 +85,8 @@ int read_nmlj(char* controlfn){
                     }
                 }
             }
-        } 
-        //  trunc 
+        }
+        //  trunc
         if (strcmp(buffer,"trunc") == 0 ) {
             fscanf(fp,"%s",buffer);
             trunctype=-1;
@@ -94,7 +100,7 @@ int read_nmlj(char* controlfn){
                 printf("%s\n",buffer);
                 exit(-1);
             }
-        } 
+        }
     }
     return 0;
 }
@@ -117,7 +123,7 @@ void init_nmlj(char* controlfn){
 
     double srcut3,pp,qq,ppqq,ut,pt,epsppqq,srq,srp,sr,sr2,qq3,pp3;
     double one16 = (1.0 / 6.0) ;
-    double two16 = pow(2.0,one16);  
+    double two16 = pow(2.0,one16);
     strcpy(trunclabel[0],"no");
     strcpy(trunclabel[1],"linear");
     strcpy(trunclabel[2],"quadratic");
@@ -139,52 +145,52 @@ void init_nmlj(char* controlfn){
   virial the same with qp in the first term
 
  ==================================================================================================
-*/  
- 
-/* 
+*/
+
+/*
  ==================================================================================================
-  simple truncation  
+  simple truncation
 
   trunclabel = 'linear'
-  trunctype  = 1 
+  trunctype  = 1
 
 
            eps    /    / sigma* \ q         / sigma* \ p  \
   V  =   ------- |  p | ------- |    -  q  | --------|    |   -  c1   with  sigma* = 2^(1/6)*sigma
           q - p   \    \   r    /           \    r   /    /
 
- 
+
           eps      /     /  sigma* \ q        /  sigma* \ p  \
-  c1 = ---------  |   p |  -------- |    - q |  -------- |   |      with rc = cutshortrange 
-         q - p     \     \   rc    /          \   rc    /    / 
- 
+  c1 = ---------  |   p |  -------- |    - q |  -------- |   |      with rc = cutshortrange
+         q - p     \     \   rc    /          \   rc    /    /
+
  ==================================================================================================
 */
 
-/* 
+/*
  ==================================================================================================
   truncation presented in J. Chem. Phys. 135 (2011) , Sengupta, Vasconcelos, Affouard, Sastry
- 
+
   trunclabel = 'quadratic'
-  trunctype  = 2    
- 
+  trunctype  = 2
+
 
          eps    /    / sigma* \ q         / sigma* \ p  \
 V  =   ------- |  p | ------- |    -  q  | --------|    |   +  c1 r^2  -  c2 with sigma* 2^(1/6)*sigma
         q - p   \    \   r   /            \    r   /    /
 
 
- verified on Sage (January 2013) 
-     
+ verified on Sage (January 2013)
+
               eps p  q           /  / sigma* \ q       /  sigma* \ p \
     c1 =  --------------------- |  | --------|    -   | --------- |  |
           2  ( q - p ) * rc^2    \  \   rc   /         \   rc    /   /
- 
+
    and
-     
+
            epsilon     /           / sigma* \ q               / sigma* \ p  \
     c2 =  ----------- |  (2p+qp)  | --------|     - (2q+pq)  | --------|   |
-          2 ( q - p )  \           \   rc   /                 \   rc   /   /       
+          2 ( q - p )  \           \   rc   /                 \   rc   /   /
 
  ==================================================================================================
  */
@@ -200,20 +206,20 @@ V  =   ------- |  p | ------- |    -  q  | --------|    |   +  c1 r^2  -  c2 wit
             srcut3=srcutsq*cutshortrange;
             pp=plj[it][jt];qq=qlj[it][jt];
             pp3=pp-3.0; qq3=qq-3.0;
-            
+
             /* -------------------------------------------------------------- */
             // used in main energy force function
             // eps / q - p
             epsqp[it][jt] = epslj[it][jt] /(qq - pp);
             // sigma*^2
             sigsq[it][jt]= two16 * two16 * sigmalj[it][jt] * sigmalj[it][jt] ;
-            // for the virial                                                          
+            // for the virial
             fc[it][jt] =  (pp * qq * epsqp [it][jt]) / sigsq [it][jt];
             ptwo[it][jt]=pp*0.5;
             qtwo[it][jt]=qq*0.5;
             /* -------------------------------------------------------------- */
-            
-            // local 
+
+            // local
             // p*q
             epsppqq=epsqp[it][jt];
             ppqq = pp * qq;
@@ -223,7 +229,7 @@ V  =   ------- |  p | ------- |    -  q  | --------|    |   +  c1 r^2  -  c2 wit
             srq=pow(sr,qq);
             //trunctype = 1
             uc[it][jt]=epsppqq*(pp*srq-qq*srp);
-            //trunctype = 2 
+            //trunctype = 2
             c1[it][jt]=epsppqq*ppqq/(2.0*srcutsq) * (srq-srp);
             c2[it][jt]=0.5*epsppqq*((2.0*pp+ppqq)*srq-
                                  (2.0*qq+ppqq)*srp);
@@ -264,19 +270,21 @@ void engforce_nmlj_pbc(double *u, double *pvir, double tau[3][3])
             ttau[i][j]=0.0;
         }
     }
-    /*************************************** 
-            cartesian to direct                    
+    /***************************************
+            cartesian to direct
      ***************************************/
     kardir ( nion , rx , ry , rz , simuCell.B ) ;
 
-#ifdef DEBUG_NMLJ 
+#ifdef DEBUG_NMLJ
     int counttest=0;
 #endif
 
-    #pragma omp parallel shared(srcutsq,rx,ry,rz,vx,vy,vz,fx,fy,fz,sigsq,ptwo,qtwo,typia,epsqp,plj,qlj,uc) \
-                         private(ia,j1,jb,je,ja,rxi,ryi,rzi,rxij,ryij,rzij,rijsq,p1,p2,sr2,srp,srq,wij,fxij,fyij,fzij) 
+    #pragma omp parallel default(none) \
+                         shared(srcutsq,rx,ry,rz,vx,vy,vz,fx,fy,fz,sigsq,ptwo,qtwo,typia,epsqp,plj,qlj,fc,\
+                                uc,nion,ttau,uu,atomDec,lverletL,verlet_nb) \
+                         private(ia,j1,jb,je,ja,rxi,ryi,rzi,rxij,ryij,rzij,rijsq,p1,p2,sr2,srp,srq,wij,fxij,fyij,fzij)
     {
-        #pragma omp for reduction (+:uu,ttau,fx[:nion],fy[:nion],fz[:nion]) schedule(dynamic,16) 
+        #pragma omp for reduction (+:uu,ttau,fx[:nion],fy[:nion],fz[:nion]) schedule(dynamic,16)
         for(ia=atomDec.iaStart;ia<atomDec.iaEnd;ia++) {
             rxi = rx[ia];
             ryi = ry[ia];
@@ -290,13 +298,13 @@ void engforce_nmlj_pbc(double *u, double *pvir, double tau[3][3])
                 je = nion;
             }
             for (j1=jb;j1<je;j1++) {
-                if (lverletL){ 
+                if (lverletL){
                     ja=verlet_nb->list[j1];
                 }
                 else{
                     ja=j1;
                 }
-                if ( (( ja > ia ) && !lverletL ) || 
+                if ( (( ja > ia ) && !lverletL ) ||
                      (( ja !=ia ) && lverletL) )  {
 #ifdef DEBUG_NMLJ
                     counttest+=1;
@@ -352,7 +360,7 @@ void engforce_nmlj_pbc(double *u, double *pvir, double tau[3][3])
     for (int i=0;i<3;i++){
         *pvir += tau[i][i] * onethird;
     }
-#ifdef MPI 
+#ifdef MPI
     statime(8);
     MPI_Allreduce_sumDouble(u,1);
     MPI_Allreduce_sumDouble(pvir,1);
@@ -365,8 +373,8 @@ void engforce_nmlj_pbc(double *u, double *pvir, double tau[3][3])
     statime(9);
     mestime(&COMMCPUtime,9,8);
 #endif
-    /*************************************** 
-            direct to cartesian                   
+    /***************************************
+            direct to cartesian
      ***************************************/
     dirkar ( nion , rx , ry , rz , simuCell.A ) ;
 #ifdef DEBUG_NMLJ
@@ -386,13 +394,13 @@ void info_nmlj(){
         LSEPARATOR;
         putchar('\n');
         printf("       eps    /    / sigma* \\ q       / sigma*  \\ p  \\ \n");
-        printf(" V = ------- |  p | ------- |    - q | -------- |    |\n"); 
-        printf("      q - p   \\    \\   r    /         \\    r    /    /\n"); 
-    
+        printf(" V = ------- |  p | ------- |    - q | -------- |    |\n");
+        printf("      q - p   \\    \\   r    /         \\    r    /    /\n");
+
         putchar('\n');
         putchar('\n');
         printf("cutoff      = %-6.2f \n",cutshortrange);
-        printf("truncation  = %s (%d)\n",trunclabel[trunctype],trunctype);        
+        printf("truncation  = %s (%d)\n",trunclabel[trunctype],trunctype);
         printf("long range correction (energy)   : "ee"\n",utail);
         printf("long range correction (pressure) : "ee"\n",ptail);
         LSEPARATOR;

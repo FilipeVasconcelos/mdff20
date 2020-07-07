@@ -2,7 +2,7 @@
 #define NMLJ_H
 #define NTYPEMAX 16
 /* -------------------------------*/
-// from input 
+// from input
 double qlj     [NTYPEMAX][NTYPEMAX] ;
 double plj     [NTYPEMAX][NTYPEMAX] ;
 double epslj   [NTYPEMAX][NTYPEMAX] ;
@@ -18,8 +18,8 @@ double ptwo    [NTYPEMAX][NTYPEMAX] ;
 double uc      [NTYPEMAX][NTYPEMAX] ;
 double c1      [NTYPEMAX][NTYPEMAX] ;
 double c2      [NTYPEMAX][NTYPEMAX] ;
-// global 
-int  trunctype                      ;  
+// global
+int  trunctype                      ;
 double utail                        ; /* long range correction to energy   */
 double ptail                        ; /* long range correction to pressure */
 

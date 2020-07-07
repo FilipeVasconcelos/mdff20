@@ -12,7 +12,15 @@
 #include "pbc.h"
 #include "global.h"
 #include "timing.h"
-//#define DEBUG
+#ifdef DEBUG
+    #define DEBUG_VERLET_NB
+    #define DEBUG_VERLET_COUL
+#endif
+//#define DEBUG_
+#ifdef DEBUG_
+    #define DEBUG_VERLET_NB
+    #define DEBUG_VERLET_COUL
+#endif
 /*******************************************************************************/
 VERLETL *allocate_verletlist(char* label){
     printf("allocate Verlet List %s\n",label);
@@ -38,9 +46,9 @@ void free_verletlist(char* label){
     free(verlet_coul->list);
     free(verlet_coul->point);
     free(verlet_coul);
-    free(xvl);    
-    free(yvl);    
-    free(zvl);    
+    free(xvl);
+    free(yvl);
+    free(zvl);
 }
 /*******************************************************************************/
 void gen_pbc_verletlist(){
@@ -54,14 +62,14 @@ void gen_pbc_verletlist(){
     int icount_coul,k_coul;
 
     for(int k=0;k<nion*VNLMAX;k++){
-        verlet_nb->list[k]=0; 
-        verlet_coul->list[k]=0; 
+        verlet_nb->list[k]=0;
+        verlet_coul->list[k]=0;
     }
-    for(int k=0;k<nion;k++) { 
-        verlet_nb->point[k]=0; 
-        verlet_coul->point[k]=0; 
+    for(int k=0;k<nion;k++) {
+        verlet_nb->point[k]=0;
+        verlet_coul->point[k]=0;
     }
-   
+
     icount_nb=0;
     icount_coul=0;
     for(int ia=atomDec.iaStart;ia<atomDec.iaEnd;ia++) {
@@ -78,7 +86,7 @@ void gen_pbc_verletlist(){
                 rzij = rzi - rz[ja];
                 pbc(&rxij,&ryij,&rzij);
                 rijsq = rxij * rxij + ryij * ryij + rzij * rzij;
-                // non bonded sphere 
+                // non bonded sphere
                 if (rijsq<=rskinsq_nb){
                     verlet_nb->list[icount_nb]=ja;
                     icount_nb+=1;
@@ -87,7 +95,7 @@ void gen_pbc_verletlist(){
                         pError("out of bound in gen_verletlist\n");
                     }
                 }
-                // coulomb sphere 
+                // coulomb sphere
                 if (rijsq<=rskinsq_coul){
                     verlet_coul->list[icount_coul]=ja;
                     icount_coul+=1;
@@ -103,20 +111,22 @@ void gen_pbc_verletlist(){
     }
     verlet_nb->point[atomDec.iaEnd]=icount_nb;
     verlet_coul->point[atomDec.iaEnd]=icount_coul;
-#ifdef DEBUG
+#ifdef DEBUG_VERLET_NB
     for(int k=0;k<nion;k++) {printf("verlet list  NB  %d %d\n",k,verlet_nb->list[k]); }
     for(int k=0;k<nion;k++) {printf("verlet point NB  %d %d\n",k,verlet_nb->point[k]); }
+#endif
+#ifdef DEBUG_VERLET_COUL
     for(int k=0;k<nion;k++) {printf("verlet list  COUL%d %d\n",k,verlet_coul->list[k]); }
     for(int k=0;k<nion;k++) {printf("verlet point COUL%d %d\n",k,verlet_coul->point[k]); }
 #endif
 }
 /*******************************************************************************/
 void check_verletlist(){
-    
+
     double drneimax=0.0,drneimax2=0.0,drnei;
     double rxvl,ryvl,rzvl;
-    /*************************************** 
-            cartesian to direct                    
+    /***************************************
+            cartesian to direct
      ***************************************/
     kardir ( nion , rx , ry , rz , simuCell.B ) ;
 
@@ -135,7 +145,7 @@ void check_verletlist(){
                 drneimax2=drnei;
         }
     }
-    if ( drneimax + drneimax2 > skindiff ) 
+    if ( drneimax + drneimax2 > skindiff )
     {
         updatevl+=1;
         gen_pbc_verletlist();
@@ -152,8 +162,8 @@ void check_verletlist(){
     }
     statime(11);
     mestime(&verletLCPUtime,11,10);
-    /*************************************** 
-        direct to cartesian                   
+    /***************************************
+        direct to cartesian
     ***************************************/
     dirkar ( nion , rx , ry , rz , simuCell.A ) ;
 

@@ -11,7 +11,7 @@ int                  cprint; /* contff printing period */
 int                  nequil; /* equilibration interval (rescaling) */
 int                 nequilT; /* equilibration period (rescaling) */
 double                 temp; /* temperature */
-double                   dt; /* time step */  
+double                   dt; /* time step */
 double        tauTberendsen; /* berendsen thermostat period */
 int                 egrator; /* int version of */
 /*****************************************************************************/
@@ -22,8 +22,8 @@ double         timesca_baro; /* time scale of barostat */
 int          nhc_yosh_order; /* order of the yoshida integrator */
 int               nhc_mults; /* number of multiple timesteps  */
 int                   nhc_n; /* length of the Nose-Hoover chain */
-double           *vxi,  *xi; /* thermostat coordinates coupled to the particules */  
-double          *vxib, *xib; /* barostat coordinates coupled to the volume */ 
+double           *vxi,  *xi; /* thermostat coordinates coupled to the particules */
+double          *vxib, *xib; /* barostat coordinates coupled to the volume */
 
 #define ALLWD_YOSH_PARAM 5
 int yosh_allowed[ALLWD_YOSH_PARAM];

@@ -4,7 +4,7 @@
 #include "constants.h"
 int           Fposff; /* Format of POSFF                                        [default : 0 ]    */
 bool        lverletL; /* use verlet list                                        [default : true]  */
-double      skindiff; /* skin distance in verlet list */ 
+double      skindiff; /* skin distance in verlet list */
 bool         lstatic; /* perform static  calculation                            [default : false] */
 bool        lreduced; /* print out quantities in reduced units see constant.h" */
 double cutshortrange; /* cut off for shortrange interaction (nmlj,bhmftd) */

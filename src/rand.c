@@ -1,8 +1,8 @@
-#include <stdio.h> 
-#include <stdlib.h> 
-#include <time.h> 
-#include <math.h> 
-  
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <math.h>
+
 #include "constants.h"
 
 /******************************************************************************/
@@ -12,13 +12,13 @@ void init_rand(time_t t) {
 
 /******************************************************************************/
 double randD() {
-    return (double) rand()/(double)(RAND_MAX); 
-} 
-  
+    return (double) rand()/(double)(RAND_MAX);
+}
+
 
 /******************************************************************************/
 double box_muller(double mean, double sigma) {
-    
+
     double C,U,V,R;
     U=randD();
     V=randD();

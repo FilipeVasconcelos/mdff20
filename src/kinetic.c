@@ -15,7 +15,7 @@
 void init_velocities()
 {
     double comit[NTYPEMAX+1][3];
-    
+
 
     maxwellboltzmann_velocities();
     rescale_velocities(0);
@@ -57,7 +57,7 @@ void maxwellboltzmann_velocities()
     sx*=onenion;
     sy*=onenion;
     sz*=onenion;
-    for ( int ia=0; ia < nion; ia++ ) {   
+    for ( int ia=0; ia < nion; ia++ ) {
         vx [ia] += -sx;
         vy [ia] += -sy;
         vz [ia] += -sz;
@@ -89,9 +89,9 @@ void rescale_velocities(int quiet)
     double T    = calc_temp(ekin);
 
     double lambda;
-    if (egrator !=2 ) { 
+    if (egrator !=2 ) {
         lambda = sqrt(1.0 + (dt / tauTberendsen) * (( temp / T / boltz_unit ) - 1.0 )) ;
-    } 
+    }
     else {
         lambda = sqrt(1.0 + (( temp / T / boltz_unit ) - 1.0 )) ;
     }
