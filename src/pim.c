@@ -212,8 +212,8 @@ void momentpolaSCF(double (*mu_ind)[3],double *upol){
      * and damping
     */
     multipole_ES(qia,dipia,quadia,&u_coul_stat,&pdummy,tdummy,ef_stat,efgdummy,lqch,ldip,lqua,ldmp,
-                /* do   forces stress ef    efg    dir   rec   inpim*/
-                        false, false, true, false, true, true, true );
+                /* do   forces stress ef    efg    dir   rec   inpim  update_sf*/
+                        false, false, true, false, true, true, true,  true);
 
     /* first electric field is static */
     for (int ia=0;ia<nion;ia++){
@@ -231,7 +231,6 @@ void momentpolaSCF(double (*mu_ind)[3],double *upol){
         printf("        iter          u_pol          u_coul            rmsd  \n");
         printf("  -----------------------------------------------------------\n");
     }
-
     while ( ( (iscf<max_scf_pim_iter) && (rmsd>conv_tol_ind))  || (iscf<min_scf_pim_iter) ) {
 
         for (int ia=0;ia<nion;ia++){
@@ -255,9 +254,8 @@ void momentpolaSCF(double (*mu_ind)[3],double *upol){
         /* quadia -> quad_ind if induce electric field gradient is wanted  */
         /*                                                                   qch   dip  quad  dmp */
         multipole_ES(zeroch,mu_ind,quadia,&u_coul_ind,&pdummy,tdummy,ef_ind,efgdummy,false,true,false,false,
-        /* do   forces stress ef    efg    dir   rec  inpim */
-                false, false, true, false, true, true, true );
-
+        /* do   forces stress ef    efg    dir   rec  inpim update_sf*/
+                false, false, true, false, true, true, true, false);
         /* ef = ef_stat + ef_ind */
         for (int ia=0;ia<nion;ia++){
             for (int i=0;i<3;i++){
@@ -501,8 +499,8 @@ void momentpolaSCFkO(double (*mu_ind)[3],double *upol){
      * and damping
     */
     multipole_ES(qia,dipia,quadia,&u_coul_stat,&pdummy,tdummy,ef_stat,efgdummy,lqch,ldip,lqua,ldmp,
-                /* do   forces stress ef    efg    dir   rec  inpim*/
-                        false, false, true, false, true, true, true);
+                /* do   forces stress ef    efg    dir   rec  inpim  upate_sfr*/
+                        false, false, true, false, true, true, true, true);
 
     /* first electric field is static */
     for (int ia=0;ia<nion;ia++){
@@ -540,11 +538,10 @@ void momentpolaSCFkO(double (*mu_ind)[3],double *upol){
 
         /* induced electric field from only induced dipoles */
         /* quadia -> quad_ind if induce electric field gradient is wanted  */
-        /*                                                                   qch   dip  quad  dmp */
+        /*                                                                           qch   dip  quad  dmp */
         multipole_ES(zeroch,mu_ind,quadia,&u_coul_ind,&pdummy,tdummy,ef_ind,efgdummy,false,true,false,false,
-        /* do   forces stress ef    efg    dir   rec  inpim */
-                false, false, true, false, true, true, true);
-
+        /* do   forces stress ef    efg    dir   rec  inpim  update_sf */
+                false, false, true, false, true, true, true, false);
         /* ef = ef_stat + ef_ind */
         for (int ia=0;ia<nion;ia++){
             for (int i=0;i<3;i++){
@@ -694,6 +691,7 @@ void induced_moment_inner_kO(double (*mu_ind)[3], double (*ef_ext)[3]){
     alphaES=0.25*sqrt(abs(log(eps*4.0*cutlongrange*tol)))/cutlongrange;
     alphaES = 0.001;
 
+    bool dummy=false; /* no rec sum in eval so update_sfr does not matter */
     /* inner loop */
     while ((iscf_inner <=20) && (rmsd_inner > 0.01*rmsd_ext) ) {
 
@@ -711,8 +709,8 @@ void induced_moment_inner_kO(double (*mu_ind)[3], double (*ef_ext)[3]){
         /* quadia -> quad_ind if induce electric field gradient is wanted  */
         /*                                                                   qch   dip  quad  dmp */
         multipole_ES(zeroch,mu_ind,quadia,&udummy,&pdummy,tdummy,ef_ind,efgdummy,false,true,false,false,
-        /* do   forces stress ef    efg    dir   rec   inpim */
-                false, false, true, false, true, false, true);
+        /* do   forces stress ef    efg    dir   rec   inpim  update_sfr */
+                false, false, true, false, true, false, true, dummy );
 
         for(int ia=0;ia<nion;ia++){
             for(int i=0;i<3;i++){
@@ -834,8 +832,8 @@ void momentpolaSCFkO2(double (*mu_ind)[3],double *upol){
      * and damping
     */
     multipole_ES(qia,dipia,quadia,&u_coul_stat,&pdummy,tdummy,ef_stat,efgdummy,lqch,ldip,lqua,ldmp,
-                /* do   forces stress ef    efg    dir   rec  inpim*/
-                        false, false, true, false, true, true, true);
+                /* do   forces stress ef    efg    dir   rec  inpim   updta_sf*/
+                        false, false, true, false, true, true, true,  true);
 
     /* first electric field is static */
     for (int ia=0;ia<nion;ia++){
@@ -854,7 +852,6 @@ void momentpolaSCFkO2(double (*mu_ind)[3],double *upol){
         printf("        iter          u_pol          u_coul            rmsd  \n");
         printf("  -----------------------------------------------------------\n");
     }
-
     while ( ( (iscf<max_scf_pim_iter) && (rmsd>conv_tol_ind))  || (iscf<min_scf_pim_iter) ) {
 
         /* predictor */
@@ -875,9 +872,8 @@ void momentpolaSCFkO2(double (*mu_ind)[3],double *upol){
         /* quadia -> quad_ind if induce electric field gradient is wanted  */
         /*                                                                   qch   dip  quad  dmp */
         multipole_ES(zeroch,mu_ind,quadia,&u_coul_ind,&pdummy,tdummy,ef_ind,efgdummy,false,true,false,false,
-        /* do   forces stress ef    efg    dir   rec  inpim */
-                false, false, true, false, true, true, true);
-
+        /* do   forces stress ef    efg    dir   rec  inpim  update_sf*/
+                false, false, true, false, true, true, true ,false);
         /* ef = ef_stat + ef_ind */
         for (int ia=0;ia<nion;ia++){
             for (int i=0;i<3;i++){
