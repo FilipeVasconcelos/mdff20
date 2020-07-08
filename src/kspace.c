@@ -8,6 +8,8 @@
 #include "tools.h"
 #include "config.h"
 
+//#define DEBUG_STRUCT_FACT
+
 /******************************************************************************/
 void init_kspace(){
 
@@ -151,51 +153,39 @@ void reorder_kmesh(KMESH *km){
 /******************************************************************************/
 /* Multipole expansion of the Ewald sum  in reciprocal space                  */
 /******************************************************************************/
-void struct_fact_rhon(double *q, double (*mu)[3], double (*theta)[3][3],bool lqchtask, bool ldiptask){
+void struct_fact(){
 
+#ifdef DEBUG_STRUCT_FACT
+    printf("inside struct_fact\n");
+#endif
     double kx,ky,kz,Ak,kcoe;
     double rxi,ryi,rzi;
-    double qi;
-    double k_dot_r,k_dot_mu;
-    double ckria,skria;
-    double rhonk_R,rhonk_I,str;
-    double recarg;
-    double recarg2;
+    double k_dot_r;
 
-    double ttau[3][3];
-    for (int i=0;i<3;i++){
-        for(int j=i;j<3;j++){
-            ttau[i][j]=0.0;
-        }
-    }
     int ik,ia;
 
     #pragma omp parallel default(none) \
-                         shared(rx,ry,rz,q,mu,theta,lqchtask,ldiptask,kcoul,nion) \
-                         private(ik,ia,qi,kx,ky,kz,Ak,kcoe,rxi,ryi,rzi,k_dot_r,k_dot_mu,rhonk_R,rhonk_I,ckria,skria)
+                         shared(rx,ry,rz,kcoul,nion) \
+                         private(ik,ia,kx,ky,kz,Ak,kcoe,rxi,ryi,rzi,k_dot_r)
     {
         for (ik=kcoul.kptDec.iaStart;ik<kcoul.kptDec.iaEnd;ik++){
 
-#ifdef DEBUG_STRUCT_FACT
+#ifdef DEBUG_STRUCT_FACT_
             printf("k %d %d %d\n",ik,kcoul.kptDec.iaStart,kcoul.kptDec.iaEnd);
 #endif
             if (kcoul.kk[ik] == 0.0) continue;
             kx   = kcoul.kx[ik];
             ky   = kcoul.ky[ik];
             kz   = kcoul.kz[ik];
-            Ak   = kcoul.Ak[ik];
-
-            rhonk_R = 0.0;
-            rhonk_I = 0.0;
+            //Ak   = kcoul.Ak[ik];
             for (ia=0;ia<nion;ia++){
                 rxi = rx[ia];
                 ryi = ry[ia];
                 rzi = rz[ia];
                 k_dot_r  = ( kx * rxi + ky * ryi + kz * rzi );
-                ckria  = cos(k_dot_r);
-                skria  = sin(k_dot_r);
-                kcoul.ckria[ik][ia]=ckria;
-                kcoul.skria[ik][ia]=skria;
+                kcoul.ckria[ik][ia]=cos(k_dot_r);
+                kcoul.skria[ik][ia]=sin(k_dot_r);
+/*
                 if ( lqchtask ) {
                     qi  = q[ia];
                     rhonk_R  += qi * ckria;
@@ -207,14 +197,78 @@ void struct_fact_rhon(double *q, double (*mu)[3], double (*theta)[3][3],bool lqc
                     rhonk_I +=  k_dot_mu * ckria;
                 }
 
-            } /* sum to get charge density */
+            } 
             kcoul.str[ik] = (rhonk_R*rhonk_R + rhonk_I*rhonk_I) * Ak;
             kcoul.rhon_R[ik] = rhonk_R;
             kcoul.rhon_I[ik] = rhonk_I;
-
+*/
+            } /* ia */ 
         } /* kpoint sum */
+    } /*omp*/
+}
+void charge_density_q(int ik, double *q){
 
+    double kx,ky,kz;
+    double rhonk_R,rhonk_I;
+    double qi;
+
+    kx   = kcoul.kx[ik];
+    ky   = kcoul.ky[ik];
+    kz   = kcoul.kz[ik];
+    rhonk_R = 0.0;
+    rhonk_I = 0.0;
+    for (int ia=0;ia<nion;ia++){
+        qi=q[ia];
+        rhonk_R += qi * kcoul.ckria[ik][ia];
+        rhonk_I += qi * kcoul.skria[ik][ia];
     }
+    kcoul.rhon_R[ik] += rhonk_R;
+    kcoul.rhon_I[ik] += rhonk_I;
+
 }
 
+void charge_density_mu(int ik, double (*mu)[3]){
 
+    double kx,ky,kz;
+    double k_dot_mu;
+    double rhonk_R,rhonk_I;
+
+    kx   = kcoul.kx[ik];
+    ky   = kcoul.ky[ik];
+    kz   = kcoul.kz[ik];
+    rhonk_R = 0.0;
+    rhonk_I = 0.0;
+    for (int ia=0;ia<nion;ia++){
+        k_dot_mu = ( mu[ia][0] * kx + mu[ia][1] * ky + mu[ia][2] * kz );
+        rhonk_R += -k_dot_mu * kcoul.skria[ik][ia];
+        rhonk_I +=  k_dot_mu * kcoul.ckria[ik][ia];
+    }
+    kcoul.rhon_R[ik] += rhonk_R;
+    kcoul.rhon_I[ik] += rhonk_I;
+
+}
+
+void charge_density_qmu(int ik, double *q, double (*mu)[3] ){
+
+    double kx,ky,kz;
+    double rhonk_R,rhonk_I;
+    double qi;
+    double k_dot_mu;
+
+    kx   = kcoul.kx[ik];
+    ky   = kcoul.ky[ik];
+    kz   = kcoul.kz[ik];
+    rhonk_R = 0.0;
+    rhonk_I = 0.0;
+    for (int ia=0;ia<nion;ia++){
+        qi=q[ia];
+        rhonk_R += qi * kcoul.ckria[ik][ia];
+        rhonk_I += qi * kcoul.skria[ik][ia];
+        k_dot_mu = ( mu[ia][0] * kx + mu[ia][1] * ky + mu[ia][2] * kz );
+        rhonk_R += -k_dot_mu * kcoul.skria[ik][ia];
+        rhonk_I +=  k_dot_mu * kcoul.ckria[ik][ia];
+    }
+    kcoul.rhon_R[ik] += rhonk_R;
+    kcoul.rhon_I[ik] += rhonk_I;
+
+}
