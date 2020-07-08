@@ -80,7 +80,7 @@ nhc_yosh_order 3
 nhc_mults      2
 timesca_thermo 2.0
 temp 2500.0
-npas 100 
+npas 1000 
 nprint 100
 fprint 10
 cprint 10

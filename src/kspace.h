@@ -25,5 +25,8 @@ void init_kspace();
 void free_kspace();
 void set_param_kmesh(KMESH *km,double alpha);
 void reorder_kmesh(KMESH *km);
-void struct_fact_rhon(double *q, double (*mu)[3], double (*theta)[3][3],bool lqchtask, bool ldiptask);
+void struct_fact();
+void charge_density_q(int ik, double *q);
+void charge_density_mu(int ik, double (*mu)[3]);
+void charge_density_qmu(int ik, double *q, double (*mu)[3] );
 #endif

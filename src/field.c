@@ -200,7 +200,7 @@ void info_field(){
                 if (quadit[it][j][k] != 0.0 ) lqua = true;
                 if (polit[it][j][k] != 0.0 )  {
                     lpol = true;
-                    ldip = true;
+        //            ldip = true;
                 }
             }
         }
@@ -379,8 +379,8 @@ void engforce()
         statime(24);
         mestime(&engforce_getdipolesCPUtime,24,23);
         multipole_ES(qia,mu,quadia,&u_coul,&pvir_coul,tau_coul,ef,efg,lqch,ldip,lqua,ldmp,
-        /* do   forces stress ef    efg   dir   rec  inpim */
-                true,  true,  true, true, true, true, false);
+        /* do   forces stress ef    efg   dir   rec  inpim  update_sf*/
+                true,  true,  true, true, true, true, false, !lpim);
         statime(25);
         mestime(&engforce_coulCPUtime,25,24);
 
@@ -394,6 +394,14 @@ void engforce()
         free(mu);
         free(ef);
         free(efg);
+        /* check for static dipoles */ 
+        /* note static quadrupole should be check in case of induced quadrupolar */
+        for(int it=0; it< ntype ; it++){
+            for (int j=0;j<3;j++){  
+                if (dipit[it][j] != 0.0 ) ldip = true; 
+            }
+        }
+
     }
     statime(3);
     mestime(&engforceCPUtime,3,2);
