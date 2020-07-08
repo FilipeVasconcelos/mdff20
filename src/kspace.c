@@ -6,6 +6,7 @@
 #include "kspace.h"
 #include "cell.h"
 #include "tools.h"
+#include "config.h"
 
 /******************************************************************************/
 void init_kspace(){
@@ -24,6 +25,15 @@ void init_kspace(){
     kcoul.kk=malloc(nk*sizeof(*kcoul.kk));
     kcoul.Ak=malloc(nk*sizeof(*kcoul.Ak));
     kcoul.kcoe=malloc(nk*sizeof(*kcoul.kcoe));
+    kcoul.rhon_R=malloc(nk*sizeof(*kcoul.rhon_R));
+    kcoul.rhon_I=malloc(nk*sizeof(*kcoul.rhon_I));
+    kcoul.ckria=malloc(nk*sizeof(**kcoul.ckria));
+    kcoul.skria=malloc(nk*sizeof(**kcoul.skria));
+    kcoul.str=malloc(nk*sizeof(*kcoul.str));
+    for (int ik=0;ik< kcoul.nk;ik++) {
+        kcoul.ckria[ik]=malloc(nion*sizeof(*kcoul.ckria));
+        kcoul.skria[ik]=malloc(nion*sizeof(*kcoul.skria));
+    }
     set_param_kmesh(&kcoul,alphaES);
     reorder_kmesh(&kcoul);
 }
@@ -36,6 +46,16 @@ void free_kspace(){
     free(kcoul.kk);
     free(kcoul.Ak);
     free(kcoul.kcoe);
+    free(kcoul.rhon_R);
+    free(kcoul.rhon_I);
+    free(kcoul.str);
+    for (int ik=0;ik<kcoul.nk;ik++) {
+        free(kcoul.ckria[ik]);
+        free(kcoul.skria[ik]);
+    }
+    free(kcoul.ckria);
+    free(kcoul.skria);
+
 }
 
 /******************************************************************************/
@@ -126,3 +146,75 @@ void reorder_kmesh(KMESH *km){
     free(tkcoe);
 
 }
+
+
+/******************************************************************************/
+/* Multipole expansion of the Ewald sum  in reciprocal space                  */
+/******************************************************************************/
+void struct_fact_rhon(double *q, double (*mu)[3], double (*theta)[3][3],bool lqchtask, bool ldiptask){
+
+    double kx,ky,kz,Ak,kcoe;
+    double rxi,ryi,rzi;
+    double qi;
+    double k_dot_r,k_dot_mu;
+    double ckria,skria;
+    double rhonk_R,rhonk_I,str;
+    double recarg;
+    double recarg2;
+
+    double ttau[3][3];
+    for (int i=0;i<3;i++){
+        for(int j=i;j<3;j++){
+            ttau[i][j]=0.0;
+        }
+    }
+    int ik,ia;
+
+    #pragma omp parallel default(none) \
+                         shared(rx,ry,rz,q,mu,theta,lqchtask,ldiptask,kcoul,nion) \
+                         private(ik,ia,qi,kx,ky,kz,Ak,kcoe,rxi,ryi,rzi,k_dot_r,k_dot_mu,rhonk_R,rhonk_I,ckria,skria)
+    {
+        for (ik=kcoul.kptDec.iaStart;ik<kcoul.kptDec.iaEnd;ik++){
+
+#ifdef DEBUG_STRUCT_FACT
+            printf("k %d %d %d\n",ik,kcoul.kptDec.iaStart,kcoul.kptDec.iaEnd);
+#endif
+            if (kcoul.kk[ik] == 0.0) continue;
+            kx   = kcoul.kx[ik];
+            ky   = kcoul.ky[ik];
+            kz   = kcoul.kz[ik];
+            Ak   = kcoul.Ak[ik];
+
+            rhonk_R = 0.0;
+            rhonk_I = 0.0;
+            for (ia=0;ia<nion;ia++){
+                rxi = rx[ia];
+                ryi = ry[ia];
+                rzi = rz[ia];
+                k_dot_r  = ( kx * rxi + ky * ryi + kz * rzi );
+                ckria  = cos(k_dot_r);
+                skria  = sin(k_dot_r);
+                kcoul.ckria[ik][ia]=ckria;
+                kcoul.skria[ik][ia]=skria;
+                if ( lqchtask ) {
+                    qi  = q[ia];
+                    rhonk_R  += qi * ckria;
+                    rhonk_I  += qi * skria;
+                }
+                if ( ldiptask ) {
+                    k_dot_mu = ( mu[ia][0] * kx + mu[ia][1] * ky + mu[ia][2] * kz );
+                    rhonk_R += -k_dot_mu * skria;
+                    rhonk_I +=  k_dot_mu * ckria;
+                }
+
+            } /* sum to get charge density */
+            kcoul.str[ik] = (rhonk_R*rhonk_R + rhonk_I*rhonk_I) * Ak;
+            kcoul.rhon_R[ik] = rhonk_R;
+            kcoul.rhon_I[ik] = rhonk_I;
+
+        } /* kpoint sum */
+
+    }
+}
+
+
