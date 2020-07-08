@@ -33,8 +33,6 @@
 //#define DEBUG_
 #ifdef DEBUG_
     #define DEBUG_EWALD
-    #define DEBUG_EWALD_DIR
-    #define DEBUG_EWALD_REC
     #define DEBUG_EWALD_DIR_DIPOLE
     #define DEBUG_EWALD_DIR_QUADRIPOLE
     #define DEBUG_EWALD_DIR_COUNT
@@ -42,6 +40,8 @@
     #define DEBUG_EWALD_DIR_PIM_COUNT
     #define DEBUG_EWALD_REC_PIM_COUNT
 #endif
+//    #define DEBUG_EWALD_DIR
+//    #define DEBUG_EWALD_REC
 
 /******************************************************************************/
 void set_autoES(){
@@ -73,7 +73,8 @@ void set_autoES(){
 /* Ewald Summation */
 void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, double *pvir, double tau[3][3],
                              double (*ef)[3], double (*efg)[3][3], bool lq, bool ld, bool lt, bool lcouldamp,
-                             bool do_forces, bool do_stress, bool do_ef, bool do_efg , bool do_dir, bool do_rec , int inpim ){
+                             bool do_forces, bool do_stress, bool do_ef, bool do_efg , bool do_dir, bool do_rec , 
+                             bool inpim, bool update_sf ){
 
 #ifdef DEBUG_EWALD
     printf("inside multipole_ES\n");
@@ -164,7 +165,7 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
 
         u_rec=0.0;
         multipole_ES_rec(q, mu, theta, &u_rec, ef_rec, efg_rec, fx_rec, fy_rec, fz_rec, tau_rec,
-                         lq, ld, do_forces, do_stress, do_ef, do_ef);
+                         lq, ld, do_forces, do_stress, do_ef, do_ef, update_sf);
 
         statime(21);
         if ( inpim ) {
@@ -857,7 +858,8 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
 void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
                       double *u_rec  , double (*ef_rec)[3], double (*efg_rec)[3][3],
                       double *fx_rec, double *fy_rec, double *fz_rec , double tau_rec[3][3],
-                      bool lqchtask, bool ldiptask,bool do_forces, bool do_stress, bool do_ef, bool do_efg){
+                      bool lqchtask, bool ldiptask,bool do_forces, bool do_stress, bool do_ef, bool do_efg,
+                      bool update_sf){
 
 #ifdef DEBUG_EWALD_REC
     printf("inside multipole_ES_rec\n");
@@ -882,7 +884,7 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
     int ik,ia;
 
     uu=0;
-   // struct_fact_rhon(q,mu,theta,lqchtask,ldiptask);
+    if (update_sf) struct_fact();
 
     #pragma omp parallel default(none) \
                          shared(rx,ry,rz,q,mu,theta,u_rec,ef_rec,efg_rec,fx_rec,fy_rec,fz_rec,tau_rec,\
@@ -893,43 +895,27 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
                         schedule(dynamic,16)
         for (ik=kcoul.kptDec.iaStart;ik<kcoul.kptDec.iaEnd;ik++){
 
-#ifdef DEBUG_EWALD_REC_
-            printf("k %d %d %d\n",ik,kcoul.kptDec.iaStart,kcoul.kptDec.iaEnd);
-#endif
             if (kcoul.kk[ik] == 0.0) continue;
             kx   = kcoul.kx[ik];
             ky   = kcoul.ky[ik];
             kz   = kcoul.kz[ik];
             Ak   = kcoul.Ak[ik];
             kcoe = kcoul.kcoe[ik];
-            ckria = kcoul.ckria[ik][ia];
-            skria = kcoul.skria[ik][ia];
+            kcoul.rhon_R[ik]=0.0;
+            kcoul.rhon_I[ik]=0.0;
 
-            rhonk_R = 0.0;
-            rhonk_I = 0.0;
-
-            for (ia=0;ia<nion;ia++){
-                rxi = rx[ia];
-                ryi = ry[ia];
-                rzi = rz[ia];
-                k_dot_r  = ( kx * rxi + ky * ryi + kz * rzi );
-                ckria  = cos(k_dot_r);
-                skria  = sin(k_dot_r);
-                if ( lqchtask ) {
-                    qi  = q[ia];
-                    rhonk_R  += qi * ckria;
-                    rhonk_I  += qi * skria;
-                }
-
-                if ( ldiptask ) {
-                    k_dot_mu = ( mu[ia][0] * kx + mu[ia][1] * ky + mu[ia][2] * kz );
-                    rhonk_R += -k_dot_mu * skria;
-                    rhonk_I +=  k_dot_mu * ckria;
-                }
-
-
-            } /* sum to get charge density */
-
+            /* charge density at ik */ 
+            if ( ( lqchtask ) && ( ldiptask ) ) {
+                charge_density_qmu(ik,q,mu);
+            } else {
+                if ( lqchtask ) charge_density_q(ik,q);
+                if ( ldiptask ) charge_density_mu(ik,mu);
+            }
+            rhonk_R = kcoul.rhon_R[ik];
+            rhonk_I = kcoul.rhon_I[ik];
+#ifdef DEBUG_EWALD_REC
+            printf("k %d %d %d"ee3"\n",ik,kcoul.kptDec.iaStart,kcoul.kptDec.iaEnd,str,rhonk_R,rhonk_I);
+#endif
             str =  (rhonk_R*rhonk_R + rhonk_I*rhonk_I) * Ak;
             /* potential energy */
             uu  += str ;
@@ -937,12 +923,8 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
             /* second sum */
             for (ia=0;ia<nion;ia++){
                 qi=q[ia];
-                rxi = rx[ia];
-                ryi = ry[ia];
-                rzi = rz[ia];
-                k_dot_r  = ( kx * rxi + ky * ryi + kz * rzi );
-                ckria  = cos(k_dot_r);
-                skria  = sin(k_dot_r);
+                ckria = kcoul.ckria[ik][ia];
+                skria = kcoul.skria[ik][ia];
 
                 if ( ( do_ef ) || ( do_forces ) ) {
                     recarg  = Ak * (rhonk_I*ckria - rhonk_R*skria);
@@ -991,8 +973,6 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
         }
     } /* omp parallel */
 
-    //sample_("f_rec",fx_rec,fy_rec,fz_rec);
-
     /* half mesh and units */
     double ttpiV = 2.0 * TPI * simuCell.inveOmega;
     double tfpiV = 2.0 * ttpiV;
@@ -1018,23 +998,6 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
             tau_rec[j][k] = ttau[j][k] * ttpiV * simuCell.inveOmegaPU;
         }
     }
-    /*
-    printf("tau_rec\n");
-    for (int i=0;i<3;i++){
-        for (int j=0;j<3;j++){
-            printf(ee,tau_rec[i][j]);
-        }
-        putchar('\n');
-    }
-    putchar('\n');
-    */
-
-    //printf("at the end EFG %e %e\n",efg_rec[0][0][0],efg_rec[0][1][1]);
-    /* remark on unit
-    1/(4*pi*epislon_0) = 1 => epsilon_0 = 1/4pi
-    */
-
-
 
 }
 
