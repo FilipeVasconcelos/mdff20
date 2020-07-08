@@ -24,8 +24,9 @@ lbhmftd __BHMD__
 # ------------
 #    PIM 
 # ------------
-algo_pim scf
-conv_tol_ind  1e-10    
+algo_pim scfkO
+omegakO 0.7
+conv_tol_ind  __CONV_SCF__ 
 algo_extrapolate_dipole aspc
 extrapolate_order 2   
 min_scf_pim_iter 10  

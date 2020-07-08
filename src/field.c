@@ -313,7 +313,6 @@ void info_field(){
 void init_field(char* controlfn){
 
     read_field(controlfn);
-
     info_field();
 
     /* NON BONDED POTENTIAL */
@@ -380,7 +379,7 @@ void engforce()
         mestime(&engforce_getdipolesCPUtime,24,23);
         multipole_ES(qia,mu,quadia,&u_coul,&pvir_coul,tau_coul,ef,efg,lqch,ldip,lqua,ldmp,
         /* do   forces stress ef    efg   dir   rec  inpim  update_sf*/
-                true,  true,  true, true, true, true, false, !lpim);
+                true,  true,  false, false, true, true, false, !lpim);
         statime(25);
         mestime(&engforce_coulCPUtime,25,24);
 

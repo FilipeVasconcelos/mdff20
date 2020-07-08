@@ -892,7 +892,7 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
                          private(ik,ia,qi,kx,ky,kz,Ak,kcoe,rxi,ryi,rzi,k_dot_r,k_dot_mu,rhonk_R,rhonk_I,str,fxij,fyij,fzij,ckria,skria,recarg,recarg2)
     {
         #pragma omp for reduction (+:uu,ttau,fx_rec[:nion],fy_rec[:nion],fz_rec[:nion],ef_rec[:nion],efg_rec[:nion]) \
-                        schedule(dynamic,16)
+                        schedule(dynamic,8)
         for (ik=kcoul.kptDec.iaStart;ik<kcoul.kptDec.iaEnd;ik++){
 
             if (kcoul.kk[ik] == 0.0) continue;
@@ -916,9 +916,9 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
                 rhonk_I = kcoul.rhon_I[ik];
             } 
             else {
-                struct_fact_rhon(ik,q,mu,lqchtask,ldiptask);
-                rhonk_R = kcoul.rhon_R[ik];
-                rhonk_I = kcoul.rhon_I[ik];
+                struct_fact_rhon(ik,q,mu,lqchtask,ldiptask,&rhonk_R,&rhonk_I);
+                //rhonk_R = kcoul.rhon_R[ik];
+                //rhonk_I = kcoul.rhon_I[ik];
             }
 #ifdef DEBUG_EWALD_REC
             printf("k %d %d %d"ee3"\n",ik,kcoul.kptDec.iaStart,kcoul.kptDec.iaEnd,str,rhonk_R,rhonk_I);
@@ -932,6 +932,14 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
                 qi=q[ia];
                 ckria = kcoul.ckria[ik][ia];
                 skria = kcoul.skria[ik][ia];
+                /*
+                rxi = rx[ia];
+                ryi = ry[ia];
+                rzi = rz[ia];
+                k_dot_r  = ( kx * rxi + ky * ryi + kz * rzi );
+                ckria=cos(k_dot_r);
+                skria=sin(k_dot_r);
+                */
 
                 if ( ( do_ef ) || ( do_forces ) ) {
                     recarg  = Ak * (rhonk_I*ckria - rhonk_R*skria);

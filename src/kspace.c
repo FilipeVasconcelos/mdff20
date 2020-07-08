@@ -8,7 +8,7 @@
 #include "tools.h"
 #include "config.h"
 
-//#define DEBUG_STRUCT_FACT
+#define DEBUG_STRUCT_FACT
 
 /******************************************************************************/
 void init_kspace(){
@@ -274,17 +274,21 @@ void charge_density_qmu(int ik, double *q, double (*mu)[3] ){
 
 }
 /******************************************************************************/
-void struct_fact_rhon(int ik, double *q,double (*mu)[3], bool lqchtask, bool ldiptask){
+void struct_fact_rhon(int ik, double *q,double (*mu)[3], bool lqchtask, bool ldiptask, 
+                      double *rhonk_R,double *rhonk_I){
 
+#ifdef DEBUG_STRUCT_FACT
+    printf("inside struct_fact_rhon\n");
+#endif
     double kx,ky,kz,Ak,kcoe;
     double rxi,ryi,rzi;
     double k_dot_r,k_dot_mu;
-    double rhonk_R,rhonk_I;
+    //double rhonk_R,rhonk_I;
     double skria,ckria;
     double qi;
 
-    rhonk_R=0.0;
-    rhonk_I=0.0;
+    *rhonk_R=0.0;
+    *rhonk_I=0.0;
     if (kcoul.kk[ik] == 0.0) return ;
     kx   = kcoul.kx[ik];
     ky   = kcoul.ky[ik];
@@ -299,19 +303,19 @@ void struct_fact_rhon(int ik, double *q,double (*mu)[3], bool lqchtask, bool ldi
         skria=sin(k_dot_r);
         if ( lqchtask ) {
             qi  = q[ia];
-            rhonk_R  += qi * ckria;
-            rhonk_I  += qi * skria;
+            *rhonk_R  += qi * ckria;
+            *rhonk_I  += qi * skria;
         }
         if ( ldiptask ) {
             k_dot_mu = ( mu[ia][0] * kx + mu[ia][1] * ky + mu[ia][2] * kz );
-            rhonk_R += -k_dot_mu * skria;
-            rhonk_I +=  k_dot_mu * ckria;
+            *rhonk_R += -k_dot_mu * skria;
+            *rhonk_I +=  k_dot_mu * ckria;
         }
         kcoul.ckria[ik][ia]=ckria;
         kcoul.skria[ik][ia]=skria;
 
     } 
-    kcoul.str[ik] = (rhonk_R*rhonk_R + rhonk_I*rhonk_I) * Ak;
-    kcoul.rhon_R[ik] = rhonk_R;
-    kcoul.rhon_I[ik] = rhonk_I;
+    //kcoul.str[ik] = (rhonk_R*rhonk_R + rhonk_I*rhonk_I) * Ak;
+    //kcoul.rhon_R[ik] = rhonk_R;
+    //kcoul.rhon_I[ik] = rhonk_I;
 }
