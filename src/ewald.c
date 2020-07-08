@@ -42,10 +42,6 @@
     #define DEBUG_EWALD_DIR_PIM_COUNT
     #define DEBUG_EWALD_REC_PIM_COUNT
 #endif
-    #define DEBUG_EWALD_DIR_COUNT
-    #define DEBUG_EWALD_REC_COUNT
-    #define DEBUG_EWALD_DIR_PIM_COUNT
-    #define DEBUG_EWALD_REC_PIM_COUNT
 
 /******************************************************************************/
 void set_autoES(){
@@ -128,7 +124,6 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
             printf("\n");
         }
 #endif
-
         statime(19);
         if ( inpim ) {
             cc_multipole_ES_dir_pim+=1;
@@ -138,35 +133,35 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
             cc_multipole_ES_dir+=1;
             mestime(&ewaldDirCPUtime,19,18);
         }
-    }
+    } /* do DIR */
 
     /*************************************************************/
     /*                RECIPROCAL SPACE                           */
     /*************************************************************/
-    statime(20);
-    for (int i=0;i<3;i++){
-        for (int j=0;j<3;j++){
-            tau_rec[i][j]=0.0;
-        }
-    }
-    ef_rec=malloc(nion*sizeof(*ef_rec));
-    efg_rec=malloc(nion*sizeof(*efg_rec));
-    fx_rec=malloc(nion*sizeof(*fx_rec));
-    fy_rec=malloc(nion*sizeof(*fy_rec));
-    fz_rec=malloc(nion*sizeof(*fz_rec));
-    for (int ia=0;ia<nion;ia++){
-        fx_rec[ia]=0.0;
-        fy_rec[ia]=0.0;
-        fz_rec[ia]=0.0;
+    if ( do_rec ) {
+        statime(20);
         for (int i=0;i<3;i++){
-            ef_rec[ia][i]=0.0;
             for (int j=0;j<3;j++){
-                efg_rec[ia][i][j]=0.0;
+                tau_rec[i][j]=0.0;
             }
         }
-    }
+        ef_rec=malloc(nion*sizeof(*ef_rec));
+        efg_rec=malloc(nion*sizeof(*efg_rec));
+            fx_rec=malloc(nion*sizeof(*fx_rec));
+        fy_rec=malloc(nion*sizeof(*fy_rec));
+        fz_rec=malloc(nion*sizeof(*fz_rec));
+        for (int ia=0;ia<nion;ia++){
+            fx_rec[ia]=0.0;
+            fy_rec[ia]=0.0;
+            fz_rec[ia]=0.0;
+            for (int i=0;i<3;i++){
+                ef_rec[ia][i]=0.0;
+                for (int j=0;j<3;j++){
+                    efg_rec[ia][i][j]=0.0;
+                    }
+            }
+        }
 
-    if ( do_rec ) {
         u_rec=0.0;
         multipole_ES_rec(q, mu, theta, &u_rec, ef_rec, efg_rec, fx_rec, fy_rec, fz_rec, tau_rec,
                          lq, ld, do_forces, do_stress, do_ef, do_ef);
@@ -188,7 +183,7 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
             printf("\n");
         }
 #endif
-    }
+    } /* do REC */
 
     /*************************************************************/
     /*                SELF AND SURFACE                           */
@@ -239,31 +234,68 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
         /* electric field at ions    */
         /* --------------------------*/
         for (int i=0;i<3;i++){
-            ef[ia][i]=(ef_dir[ia][i]+ef_rec[ia][i]+ef_self[ia][i]);
+            ef[ia][i] = ef_self[ia][i];
 #ifdef DEBUG_EWALD
-            printf("EF : %d %d dir: %e rec: %e self : %e tot : %e\n",ia,i,ef_dir[ia][i],ef_rec[ia][i],ef_self[ia][i],ef[ia][i]);
+            printf("EF : %d %d self : %15.8e ",ia,i,ef_self[ia][i]);
+#endif
+            if ( do_dir ) {
+                ef[ia][i] += ef_dir[ia][i];
+#ifdef DEBUG_EWALD
+                printf("dir: %15.8e ",ef_dir[ia][i]);
+#endif
+            }
+            if ( do_rec ) {
+                ef[ia][i] += ef_rec[ia][i];
+#ifdef DEBUG_EWALD
+                printf("rec: %15.8e ",ef_rec[ia][i]);
+#endif
+            }
+#ifdef DEBUG_EWALD
+                printf("tot: %15.8e \n",ef[ia][i]);
 #endif
         /* ------------------------- */
         /* electric field gradient   */
         /* ------------------------- */
             for (int j=0;j<3;j++){
-                efg[ia][i][j]=(efg_dir[ia][i][j]+efg_rec[ia][i][j]+efg_self[ia][i][j]);
-#ifdef DEBUG_EWALD
-        printf("EFG : %d %d %d dir: %e rec: %e self : %e tot : %e\n",ia,i,j,efg_dir[ia][i][j],efg_rec[ia][i][j],efg_self[ia][i][j],efg[ia][i][j]);
-#endif
+                efg[ia][i][j]=efg_self[ia][i][j];
+                if ( do_dir ) {
+                    efg[ia][i][j] += efg_dir[ia][i][j];
+                }
+                if ( do_rec ) {
+                    efg[ia][i][j] += efg_rec[ia][i][j];
+                }
             }
         }
         /* ---------------------------- */
         /*           forces             */
         /* ---------------------------- */
-        fx[ia] += (fx_dir[ia] + fx_rec[ia]) * coul_unit;
-        fy[ia] += (fy_dir[ia] + fy_rec[ia]) * coul_unit;
-        fz[ia] += (fz_dir[ia] + fz_rec[ia]) * coul_unit;
+
+        if ( do_dir ) {
+            fx[ia] += fx_dir[ia] * coul_unit;
+            fy[ia] += fy_dir[ia] * coul_unit;
+            fz[ia] += fz_dir[ia] * coul_unit;
+        }
+        if ( do_rec ) {
+            fx[ia] += fx_rec[ia] * coul_unit;
+            fy[ia] += fy_rec[ia] * coul_unit;
+            fz[ia] += fz_rec[ia] * coul_unit;
+        }
     }
 
-    for (int i=0;i<3;i++){
-        for (int j=0;j<3;j++){
-            tau[i][j] = ( tau_dir[i][j] + tau_rec[i][j] ) * coul_unit;
+    /* ---------------------------- */
+    /*         stress tensor        */
+    /* ---------------------------- */
+    if ( do_stress ) {
+        for (int i=0;i<3;i++){
+            for (int j=0;j<3;j++){
+                tau[i][j]=0.0;
+                if ( do_dir ) {
+                    tau[i][j] += tau_dir[i][j] * coul_unit;
+                }
+                if ( do_rec ) {
+                    tau[i][j] += tau_rec[i][j] * coul_unit;
+                }
+            }
         }
     }
 
@@ -277,29 +309,37 @@ void multipole_ES(double *q, double (*mu)[3], double (*theta)[3][3],double *u, d
     for (int ia=0;ia<nion;ia++){
         printf("mu  %e %e %e\n",mu[ia][0],mu[ia][1],mu[ia][2]);
     }
-    printf("u_dir  %e\n",u_dir*coul_unit);
-    printf("u_rec  %e\n",u_rec*coul_unit);
     printf("u_self %e\n",u_self*coul_unit);
     printf("u_coul %e\n",*u);
-    printf("fx_dir  %e %e %e \n",fx_dir[0],fy_dir[0],fz_dir[0]);
-    printf("fx_rec  %e %e %e \n",fx_rec[0],fx_rec[0],fx_rec[0]);
-    printf("ef_dir  %e %e %e \n",ef_dir[0][0],ef_dir[0][1],ef_dir[0][2]);
-    printf("ef_rec  %e %e %e\n",ef_rec[0][0],ef_rec[0][1],ef_rec[0][2]);
-    putchar('\n');
+    if ( do_dir ) {
+        printf("u_dir  %e\n",u_dir*coul_unit);
+        printf("fx_dir  %e %e %e \n",fx_dir[0],fy_dir[0],fz_dir[0]);
+        printf("ef_dir  %e %e %e \n",ef_dir[0][0],ef_dir[0][1],ef_dir[0][2]);
+    }
+    if ( do_rec ) {
+        printf("u_rec  %e\n",u_rec*coul_unit);
+        printf("fx_rec  %e %e %e \n",fx_rec[0],fx_rec[0],fx_rec[0]);
+        printf("ef_rec  %e %e %e\n",ef_rec[0][0],ef_rec[0][1],ef_rec[0][2]);
+        putchar('\n');
+    }
 #endif
 
-    free(ef_dir);
-    free(ef_rec);
     free(ef_self);
-    free(efg_dir);
-    free(efg_rec);
     free(efg_self);
-    free(fx_dir);
-    free(fy_dir);
-    free(fz_dir);
-    free(fx_rec);
-    free(fy_rec);
-    free(fz_rec);
+    if ( do_dir ) {
+        free(ef_dir);
+        free(fx_dir);
+        free(fy_dir);
+        free(fz_dir);
+        free(efg_dir);
+    }
+    if ( do_rec ) {
+        free(ef_rec);
+        free(efg_rec);
+        free(fx_rec);
+        free(fy_rec);
+        free(fz_rec);
+    }
 #ifdef DEBUG_EWALD
     printf("outside multipole_ES\n");
 #endif
@@ -842,6 +882,7 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
     int ik,ia;
 
     uu=0;
+   // struct_fact_rhon(q,mu,theta,lqchtask,ldiptask);
 
     #pragma omp parallel default(none) \
                          shared(rx,ry,rz,q,mu,theta,u_rec,ef_rec,efg_rec,fx_rec,fy_rec,fz_rec,tau_rec,\
@@ -861,25 +902,30 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
             kz   = kcoul.kz[ik];
             Ak   = kcoul.Ak[ik];
             kcoe = kcoul.kcoe[ik];
+            ckria = kcoul.ckria[ik][ia];
+            skria = kcoul.skria[ik][ia];
 
             rhonk_R = 0.0;
             rhonk_I = 0.0;
 
             for (ia=0;ia<nion;ia++){
-                qi  = q[ia];
                 rxi = rx[ia];
                 ryi = ry[ia];
                 rzi = rz[ia];
                 k_dot_r  = ( kx * rxi + ky * ryi + kz * rzi );
                 ckria  = cos(k_dot_r);
                 skria  = sin(k_dot_r);
-                rhonk_R  += qi * ckria;
-                rhonk_I  += qi * skria;
+                if ( lqchtask ) {
+                    qi  = q[ia];
+                    rhonk_R  += qi * ckria;
+                    rhonk_I  += qi * skria;
+                }
 
-                if ( ! ldiptask ) continue;
-                k_dot_mu = ( mu[ia][0] * kx + mu[ia][1] * ky + mu[ia][2] * kz );
-                rhonk_R += -k_dot_mu * skria;
-                rhonk_I +=  k_dot_mu * ckria;
+                if ( ldiptask ) {
+                    k_dot_mu = ( mu[ia][0] * kx + mu[ia][1] * ky + mu[ia][2] * kz );
+                    rhonk_R += -k_dot_mu * skria;
+                    rhonk_I +=  k_dot_mu * ckria;
+                }
 
 
             } /* sum to get charge density */
