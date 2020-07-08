@@ -112,6 +112,7 @@ void get_dipoles(double (*mu)[3],double *upol){
             printf("ia %d mu_ind %e %e %e\n",ia,mu_ind[ia][0],mu_ind[ia][1],mu_ind[ia][2]);
 #endif
         }
+        ldip=true;
         free(mu_ind);
     }
     //restore current forces
