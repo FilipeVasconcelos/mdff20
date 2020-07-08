@@ -29,4 +29,5 @@ void induced_moment(double (*mu_ind)[3], double (*ef)[3]);
 void induced_moment_inner_kO(double (*mu_ind)[3], double (*ef_ext)[3]);
 void extrapolate_dipole_aspc(double (*mu_ind)[3] , double (*ef)[3], int key );
 double get_rmsd_mu(double (*mu)[3], double (*ef)[3]);
+void find_min(double (*ef0)[3], double (*ef1)[3],double (*mu0)[3], double (*mu1)[3]) ;
 #endif
