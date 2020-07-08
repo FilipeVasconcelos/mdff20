@@ -884,11 +884,11 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
     int ik,ia;
 
     uu=0;
-    if (update_sf) struct_fact();
+    if ( (update_sf) && (lpim) ) struct_fact();
 
     #pragma omp parallel default(none) \
                          shared(rx,ry,rz,q,mu,theta,u_rec,ef_rec,efg_rec,fx_rec,fy_rec,fz_rec,tau_rec,\
-                                lqchtask,ldiptask,do_ef,do_efg,do_forces,do_stress,kcoul,uu,ttau,nion) \
+                                lqchtask,ldiptask,do_ef,do_efg,do_forces,do_stress,kcoul,uu,ttau,nion,lpim) \
                          private(ik,ia,qi,kx,ky,kz,Ak,kcoe,rxi,ryi,rzi,k_dot_r,k_dot_mu,rhonk_R,rhonk_I,str,fxij,fyij,fzij,ckria,skria,recarg,recarg2)
     {
         #pragma omp for reduction (+:uu,ttau,fx_rec[:nion],fy_rec[:nion],fz_rec[:nion],ef_rec[:nion],efg_rec[:nion]) \
@@ -904,15 +904,22 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
             kcoul.rhon_R[ik]=0.0;
             kcoul.rhon_I[ik]=0.0;
 
-            /* charge density at ik */ 
-            if ( ( lqchtask ) && ( ldiptask ) ) {
-                charge_density_qmu(ik,q,mu);
-            } else {
-                if ( lqchtask ) charge_density_q(ik,q);
-                if ( ldiptask ) charge_density_mu(ik,mu);
+            if ( lpim ) { 
+                /* charge density at ik */ 
+                if ( ( lqchtask ) && ( ldiptask ) ) {
+                    charge_density_qmu(ik,q,mu);
+                } else {
+                    if ( lqchtask ) charge_density_q(ik,q);
+                    if ( ldiptask ) charge_density_mu(ik,mu);
+                }
+                rhonk_R = kcoul.rhon_R[ik];
+                rhonk_I = kcoul.rhon_I[ik];
+            } 
+            else {
+                struct_fact_rhon(ik,q,mu,lqchtask,ldiptask);
+                rhonk_R = kcoul.rhon_R[ik];
+                rhonk_I = kcoul.rhon_I[ik];
             }
-            rhonk_R = kcoul.rhon_R[ik];
-            rhonk_I = kcoul.rhon_I[ik];
 #ifdef DEBUG_EWALD_REC
             printf("k %d %d %d"ee3"\n",ik,kcoul.kptDec.iaStart,kcoul.kptDec.iaEnd,str,rhonk_R,rhonk_I);
 #endif
