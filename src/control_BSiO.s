@@ -37,11 +37,11 @@ BDbhmftd  1.889           4.15739913          0.0
 # ------------
 #algo_pim scf
 algo_pim scfkO
-omegakO 0.9
+omegakO 0.95
 conv_tol_ind  1e-6
 algo_extrapolate_dipole aspc
 extrapolate_order 4   
-min_scf_pim_iter 3 
+min_scf_pim_iter 4 
 max_scf_pim_iter 50
 # ----------------------------
 # Polarizabilities
@@ -84,8 +84,8 @@ nhc_mults      2
 timesca_thermo 1.0
 
 temp 2500.0
-npas 100
-nprint 10
+npas 0
+nprint 100
 fprint 10
 cprint 1000
 dt .0005
