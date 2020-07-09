@@ -850,6 +850,23 @@ void multipole_ES_dir(double *q, double (*mu)[3], double (*theta)[3][3],
      ***************************************/
     dirkar ( nion , rx , ry , rz , simuCell.A ) ;
 
+#ifdef MPI
+    statime(8);
+    MPI_Allreduce_sumDouble(u_dir,1);
+    MPI_Allreduce_sumDouble(fx_dir,nion);
+    MPI_Allreduce_sumDouble(fy_dir,nion);
+    MPI_Allreduce_sumDouble(fz_dir,nion);
+    MPI_Allreduce_sumDouble_R2(ef_dir,nion);
+    MPI_Allreduce_sumDouble_R3(efg_dir,nion);
+    MPI_Allreduce_sumDouble(tau_dir[0],3);
+    MPI_Allreduce_sumDouble(tau_dir[1],3);
+    MPI_Allreduce_sumDouble(tau_dir[2],3);
+    statime(9);
+    mestime(&COMMCPUtime,9,8);
+#endif
+
+
+
 }
 
 /******************************************************************************/
@@ -916,6 +933,7 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
                 rhonk_I = kcoul.rhon_I[ik];
             } 
             else {
+                //printf("struct_fact_rhon\n");
                 struct_fact_rhon(ik,q,mu,lqchtask,ldiptask,&rhonk_R,&rhonk_I);
                 //rhonk_R = kcoul.rhon_R[ik];
                 //rhonk_I = kcoul.rhon_I[ik];
@@ -932,7 +950,7 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
                 qi=q[ia];
                 ckria = kcoul.ckria[ik][ia];
                 skria = kcoul.skria[ik][ia];
-                /*
+                /*  
                 rxi = rx[ia];
                 ryi = ry[ia];
                 rzi = rz[ia];
@@ -940,9 +958,10 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
                 ckria=cos(k_dot_r);
                 skria=sin(k_dot_r);
                 */
+                recarg  = Ak * (rhonk_I*ckria - rhonk_R*skria);
+                recarg2 = Ak * ( rhonk_R * ckria + rhonk_I * skria );
 
                 if ( ( do_ef ) || ( do_forces ) ) {
-                    recarg  = Ak * (rhonk_I*ckria - rhonk_R*skria);
                     fxij = kx * recarg;
                     fyij = ky * recarg;
                     fzij = kz * recarg;
@@ -955,7 +974,6 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
                 }
 
                 if ( do_efg ) {
-                    recarg2 = Ak * ( rhonk_R * ckria + rhonk_I * skria );
                     efg_rec[ia][0][0] += kx * kx * recarg2;
                     efg_rec[ia][1][1] += ky * ky * recarg2;
                     efg_rec[ia][2][2] += kz * kz * recarg2;
@@ -1013,6 +1031,21 @@ void multipole_ES_rec(double *q, double (*mu)[3], double (*theta)[3][3],
             tau_rec[j][k] = ttau[j][k] * ttpiV * simuCell.inveOmegaPU;
         }
     }
+#ifdef MPI
+    statime(8);
+    MPI_Allreduce_sumDouble(u_rec,1);
+    MPI_Allreduce_sumDouble(fx_rec,nion);
+    MPI_Allreduce_sumDouble(fy_rec,nion);
+    MPI_Allreduce_sumDouble(fz_rec,nion);
+    MPI_Allreduce_sumDouble_R2(ef_rec,nion);
+    MPI_Allreduce_sumDouble_R3(efg_rec,nion);
+    MPI_Allreduce_sumDouble(tau_rec[0],3);
+    MPI_Allreduce_sumDouble(tau_rec[1],3);
+    MPI_Allreduce_sumDouble(tau_rec[2],3);
+    statime(9);
+    mestime(&COMMCPUtime,9,8);
+#endif
+
 
 }
 
