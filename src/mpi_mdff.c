@@ -75,9 +75,35 @@ void MPI_Allreduce_sumDouble( double *localSum, int ndim){
 }
 
 
-//void MPI_Allreduce_sumArrayDouble( double *localSum, double *globalSum, int ndim ) {
-//    MPI_Allreduce(localsum,globalSum,)
-//}
+void MPI_Allreduce_sumDouble_R2(double (*inout)[3], int ndim){
+    double (*tmp);
+    tmp=malloc(ndim*sizeof(*tmp));
+    for (int i=0;i<3;i++) {
+        for (int ia=0;ia<ndim;ia++){
+            tmp[ia]=inout[ia][i];
+        }
+        MPI_Allreduce_sumDouble(tmp,ndim);
+        for (int ia=0;ia<ndim;ia++){
+            inout[ia][i]=tmp[ia];
+        }
+    }
+    free(tmp);
 
+}
+void MPI_Allreduce_sumDouble_R3(double (*inout)[3][3], int ndim){
+    double (*tmp);
+    tmp=malloc(ndim*sizeof(*tmp));
+    for (int i=0;i<3;i++) {
+        for (int j=0;j<3;j++) {
+            for (int ia=0;ia<ndim;ia++){
+                tmp[ia]=inout[ia][i][j];
+            }
+            MPI_Allreduce_sumDouble(tmp,ndim);
+            for (int ia=0;ia<ndim;ia++){
+                inout[ia][i][j]=tmp[ia];
+            }
+        }
+    }
+    free(tmp);
 
-
+}
