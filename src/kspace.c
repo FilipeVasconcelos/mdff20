@@ -8,7 +8,7 @@
 #include "tools.h"
 #include "config.h"
 
-#define DEBUG_STRUCT_FACT
+//#define DEBUG_STRUCT_FACT
 
 /******************************************************************************/
 void init_kspace(){
@@ -167,7 +167,6 @@ void struct_fact(){
                          private(ik,ia,kx,ky,kz,Ak,kcoe,rxi,ryi,rzi,k_dot_r)
     {
         for (ik=kcoul.kptDec.iaStart;ik<kcoul.kptDec.iaEnd;ik++){
-
 #ifdef DEBUG_STRUCT_FACT_
             printf("k %d %d %d\n",ik,kcoul.kptDec.iaStart,kcoul.kptDec.iaEnd);
 #endif
@@ -175,7 +174,6 @@ void struct_fact(){
             kx   = kcoul.kx[ik];
             ky   = kcoul.ky[ik];
             kz   = kcoul.kz[ik];
-            //Ak   = kcoul.Ak[ik];
             for (ia=0;ia<nion;ia++){
                 rxi = rx[ia];
                 ryi = ry[ia];
@@ -183,23 +181,6 @@ void struct_fact(){
                 k_dot_r  = ( kx * rxi + ky * ryi + kz * rzi );
                 kcoul.ckria[ik][ia]=cos(k_dot_r);
                 kcoul.skria[ik][ia]=sin(k_dot_r);
-/*
-                if ( lqchtask ) {
-                    qi  = q[ia];
-                    rhonk_R  += qi * ckria;
-                    rhonk_I  += qi * skria;
-                }
-                if ( ldiptask ) {
-                    k_dot_mu = ( mu[ia][0] * kx + mu[ia][1] * ky + mu[ia][2] * kz );
-                    rhonk_R += -k_dot_mu * skria;
-                    rhonk_I +=  k_dot_mu * ckria;
-                }
-
-            } 
-            kcoul.str[ik] = (rhonk_R*rhonk_R + rhonk_I*rhonk_I) * Ak;
-            kcoul.rhon_R[ik] = rhonk_R;
-            kcoul.rhon_I[ik] = rhonk_I;
-*/
             } /* ia */ 
         } /* kpoint sum */
     } /*omp*/
