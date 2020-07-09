@@ -693,7 +693,7 @@ void induced_moment_inner_kO(double (*mu_ind)[3], double (*ef_ext)[3]){
 
     bool dummy=false; /* no rec sum in eval so update_sfr does not matter */
     /* inner loop */
-    while ((iscf_inner <=20) && (rmsd_inner > 0.01*rmsd_ext) ) {
+    while ((iscf_inner <=20) && (rmsd_inner > 0.1*rmsd_ext) ) {
 
         iscf_inner+=1;
         /* alpha is reduced for the short-range dipole-dipole interaction
@@ -726,7 +726,7 @@ void induced_moment_inner_kO(double (*mu_ind)[3], double (*ef_ext)[3]){
             }
         }
     }
-#ifdef DEBUG_INNER_KO_
+#ifdef DEBUG_INNER_KO
     if ( iopnode(istep,npas,nprint ) )  {
         printf("  inner converged in %d steps     rmsd_inner = %15.8e \n",iscf_inner,rmsd_inner);
     }
