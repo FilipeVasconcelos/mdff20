@@ -13,6 +13,7 @@
 #include "pbc.h"
 #include "timing.h"
 #include "tools.h"
+#include "io.h"
 #include "math_mdff.h"
 #include "kspace.h"
 #include "functions.h"
@@ -53,7 +54,7 @@ void set_autoES(){
     rcut =  0.5 * dmin_arr(simuCell.w,3);
 //    printf("rcut %f min %f  \n",rcut,dmin_arr(simuCell.w,3));
     if ( cutlongrange < rcut ) {
-        printf("WARNING : cutlongrange will be changed according to simuCell.W[]\n");
+        if ( ionode ) printf("WARNING : cutlongrange will be changed according to simuCell.W[]\n");
         cutlongrange=rcut;
     }
     eps=dmin(fabs(epsw),0.5);

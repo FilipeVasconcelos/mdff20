@@ -23,7 +23,7 @@
 #endif
 /*******************************************************************************/
 VERLETL *allocate_verletlist(char* label){
-    printf("allocate Verlet List %s\n",label);
+    if ( ionode ) printf("allocate Verlet List %s\n",label);
     VERLETL *vlist=malloc(sizeof(*vlist));
     vlist->list=malloc(nion*VNLMAX*sizeof(*(vlist->list)));
     vlist->point=malloc((nion+1)*sizeof(*(vlist->point)));

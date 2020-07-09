@@ -10,6 +10,7 @@
 #include "global.h"
 #include "config.h"
 #include "md.h"
+#include "io.h"
 #include "ewald.h"
 #include "coulombic.h"
 
@@ -512,7 +513,7 @@ void momentpolaSCFkO(double (*mu_ind)[3],double *upol){
     /* SCF LOOP */
     iscf=0;
     rmsd=DBL_MAX;
-    if ( iopnode(istep,npas,nprint) ) {
+    if ( ( ionode) && ( iopnode(istep,npas,nprint) ) ) {
         printf("  -----------------------------------------------------------\n");
         printf("                 PIM :     self consistent (kOv1)            \n");
         printf("  -----------------------------------------------------------\n");
@@ -564,7 +565,7 @@ void momentpolaSCFkO(double (*mu_ind)[3],double *upol){
             }
         }
         /* kO */
-        if ( iopnode(istep,npas,nprint ) )  {
+        if ( ( ionode ) && ( iopnode(istep,npas,nprint ) ) )  {
             printf("  scf: %5d  "ee3"\n",iscf+1,uupol*coul_unit,u_coul_pol*coul_unit,rmsd);
         }
         iscf+=1;
@@ -576,7 +577,7 @@ void momentpolaSCFkO(double (*mu_ind)[3],double *upol){
             dipia_ind[ia][0][i]=mu_ind[ia][i];
         }
     }
-    if ( iopnode(istep,npas,nprint ) )  {
+    if ( ( ionode ) && ( iopnode(istep,npas,nprint ) ) )  {
         putchar('\n');
         printf("  scf converged in %d iterations, rmsd "ee"\n",iscf,rmsd);
         putchar('\n');
@@ -727,7 +728,7 @@ void induced_moment_inner_kO(double (*mu_ind)[3], double (*ef_ext)[3]){
         }
     }
 #ifdef DEBUG_INNER_KO
-    if ( iopnode(istep,npas,nprint ) )  {
+    if ( ( ionode ) && ( iopnode(istep,npas,nprint ) ) )  {
         printf("  inner converged in %d steps     rmsd_inner = %15.8e \n",iscf_inner,rmsd_inner);
     }
 #endif
@@ -845,7 +846,7 @@ void momentpolaSCFkO2(double (*mu_ind)[3],double *upol){
     /* SCF LOOP */
     iscf=0;
     rmsd=DBL_MAX;
-    if ( iopnode(istep,npas,nprint) ) {
+    if ( ( ionode) && ( iopnode(istep,npas,nprint) ) ) {
         printf("  -----------------------------------------------------------\n");
         printf("                 PIM :     self consistent (kOv1)            \n");
         printf("  -----------------------------------------------------------\n");
@@ -900,7 +901,7 @@ void momentpolaSCFkO2(double (*mu_ind)[3],double *upol){
 
         }
         /* kO */
-        if ( iopnode(istep,npas,nprint ) )  {
+        if ( ( ionode) && ( iopnode(istep,npas,nprint) ) ) {
             printf("  scf: %5d  "ee3"\n",iscf+1,uupol*coul_unit,u_coul_pol*coul_unit,rmsd);
         }
         iscf+=1;
@@ -912,7 +913,7 @@ void momentpolaSCFkO2(double (*mu_ind)[3],double *upol){
             dipia_ind[ia][0][i]=mu_ind[ia][i];
         }
     }
-    if ( iopnode(istep,npas,nprint ) )  {
+    if ( ( ionode) && ( iopnode(istep,npas,nprint) ) ) {
         putchar('\n');
         printf("  scf converged in %d iterations, rmsd %e\n",iscf,rmsd);
         putchar('\n');

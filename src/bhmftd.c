@@ -12,6 +12,7 @@
 #include "cell.h"
 #include "verlet.h"
 #include "bhmftd.h"
+#include "timing.h"
 
 #ifdef DEBUG
     #define DEBUG_BHMFTD

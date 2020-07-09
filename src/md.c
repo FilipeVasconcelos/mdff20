@@ -179,21 +179,21 @@ void run_md()
 {
 
     e_kin=calc_kin();
-    sample_config(0);
 
-    engforce();
+#ifdef DEBUG_MD
+    sample_config(0);
+#endif
+    
     if(ionode){
         SEPARATOR;
         printf("properties at t=0\n");
         SEPARATOR;
         putchar('\n');
     }
+    /* energy, field, forces */
+    engforce();
 
     info_thermo(0,NULL); /* at t=0 */
-
-#ifdef DEBUG_MD
-    sample_config(0);
-#endif
 
     if( (ionode) && (npas>0)){
         SEPARATOR;
@@ -207,7 +207,6 @@ void run_md()
         pError("opening OSZIFF file");
         exit(-1);
     }
-
     /* ----------------------------------------------------*/
     /*                  MAIN LOOP                          */
     /* ----------------------------------------------------*/
@@ -256,8 +255,6 @@ void run_md()
         if ( iopnode(istep,npas,cprint) ) {
             write_config();
         }
-
-
     }
     /* ----------------------------------------------------*/
     write_config();
