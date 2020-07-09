@@ -84,8 +84,8 @@ nhc_mults      2
 timesca_thermo 1.0
 
 temp 2500.0
-npas 0
-nprint 100
+npas 10
+nprint 1
 fprint 10
 cprint 1000
 dt .0005

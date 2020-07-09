@@ -44,17 +44,16 @@ BDbhmftd   2.64562     0.0
 algo_pim scfkO
 #algo_pim scf
 omegakO 0.8
-conv_tol_ind  1e-6
+conv_tol_ind  1e-5
 algo_extrapolate_dipole aspc
 extrapolate_order 4
-min_scf_pim_iter 3
-max_scf_pim_iter 100
+min_scf_pim_iter 4
+max_scf_pim_iter 50
 # --------------------
 #  Polarizability
 # --------------------
 # O type
 polit 1.59150 0.0 0.0 0.0 1.59150 0.0 0.0 0.0 1.59150
-#polit 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 # Si type
 polit 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 # ------------
@@ -80,8 +79,8 @@ nhc_yosh_order 3
 nhc_mults      2
 timesca_thermo 2.0
 temp 2500.0
-npas 1000 
-nprint 100
+npas 1000000
+nprint 1000
 fprint 10
 cprint 10
 dt .0005
