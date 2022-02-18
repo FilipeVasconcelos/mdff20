@@ -13,7 +13,6 @@ void gen_constants()
     rho_unit   = 1.660538782         ;
     coul_unit  = 14.3996441494161    ;
 
-
     radian     = 180. / PI           ;
     onethird   = 1.   / 3.0          ;
     piroot     = sqrt(PI)            ;
