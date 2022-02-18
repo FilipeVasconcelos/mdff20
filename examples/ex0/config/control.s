@@ -15,7 +15,7 @@ temp 10.0
 npas 0
 dt .001
 tauTberendsen .001
-nprint 0
+nprint 1
 fprint 0
 nequil 0
 # ============================
