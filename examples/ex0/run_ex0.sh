@@ -11,8 +11,8 @@
 # user settings
 
 EXECP2K=cp2k
-EXEDLPOLY=/home/filipe/build/dl_poly/execute/DLPOLY.X
-EXEMDFF=mdff20.x
+EXEDLPOLY=/home/filipe/dev/dl_poly/execute/DLPOLY.X
+EXEMDFF=/home/filipe/dev/mdff20/src/mdff20.x
 CONTROLFF=control.s
 
 do_cp2k=true
@@ -26,7 +26,7 @@ echo "# Example 0: Minimum settings with FCC structure"
 echo "# FCC LJ a=5.24 A (in reduced units 1.5414)"
 echo "# natm = 256"
 echo "# more details in ${CONTROLFF} file"
-
+echo "executable : ${EXEMDFF}"
 rm -rf mdff/
 mkdir mdff
 cd mdff
@@ -34,7 +34,7 @@ echo
 echo "# mdff calculation "
 cp ../config/${CONTROLFF} .
 cp ../config/POSFF .
-$EXEMDFF ${CONTROLFF} > stdout 
+${EXEMDFF} ${CONTROLFF} > stdout 
 cd ..
 
 if $do_dlpoly; then
@@ -64,7 +64,7 @@ echo
 echo $sep
 echo 
 # print energy informations
-etot=$(grep Etot mdff/stdout | tail -n 1 | awk '{print $NF}')
+etot=$(grep Utot mdff/stdout | tail -n 1 | awk '{print $NF}')
 etot2=$(echo ${etot} | sed -e 's/[eE]+*/\*10\^/')
 nion=$(grep nion mdff/stdout | awk '{print $NF}')
 lr=$(grep "long range correction (energy)" mdff/stdout |  awk '{print $NF}')
