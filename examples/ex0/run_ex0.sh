@@ -83,7 +83,7 @@ then
 fi
 if [ $do_dlpoly = "true" ] && [ -f dl_poly/STATIS ]
 then
-	etotdl=`head -n 4 dl_poly/STATIS | tail -n 1 | awk '{printf("%.4f\n", $1*1.0)}'`
+	etotdl=`head -n 4 dl_poly/STATIS | tail -n 1 | awk '{printf("%.4f\n", $1)}'` 
 	echo "dl_poly                      = " $etotdl 
 fi
 
