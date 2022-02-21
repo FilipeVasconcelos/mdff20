@@ -1,0 +1,8 @@
+#!/bin/bash
+lr=$1
+if [ -z ${lr} ]
+then
+    grep e+ OSZIFF | sed -n 'p;n' | awk '{print $2,$3}' 
+else
+    grep e+ OSZIFF | sed -n 'p;n' | awk -v lr=${lr} '{print $2,$3+lr}' 
+fi
