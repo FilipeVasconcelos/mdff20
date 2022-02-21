@@ -27,6 +27,7 @@
 /******************************************************************************/
 int read_pim (char * controlfn)
 {
+    int c;
     char buffer[MAX_LEN+1];
     FILE * fp;
 
@@ -39,28 +40,28 @@ int read_pim (char * controlfn)
 
     while (EOF != fscanf(fp, "%s\n", buffer)) {
         if (strcmp(buffer,"algo_pim") == 0 ) {
-            fscanf(fp,"%s",buffer);
+            c=fscanf(fp,"%s",buffer);
             algo_pim=check_string("algo_pim",buffer,allwd_algo_pim, ALLWD_ALGO_PIM_STR);
         }
         if (strcmp(buffer,"algo_extrapolate_dipole") == 0 ) {
-            fscanf(fp,"%s",buffer);
+            c=fscanf(fp,"%s",buffer);
             algo_extrapolate_dipole=check_string("algo_extrapolate_dipole",buffer,allwd_algo_extrapolate_dipole,
                                                            ALLWD_ALGO_EXTRAPOLATE_DIPOLE_STR);
         }
         if (strcmp(buffer,"conv_tol_ind") == 0 ) {
-            fscanf(fp,"%lf",&conv_tol_ind);
+            c=fscanf(fp,"%lf",&conv_tol_ind);
         }
         if (strcmp(buffer,"extrapolate_order") == 0 ) {
-            fscanf(fp,"%d",&extrapolate_order);
+            c=fscanf(fp,"%d",&extrapolate_order);
         }
         if (strcmp(buffer,"min_scf_pim_iter") == 0 ) {
-            fscanf(fp,"%d",&min_scf_pim_iter);
+            c=fscanf(fp,"%d",&min_scf_pim_iter);
         }
         if (strcmp(buffer,"max_scf_pim_iter") == 0 ) {
-            fscanf(fp,"%d",&max_scf_pim_iter);
+            c=fscanf(fp,"%d",&max_scf_pim_iter);
         }
         if (strcmp(buffer,"omegakO") == 0 ) {
-            fscanf(fp,"%lf",&omegakO);
+            c=fscanf(fp,"%lf",&omegakO);
         }
    }
    fclose(fp);

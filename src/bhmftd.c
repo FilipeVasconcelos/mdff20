@@ -25,6 +25,7 @@
 /******************************************************************************/
 int read_bhmftd(char* controlfn) {
 
+    int c;
     char buffer[MAX_LEN+1];
     FILE *fp;
     fp = fopen (controlfn, "r");
@@ -39,7 +40,7 @@ int read_bhmftd(char* controlfn) {
             for(int it=0;it<ntype;it++){
                 for(int jt=0;jt<ntype;jt++){
                     if (jt >= it) {
-                        fscanf(fp,"%lf",&Abhmftd[it][jt]);
+                        c=fscanf(fp,"%lf",&Abhmftd[it][jt]);
                     }
                 }
             }
@@ -49,7 +50,7 @@ int read_bhmftd(char* controlfn) {
             for(int it=0;it<ntype;it++){
                 for(int jt=0;jt<ntype;jt++){
                     if (jt >= it) {
-                        fscanf(fp,"%lf",&Bbhmftd[it][jt]);
+                        c=fscanf(fp,"%lf",&Bbhmftd[it][jt]);
                     }
                 }
             }
@@ -59,7 +60,7 @@ int read_bhmftd(char* controlfn) {
             for(int it=0;it<ntype;it++){
                 for(int jt=0;jt<ntype;jt++){
                     if (jt >= it) {
-                        fscanf(fp,"%lf",&Cbhmftd[it][jt]);
+                        c=fscanf(fp,"%lf",&Cbhmftd[it][jt]);
                     }
                 }
             }
@@ -69,7 +70,7 @@ int read_bhmftd(char* controlfn) {
             for(int it=0;it<ntype;it++){
                 for(int jt=0;jt<ntype;jt++){
                     if (jt >= it) {
-                        fscanf(fp,"%lf",&Dbhmftd[it][jt]);
+                        c=fscanf(fp,"%lf",&Dbhmftd[it][jt]);
                     }
                 }
             }
@@ -79,7 +80,7 @@ int read_bhmftd(char* controlfn) {
             for(int it=0;it<ntype;it++){
                 for(int jt=0;jt<ntype;jt++){
                     if (jt >= it) {
-                        fscanf(fp,"%lf",&BDbhmftd[it][jt]);
+                        c=fscanf(fp,"%lf",&BDbhmftd[it][jt]);
                     }
                 }
             }

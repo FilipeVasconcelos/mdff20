@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include "color_mdff.h"
 #include "constants.h"
-#define SEPARATOR  for(int i=0;i<61;i++)  putchar('=');putchar('\n')
+#define SEPARATOR  if (ionode) for(int i=0;i<61;i++)  putchar('=');putchar('\n') 
 #define LSEPARATOR for(int i=0;i<61;i++)  putchar('-');putchar('\n')
 #define BSEPARATOR for(int i=0;i<105;i++) putchar('-');putchar('\n')
 #define BLANKLINE  putchar('\n');
@@ -20,5 +20,6 @@ bool ionode;
 void headerstdout(char* time ,int numprocs);
 void init_io();
 int iopnode(int step,int npas, int nprint);
+int iopsnode(int step,int npas, int nprint,int start);
 int check_FTstring(char* label,char buffer[MAX_LEN+1] );
 #endif

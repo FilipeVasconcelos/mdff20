@@ -18,6 +18,7 @@
 #include "config.h"
 #include "field.h"
 #include "nmlj.h"
+#include "radial_distribution.h"
 #include "kinetic.h"
 #include "verlet.h"
 #include "md.h"
@@ -59,39 +60,43 @@ int main(int argc, char *argv[])
 
     if(argc < 2)
     {
-        io_node printf(BLU"  Usage :"RES" ./mdff20.x <filename>\n");
+        SEPARATOR; 
+        io_node printf(BLU"Usage :"RES" ./mdff20.x <filename>\n");
         exit(-1);
     }
+    io_node printf("Compilation date and time : %s %s\n",__DATE__,__TIME__);
+    SEPARATOR; 
     //main control file
     controlfn=argv[1];
-
     // header output à la MDFF
     headerstdout(pstartingDate,numprocs);
-
+    // inititialisation of global parameters (main calculation) 
     init_global(controlfn);
     //read configuration from file POSFF
     //allocate main quantities when nion is known
     read_config();
-
-    // main md parameters
-    init_md(controlfn);
-    // main field parameters
-    init_field(controlfn);
     init_config();
-
     // parallelization atom decomposition
     do_split(nion,numprocs,myrank,&atomDec,"atoms");
     do_split(kcoul.nk,numprocs,myrank,&kcoul.kptDec,"k-points");
-    // verlet list
-    if (lverletL) check_verletlist();
-
-    if (!lstatic) {
+    if (lrdf) {
+        init_rdf(controlfn);
+    }
+    else {
+        // main md parameters
+        init_md(controlfn);
+        // main field parameters
+        init_field(controlfn);
+        // verlet list
+        if (lverletL) check_verletlist();
+    }
+    if ( !lstatic && !lrdf ) {
         //lets give ions some velocities
         init_velocities();
         // main md function
         run_md();
     }
-    else {
+    else if (lstatic) {
         e_kin=calc_kin();
         io_node printf("  static properties\n");
         /* energie, force and pressure */
@@ -101,11 +106,10 @@ int main(int argc, char *argv[])
             printf("  properties at t=0\n");
             SEPARATOR;
             putchar('\n');
-            write_config();
+            write_config("CONTFF",'w');
             info_thermo(0,NULL);
         }
     }
-
     /* ------------------------------------- */
     info_timing();
     finishingDate = time(NULL);
@@ -122,12 +126,17 @@ int main(int argc, char *argv[])
 #else
         double elapsedTime=((double) clock()-startingTime)/CLOCKS_PER_SEC;
 #endif
-        printf("  Elapsed time : %5.3f (s)\n", elapsedTime );
-        printf("  Date         : %s", pfinishingDate);
+        printf("Elapsed time : %5.3f (s)\n", elapsedTime );
+        printf("Date         : %s", pfinishingDate);
     }
     free_config();
-    free_md();
-    free_coulombic();
+    if (!lrdf) {
+        free_md();
+        free_coulombic();
+    } 
+    else {
+        free_rdf();
+    }
     free(pstartingDate);
     free(pfinishingDate);
 #ifdef MPI

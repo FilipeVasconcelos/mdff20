@@ -38,6 +38,7 @@ double addtruncU(int p1 , int p2, double srp, double srq){
 /******************************************************************************/
 int read_nmlj(char* controlfn){
 
+    int c;
     char buffer[MAX_LEN+1];
     FILE * fp;
     fp = fopen (controlfn, "r");
@@ -51,7 +52,7 @@ int read_nmlj(char* controlfn){
             for(int it=0;it<ntype;it++){
                 for(int jt=0;jt<ntype;jt++){
                     if (jt >= it) {
-                        fscanf(fp,"%lf",&sigmalj[it][jt]);
+                        c=fscanf(fp,"%lf",&sigmalj[it][jt]);
                     }
                 }
             }
@@ -61,7 +62,7 @@ int read_nmlj(char* controlfn){
             for(int it=0;it<ntype;it++){
                 for(int jt=0;jt<ntype;jt++){
                     if (jt >= it) {
-                        fscanf(fp,"%lf",&epslj[it][jt]);
+                        c=fscanf(fp,"%lf",&epslj[it][jt]);
                     }
                 }
             }
@@ -71,7 +72,7 @@ int read_nmlj(char* controlfn){
             for(int it=0;it<ntype;it++){
                 for(int jt=0;jt<ntype;jt++){
                     if (jt >= it) {
-                        fscanf(fp,"%lf",&plj[it][jt]);
+                        c=fscanf(fp,"%lf",&plj[it][jt]);
                     }
                 }
             }
@@ -81,14 +82,14 @@ int read_nmlj(char* controlfn){
             for(int it=0;it<ntype;it++){
                 for(int jt=0;jt<ntype;jt++){
                     if (jt >= it) {
-                        fscanf(fp,"%lf",&qlj[it][jt]);
+                        c=fscanf(fp,"%lf",&qlj[it][jt]);
                     }
                 }
             }
         }
         //  trunc
         if (strcmp(buffer,"trunc") == 0 ) {
-            fscanf(fp,"%s",buffer);
+            c=fscanf(fp,"%s",buffer);
             trunctype=-1;
             for (int k=0;k<3;k++){
                 if (strcmp(buffer,trunclabel[k]) == 0){

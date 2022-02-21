@@ -236,6 +236,25 @@ void sample_config(int key){
             putchar('\n');
         }
     }
+    if (key==1) { /* first and last*/
+        if (ionode) {
+            LSEPARATOR;
+            printf("              Configuration sample (first and last)\n");
+            LSEPARATOR;
+            printf("   ia atype              rx              vx              fx\n");
+            printf("%5d %5s "ee3"\n",0,atypia[0],rx[0],vx[0],fx[0]);
+            printf("%5d %5s "ee3"\n",nion-1,atypia[nion-1],rx[nion-1],vx[nion-1],fx[nion-1]);
+            printf("   ia atype              ry              vy              fy\n");
+            printf("%5d %5s "ee3"\n",0,atypia[0],ry[0],vy[0],fy[0]);
+            printf("%5d %5s "ee3"\n",nion-1,atypia[nion-1],ry[nion-1],vy[nion-1],fy[nion-1]);
+            printf("   ia atype              rz              vz              fz\n");
+            printf("%5d %5s "ee3"\n",0,atypia[0],rz[0],vz[0],fz[0]);
+            printf("%5d %5s "ee3"\n",nion-1,atypia[nion-1],rz[nion-1],vz[nion-1],fz[nion-1]);
+            LSEPARATOR;
+            putchar('\n');
+
+        }
+    }
 }
 void sample_(char *label,double *ax, double *ay, double *az){
     int mia=10;
@@ -269,7 +288,7 @@ A 0.0 0.0 0.0
 ...
 B 0.5 0.5 0.5
 */
-int write_config(){
+int write_config(char* filename, char opt){
 
     double *xxx, *yyy, *zzz;
     xxx= malloc(nion*sizeof(*xxx));
@@ -287,9 +306,10 @@ int write_config(){
     dirkar ( nion , xxx , yyy , zzz , simuCell.A ) ;
 
     FILE * fp;
-    fp = fopen ("CONTFF", "w");
+    fp = fopen (filename, &opt);
     if (NULL == fp) {
-        pError("opening CONTFF file");
+        pError("opening file :");
+        printf(" %s\n",filename);
         return -1;
     }
     fprintf(fp,"%d\n",nion);
@@ -327,11 +347,10 @@ int write_config(){
 int read_config()
 {
 
+    int c;
     pre_alloc_config();
-
     char cpos[MAX_LEN+1];
     FILE * fp;
-
     fp = fopen ("POSFF","r");
 
     if (NULL == fp ) {
@@ -350,13 +369,13 @@ int read_config()
     io_node printf("reading configuration from file POSFF\n");
 
     // reading nion number of ions in POSFF
-    fscanf(fp, "%d", &nion);
+    c=fscanf(fp, "%d", &nion);
     // reading config name
-    fscanf(fp, "%s", configname);
+    c=fscanf(fp, "%s", configname);
     // reading cell parameters
     for(int i=0;i<3;i++){
         for(int j=0;j<3;j++){
-            fscanf(fp, "%lf",&simuCell.A[i][j]);
+            c=fscanf(fp, "%lf",&simuCell.A[i][j]);
         }
     }
     lattice(&simuCell);
@@ -366,18 +385,18 @@ int read_config()
     // type informations
     // ------------------
     //ntype : number of types in POSFF
-    fscanf(fp, "%d", &ntype); //ntype
+    c=fscanf(fp, "%d", &ntype); //ntype
 
     //atypit : types char
     io_node printf("found type information on POSFF");
     for (int it=0;it<ntype;it++) {
-        fscanf(fp,"%s",atypit[it]);
+        c=fscanf(fp,"%s",atypit[it]);
         io_node printf(" %s ",atypit[it]);
     }
     //nionit : ions per type
     io_node printf("\n                               ");
     for (int it=0;it<ntype;it++) {
-        fscanf(fp,"%d",&nionit[it]);
+        c=fscanf(fp,"%d",&nionit[it]);
         io_node printf(" %d ",nionit[it]);
     }
     io_node putchar('\n');
@@ -386,18 +405,18 @@ int read_config()
     alloc_config();
 
     // Direct or Cartesian
-    fscanf(fp, "%s", cpos);
+    c=fscanf(fp, "%s", cpos);
     //strcpy(cpos,buffer);
 
     // reading positions of ions
     for (int ia=0;ia<nion;ia++) {
-        fscanf(fp," %s ",atypia[ia]);
-        fscanf(fp,"%lf %lf %lf ",&rx[ia],&ry[ia],&rz[ia]);
+        c=fscanf(fp," %s ",atypia[ia]);
+        c=fscanf(fp,"%lf %lf %lf ",&rx[ia],&ry[ia],&rz[ia]);
         if (Fposff>0) {
-            fscanf(fp,"%lf %lf %lf ",&vx[ia],&vy[ia],&vz[ia]);
+            c=fscanf(fp,"%lf %lf %lf ",&vx[ia],&vy[ia],&vz[ia]);
         }
         if (Fposff>1) {
-            fscanf(fp,"%lf %lf %lf ",&fx[ia],&fy[ia],&fz[ia]);
+            c=fscanf(fp,"%lf %lf %lf ",&fx[ia],&fy[ia],&fz[ia]);
         }
         //printf("ia %d atypia %s"ee9"\n",ia,atypia[ia],rx[ia],ry[ia],rz[ia],vx[ia],vy[ia],vz[ia],fx[ia],fy[ia],fz[ia]);
     }
@@ -426,4 +445,51 @@ int read_config()
     return 0;
 }
 
+void read_next_traj (FILE *fp){
+
+    int c;
+    char cpos[MAX_LEN+1];
+
+    // reading nion number of ions in POSFF
+    c=fscanf(fp, "%d", &nion);
+    printf("%d\n",nion);
+    // reading config name
+    c=fscanf(fp, "%s", configname);
+    printf("%s\n",configname);
+    // reading cell parameters
+    for(int i=0;i<3;i++){
+        for(int j=0;j<3;j++){
+            c=fscanf(fp, "%lf",&simuCell.A[i][j]);
+        }
+    }
+    lattice(&simuCell);
+    rhoN=(double)nion * simuCell.inveOmega;
+    // ------------------
+    // type informations
+    // ------------------
+    //ntype : number of types in POSFF
+    c=fscanf(fp, "%d", &ntype); //ntype
+
+    //atypit : types char
+    for (int it=0;it<ntype;it++) {
+        c=fscanf(fp,"%s",atypit[it]);
+    }
+    for (int it=0;it<ntype;it++) {
+        c=fscanf(fp,"%d",&nionit[it]);
+    }
+    // Direct or Cartesian
+    c=fscanf(fp, "%s", cpos);
+
+    // reading positions of ions
+    for (int ia=0;ia<nion;ia++) {
+        c=fscanf(fp," %s ",atypia[ia]);
+        c=fscanf(fp,"%lf %lf %lf ",&rx[ia],&ry[ia],&rz[ia]);
+        c=fscanf(fp,"%lf %lf %lf ",&vx[ia],&vy[ia],&vz[ia]);
+        c=fscanf(fp,"%lf %lf %lf ",&fx[ia],&fy[ia],&fz[ia]);
+    }
+    // if position are in direct coordinates => cartesian coordinates
+    if ((strcmp(cpos,"Direct") == 0 ) || (strcmp(cpos,"D") == 0 )) {
+        dirkar(nion, rx, ry, rz , simuCell.A);
+    }
+}
 

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #include "constants.h"
 #include "config.h"
@@ -27,6 +28,7 @@
 /******************************************************************************/
 int read_md (char * controlfn)
 {
+    int c;
     char buffer[MAX_LEN+1];
     FILE * fp;
 
@@ -39,50 +41,56 @@ int read_md (char * controlfn)
 
     while (EOF != fscanf(fp, "%s\n", buffer)) {
         if (strcmp(buffer,"integrator") == 0 ) {
-            fscanf(fp,"%s",buffer);
+            c=fscanf(fp,"%s",buffer);
             egrator=check_string("integrator",buffer,allwd_integrator,ALLWD_INTEGRATOR_STR);
         }
         if (strcmp(buffer,"dt") == 0 ) {
-            fscanf(fp,"%lf",&dt);
+            c=fscanf(fp,"%lf",&dt);
         }
         if (strcmp(buffer,"temp") == 0 ) {
-            fscanf(fp,"%lf",&temp);
+            c=fscanf(fp,"%lf",&temp);
         }
         if (strcmp(buffer,"npas") == 0 ) {
-            fscanf(fp,"%d",&npas);
+            c=fscanf(fp,"%d",&npas);
         }
         if (strcmp(buffer,"nprint") == 0 ) {
-            fscanf(fp,"%d",&nprint);
+            c=fscanf(fp,"%d",&nprint);
         }
         if (strcmp(buffer,"fprint") == 0 ) {
-            fscanf(fp,"%d",&fprint);
+            c=fscanf(fp,"%d",&fprint);
         }
         if (strcmp(buffer,"cprint") == 0 ) {
-            fscanf(fp,"%d",&cprint);
+            c=fscanf(fp,"%d",&cprint);
+        }
+        if (strcmp(buffer,"tstart") == 0 ) {
+            c=fscanf(fp,"%d",&tstart);
+        }
+        if (strcmp(buffer,"tprint") == 0 ) {
+            c=fscanf(fp,"%d",&tprint);
         }
         if (strcmp(buffer,"nequil") == 0 ) {
-            fscanf(fp,"%d",&nequil);
+            c=fscanf(fp,"%d",&nequil);
         }
         if (strcmp(buffer,"nequilT") == 0 ) {
-            fscanf(fp,"%d",&nequilT);
+            c=fscanf(fp,"%d",&nequilT);
         }
         if (strcmp(buffer,"tauTberendsen") == 0 ) {
-            fscanf(fp,"%lf",&tauTberendsen);
+            c=fscanf(fp,"%lf",&tauTberendsen);
         }
         if (strcmp(buffer,"nhc_n") == 0 ) {
-            fscanf(fp,"%d",&nhc_n);
+            c=fscanf(fp,"%d",&nhc_n);
         }
         if (strcmp(buffer,"nhc_mults") == 0 ) {
-            fscanf(fp,"%d",&nhc_mults);
+            c=fscanf(fp,"%d",&nhc_mults);
         }
         if (strcmp(buffer,"nhc_yosh_order") == 0 ) {
-            fscanf(fp,"%d",&nhc_yosh_order);
+            c=fscanf(fp,"%d",&nhc_yosh_order);
         }
         if (strcmp(buffer,"timesca_thermo") == 0 ) {
-            fscanf(fp,"%lf",&timesca_thermo);
+            c=fscanf(fp,"%lf",&timesca_thermo);
         }
         if (strcmp(buffer,"timesca_baro") == 0 ) {
-            fscanf(fp,"%lf",&timesca_baro);
+            c=fscanf(fp,"%lf",&timesca_baro);
         }
    }
    fclose(fp);
@@ -105,6 +113,8 @@ void default_md(){
     nprint=1;
     fprint=1;
     cprint=1000;
+    tprint=1000;
+    tstart=0;
 }
 /******************************************************************************/
 void check_md(){
@@ -122,6 +132,10 @@ void check_md(){
     rescale_allowed=false;
     for (int i =0;i<ALLWD_RESCALE_INTEGRATOR;i++){
         if ( egrator == allwd_rescale_integrator[i] ) rescale_allowed=true;
+    }
+    if ( tprint > 0  && access( "TRAJFF", F_OK ) == 0 ) {
+    // if trajectory requested and TRAJFF exists
+        remove("TRAJFF");
     }
 }
 
@@ -246,17 +260,23 @@ void run_md()
         /*          OSZIFF info              */
         /* --------------------------------- */
         if ( iopnode(istep,npas,fprint) ) {
-            info_thermo(1,fpOSZIFF);   /*OSZIFF*/
+            info_thermo(1,fpOSZIFF);         /* OSZIFF */
         }
         /* --------------------------------- */
         /*          CONTFF info              */
         /* --------------------------------- */
         if ( iopnode(istep,npas,cprint) ) {
-            write_config();
+            write_config("CONTFF",'w');
+        }
+        /* --------------------------------- */
+        /*          TRAJFF info              */
+        /* --------------------------------- */
+        if ( iopsnode(istep,npas,tprint,tstart) ) {
+            write_config("TRAJFF",'a');         /* TRAJFF */
         }
     }
     /* ----------------------------------------------------*/
-    write_config();
+    write_config("CONTFF",'w');
     fclose(fpOSZIFF);
 }
 

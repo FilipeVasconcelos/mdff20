@@ -63,6 +63,10 @@ int iopnode(int step,int npas,int nprint){
     return ( (step % nprint==0 || step == npas ) && (step >= 0) );
 }
 
+/******************************************************************************/
+int iopsnode(int step,int npas,int nprint,int start){
+    return ( (step % nprint==0 || step == npas ) && (step >= start) );
+}
 
 
 

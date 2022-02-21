@@ -30,6 +30,7 @@
 /******************************************************************************/
 int read_field(char* controlfn)
 {
+    int c;
     int type,it,jt;
     int kmas,kqch,kdip,kqua,kpol;
     kmas=0;   /* mass           */
@@ -47,39 +48,39 @@ int read_field(char* controlfn)
     }
     while (EOF != fscanf(fp, "%s\n", buffer)) {
         if (strcmp(buffer,"lbhmft") == 0 ) {
-            fscanf(fp,"%s",buffer);
+            c=fscanf(fp,"%s",buffer);
             lbhmft=check_boolstring("lbhmft",buffer);
         }
         if (strcmp(buffer,"lbhmftd") == 0 ) {
-            fscanf(fp,"%s",buffer);
+            c=fscanf(fp,"%s",buffer);
             lbhmftd=check_boolstring("lbhmftd",buffer);
         }
         if (strcmp(buffer,"lnmlj") == 0 ) {
-            fscanf(fp,"%s",buffer);
+            c=fscanf(fp,"%s",buffer);
             lnmlj=check_boolstring("lnmlj",buffer);
         }
         if (strcmp(buffer,"lcoulombic") == 0 ) {
-            fscanf(fp,"%s",buffer);
+            c=fscanf(fp,"%s",buffer);
             lcoulombic=check_boolstring("lcoulombic",buffer);
         }
         // mass of type
         if (strcmp(buffer,"massit") == 0 ) {
-            fscanf(fp,"%lf",&massit[kmas]);
+            c=fscanf(fp,"%lf",&massit[kmas]);
             kmas+=1;
         }
         // charges on type
         if (strcmp(buffer,"qit") == 0 ) {
-            fscanf(fp,"%lf",&qit[kqch]);
+            c=fscanf(fp,"%lf",&qit[kqch]);
             kqch+=1;
         }
         // dipole on type
         if (strcmp(buffer,"dipit") == 0 ) {
-            fscanf(fp,"%lf %lf %lf",&dipit[kdip][0],&dipit[kdip][1],&dipit[kdip][2]);
+            c=fscanf(fp,"%lf %lf %lf",&dipit[kdip][0],&dipit[kdip][1],&dipit[kdip][2]);
             kdip+=1;
         }
         // quadrupole on type
         if (strcmp(buffer,"quadit") == 0 ) {
-           fscanf(fp,"%lf %lf %lf %lf %lf %lf %lf %lf %lf",
+           c=fscanf(fp,"%lf %lf %lf %lf %lf %lf %lf %lf %lf",
                   &quadit[kqua][0][0],&quadit[kqua][0][1],&quadit[kqua][0][2],
                   &quadit[kqua][1][0],&quadit[kqua][1][1],&quadit[kqua][1][2],
                   &quadit[kqua][2][0],&quadit[kqua][2][1],&quadit[kqua][2][2]);
@@ -94,7 +95,7 @@ int read_field(char* controlfn)
         */
         // poldip tensor on type
         if (strcmp(buffer,"polit") == 0 ) {
-            fscanf(fp,"%lf %lf %lf %lf %lf %lf %lf %lf %lf",
+            c=fscanf(fp,"%lf %lf %lf %lf %lf %lf %lf %lf %lf",
                     &polit[kpol][0][0],&polit[kpol][0][1],&polit[kpol][0][2],
                     &polit[kpol][1][0],&polit[kpol][1][1],&polit[kpol][1][2],
                     &polit[kpol][2][0],&polit[kpol][2][1],&polit[kpol][2][2]);
@@ -107,39 +108,39 @@ int read_field(char* controlfn)
         }
         // pola on type
         if (strcmp(buffer,"lpoldamping") == 0 ) {
-            fscanf(fp,"%d %d %d %s",&type,&it,&jt,buffer);
+            c=fscanf(fp,"%d %d %d %s",&type,&it,&jt,buffer);
             lpoldamping[type][it][jt]=check_boolstring("lpoldamping",buffer);
         }
         if (strcmp(buffer,"pol_damp_b") == 0 ) {
-            fscanf(fp,"%d %d %d",&type,&it,&jt);
-            fscanf(fp,"%lf",&pol_damp_b[type][it][jt]);
+            c=fscanf(fp,"%d %d %d",&type,&it,&jt);
+            c=fscanf(fp,"%lf",&pol_damp_b[type][it][jt]);
         }
         if (strcmp(buffer,"pol_damp_c") == 0 ) {
-            fscanf(fp,"%d %d %d",&type,&it,&jt);
-            fscanf(fp,"%lf",&pol_damp_c[type][it][jt]);
+            c=fscanf(fp,"%d %d %d",&type,&it,&jt);
+            c=fscanf(fp,"%lf",&pol_damp_c[type][it][jt]);
         }
         if (strcmp(buffer,"pol_damp_k") == 0 ) {
-            fscanf(fp,"%d %d %d",&type,&it,&jt);
-            fscanf(fp,"%d",&pol_damp_k[type][it][jt]);
+            c=fscanf(fp,"%d %d %d",&type,&it,&jt);
+            c=fscanf(fp,"%d",&pol_damp_k[type][it][jt]);
         }
 // ldip_damping, pol_damp_b, pol_damp_c, pol_damp_k
         //ewald sum param
         if (strcmp(buffer,"alphaES") == 0 ) {
-            fscanf(fp,"%lf",&alphaES);
+            c=fscanf(fp,"%lf",&alphaES);
         }
         if (strcmp(buffer,"kES") == 0 ) {
             for(int k=0;k<3;k++){
-                fscanf(fp,"%d",&kES[k]);
+                c=fscanf(fp,"%d",&kES[k]);
             }
         }
         if (strcmp(buffer,"epsw") == 0 ) {
-            fscanf(fp,"%lf",&epsw);
+            c=fscanf(fp,"%lf",&epsw);
         }
         if (strcmp(buffer,"epsw") == 0 ) {
-            fscanf(fp,"%lf",&epsw);
+            c=fscanf(fp,"%lf",&epsw);
         }
         if (strcmp(buffer,"lautoES") == 0 ) {
-            fscanf(fp,"%s",buffer);
+            c=fscanf(fp,"%s",buffer);
             lautoES=check_boolstring("lautoES",buffer);
         }
 

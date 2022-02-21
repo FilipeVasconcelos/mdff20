@@ -58,6 +58,7 @@ void          free_config();
 void          info_config();
 void sample_config(int key);
 void sample_(char *label,double *ax, double *ay, double *az);
-int          write_config();
+int          write_config(char* filename, char opt);
 int           read_config();
+void          read_next_traj(FILE *fp);
 #endif
