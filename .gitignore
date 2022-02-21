@@ -16,3 +16,6 @@ src/OSZIFF
 #Examples
 examples/ex9/config/pot_mdff/*
 examples/ex9/config/pot_cp2k/*
+examples/ex*/cp2k/
+examples/ex*/mdff/
+examples/ex*/dl_poly/

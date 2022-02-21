@@ -57,6 +57,4 @@ do
         diff=$(echo "(${mdffres})-(${CCDres})"|bc -l)
         printf "%-8d %15.6f %15.6f %15.6f\n" ${cluster} ${mdffres} ${CCDres} ${diff}
 done
-
-
-#rm CONTFF  OSZIFF  POSFF  stdout  tmp.file  TRAJFF
+rm CONTFF  POSFF  stdout 
