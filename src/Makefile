@@ -15,7 +15,6 @@ CC=gcc
 $(info CC  $(shell which $(CC) ))
 
 #CFLAGS=-O0 -msse4 -mavx2 -Wall -ffast-math -fopenmp
-#CFLAGS=-O3 -msse4 -mavx2 -ffast-math -fopenmp -Ofast
 CFLAGS=-O3 -msse4 -mavx2 -ffast-math -fopenmp -Ofast
 CFLAGS+=-I/usr/lib/gcc/x86_64-linux-gnu/6.3.0/include/
 $(info CFLAGS   $(CFLAGS))
@@ -45,7 +44,7 @@ ifeq ($(CC),mpicc)
 else
     CPPDEFS=-DOMP -DHOST="$(HOST)" -DBRANCH="$(BRANCH)"
 endif
-#CPPDEFS+=-DDEBUG
+#CPPDEFS+=-DDEBUG_MD
 $(info CPPDEFS  $(CPPDEFS))
 
 .PHONY: clean
@@ -61,6 +60,5 @@ install: mdff20.x
 
 clean:
 	rm -rf *.o
-
 
 $(info -----------------------------------------------------------------------)

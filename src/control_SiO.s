@@ -10,6 +10,22 @@ lstatic false
 lreduced false
 lpstress false
 # ------------
+#    md
+# ------------
+integrator nvt-nhcn
+#integrator nve-vv
+nhc_n          3
+nhc_yosh_order 3
+nhc_mults      2
+timesca_thermo 2.0
+temp 2500.0
+npas 10000
+nprint 100
+fprint 100
+cprint 100
+dt .0005
+tauTberendsen .0005
+# ------------
 #   Field
 # ------------
 lcoulombic true
@@ -69,19 +85,3 @@ lpoldamping 0 0 1 true
 pol_damp_b 0 0 1 3.66480
 pol_damp_c 0 0 1 1.44589
 pol_damp_k 0 0 1 4
-# ------------
-#    md
-# ------------
-integrator nvt-nhcn
-#integrator nve-vv
-nhc_n          3
-nhc_yosh_order 3
-nhc_mults      2
-timesca_thermo 2.0
-temp 2500.0
-npas 1000000
-nprint 1000
-fprint 10
-cprint 10
-dt .0005
-tauTberendsen .0005
