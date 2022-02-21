@@ -21,7 +21,8 @@
 /******************************************************************************/
 void prop_velocity_verlet(){
 
-    statime(12);
+    //printf("debug inside prop_velocity_verlet");
+    statime(23);
     double *fxs, *fys, *fzs;
     fxs=malloc(nion*sizeof(*fxs));
     fys=malloc(nion*sizeof(*fys));
@@ -35,12 +36,14 @@ void prop_velocity_verlet(){
         ry[ia] += vy[ia] * dt + (fy[ia] * dtsq2 ) * invemassia[ia] ;
         rz[ia] += vz[ia] * dt + (fz[ia] * dtsq2 ) * invemassia[ia] ;
     }
-    statime(13);
-    mestime(&propagatorCPUtime,13,12);
+    statime(24);
+    mestime(&velocityverletCPUtime,24,23);
 // ------------------
+    //printf("debug before forces");
     engforce();
+    //printf("debug after forces");
 // ------------------
-    statime(12);
+    statime(23);
     double kin=0.0;
     for(int ia=0;ia<nion;ia++){
         vx [ia] += ( fxs[ia] + fx[ia] ) * dt2 * invemassia[ia];
@@ -55,8 +58,8 @@ void prop_velocity_verlet(){
     free(fxs);
     free(fys);
     free(fzs);
-    statime(13);
-    mestime(&propagatorCPUtime,13,12);
+    statime(24);
+    mestime(&velocityverletCPUtime,24,23);
 }
 
 /******************************************************************************/
@@ -91,7 +94,7 @@ void prop_leap_frog(){
 
     engforce();
 
-    statime(12);
+    //statime(12);
     double dtsq = dt * dt ;
     double *urx, *ury, *urz;
     double idt = 0.5 / dt ;
@@ -128,8 +131,8 @@ void prop_leap_frog(){
     free(urx);
     free(ury);
     free(urz);
-    statime(13);
-    mestime(&propagatorCPUtime,13,12);
+    //statime(13);
+    //mestime(&propagatorCPUtime,13,12);
 
 }
 
@@ -310,13 +313,13 @@ void prop_agate(int step){
         printf("  switch to leap-frog %d\n",egrator);
     }
     */
-    statime(13);
-    mestime(&propagatorCPUtime,13,12);
+//    printf("debug: %d %d\n",egrator,step);
     switch (egrator) {
         case 0: /* nve-lf */
             prop_leap_frog();
             break;
         case 1: /* nve-vv */
+//            printf("debug just before prop_velocity_verlet");
             prop_velocity_verlet();
             break;
         case 2: /* nvt-nhc_n*/
@@ -324,6 +327,9 @@ void prop_agate(int step){
             break;
     }
 
+    statime(13);
+    mestime(&propagatorCPUtime,13,12);
+//    printf("debug: %f %f %f\n",ttt[12],ttt[13],propagatorCPUtime);
 }
 
 

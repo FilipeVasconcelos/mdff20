@@ -1,6 +1,6 @@
 #ifndef INTEGRATION_H
 #define INTEGRATION_H
-void prop_agate();
+void prop_agate(int step);
 void prop_velocity_verlet();
 void prop_leap_frog();
 
