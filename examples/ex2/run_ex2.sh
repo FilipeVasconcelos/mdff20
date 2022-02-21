@@ -1,6 +1,6 @@
 #!/bin/bash
 
-EXEMDFF=mdff20.x
+EXEMDFF=/home/filipe/dev/mdff20/src/mdff20.x
 
 echo "EXAMPLE 2 : calculation of total energy of LJ clusters"
 echo "reference structures and energies from :"
