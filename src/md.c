@@ -117,7 +117,7 @@ void default_md(){
     tstart=0;
 }
 /******************************************************************************/
-void check_md(){
+int check_md(){
     /* tauTberendsen == dt => simple velocity rescale */
     if ( (nequil > 0 ) && (tauTberendsen==0.0)) tauTberendsen=dt;
 
@@ -133,6 +133,7 @@ void check_md(){
     for (int i =0;i<ALLWD_RESCALE_INTEGRATOR;i++){
         if ( egrator == allwd_rescale_integrator[i] ) rescale_allowed=true;
     }
+    if (lrdf) return 0;
     if ( tprint > 0  && access( "TRAJFF", F_OK ) == 0 ) {
     // if trajectory requested and TRAJFF exists
         remove("TRAJFF");

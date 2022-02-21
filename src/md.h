@@ -48,4 +48,5 @@ void info_md();
 void run_md();
 void alloc_md();
 void free_md();
+int check_md();
 #endif

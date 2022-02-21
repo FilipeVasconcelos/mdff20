@@ -75,21 +75,16 @@ int main(int argc, char *argv[])
     //read configuration from file POSFF
     //allocate main quantities when nion is known
     read_config();
+    // main md parameters
+    init_md(controlfn);
+    // main field parameters
+    init_field(controlfn);
     init_config();
     // parallelization atom decomposition
     do_split(nion,numprocs,myrank,&atomDec,"atoms");
     do_split(kcoul.nk,numprocs,myrank,&kcoul.kptDec,"k-points");
-    if (lrdf) {
-        init_rdf(controlfn);
-    }
-    else {
-        // main md parameters
-        init_md(controlfn);
-        // main field parameters
-        init_field(controlfn);
-        // verlet list
-        if (lverletL) check_verletlist();
-    }
+    // verlet list
+    if (lverletL) check_verletlist();
     if ( !lstatic && !lrdf ) {
         //lets give ions some velocities
         init_velocities();
@@ -109,6 +104,9 @@ int main(int argc, char *argv[])
             write_config("CONTFF",'w');
             info_thermo(0,NULL);
         }
+    }
+    else if (lrdf) {
+        init_rdf(controlfn);
     }
     /* ------------------------------------- */
     info_timing();

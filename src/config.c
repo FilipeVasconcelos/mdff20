@@ -312,15 +312,15 @@ int write_config(char* filename, char opt){
         printf(" %s\n",filename);
         return -1;
     }
-    fprintf(fp,"%d\n",nion);
-    fprintf(fp,"%s\n",configname);
+    fprintf(fp,"%d \n",nion);
+    fprintf(fp,"%s \n",configname);
     for(int i=0;i<3;i++){
         for(int j=0;j<3;j++){
             fprintf(fp,FF,simuCell.A[i][j]);
         }
-        fprintf(fp,"\n");
+        fprintf(fp," \n");
     }
-    fprintf(fp,"%d\n",ntype);
+    fprintf(fp,"%d \n",ntype);
     for(int it=0;it<ntype;it++){
         fprintf(fp,"%s ",atypit[it]);
     }
@@ -328,13 +328,13 @@ int write_config(char* filename, char opt){
     for(int it=0;it<ntype;it++){
         fprintf(fp,"%d ",nionit[it]);
     }
-    fprintf(fp,"\n");
-    fprintf(fp,"Cartesian\n");
+    fprintf(fp," \n");
+    fprintf(fp,"Cartesian \n");
     for(int ia=0;ia<nion;ia++){
         fprintf(fp,"%s ",atypia[ia]);
-        fprintf(fp,EE3,xxx[ia],yyy[ia],zzz[ia]);
-        fprintf(fp,EE3,vx[ia],vy[ia],vz[ia]);
-        fprintf(fp,EE3,fx[ia],fy[ia],fz[ia]);
+        fprintf(fp,FF3,xxx[ia],yyy[ia],zzz[ia]);
+        fprintf(fp,FF3,vx[ia],vy[ia],vz[ia]);
+        fprintf(fp,FF3,fx[ia],fy[ia],fz[ia]);
         fprintf(fp,"\n");
     }
     fclose(fp);
@@ -410,7 +410,7 @@ int read_config()
 
     // reading positions of ions
     for (int ia=0;ia<nion;ia++) {
-        c=fscanf(fp," %s ",atypia[ia]);
+        c=fscanf(fp,"%s ",atypia[ia]);
         c=fscanf(fp,"%lf %lf %lf ",&rx[ia],&ry[ia],&rz[ia]);
         if (Fposff>0) {
             c=fscanf(fp,"%lf %lf %lf ",&vx[ia],&vy[ia],&vz[ia]);
@@ -449,17 +449,22 @@ void read_next_traj (FILE *fp){
 
     int c;
     char cpos[MAX_LEN+1];
+    if (NULL == fp ) {
+        pError("POSFF not found\n");
+        exit(-1);
+    }
 
     // reading nion number of ions in POSFF
-    c=fscanf(fp, "%d", &nion);
-    printf("%d\n",nion);
+    c=fscanf(fp,"%d ", &nion);
+    printf("%d %d\n",c,nion);
     // reading config name
-    c=fscanf(fp, "%s", configname);
+    c=fscanf(fp, "%s ", configname);
     printf("%s\n",configname);
     // reading cell parameters
     for(int i=0;i<3;i++){
         for(int j=0;j<3;j++){
             c=fscanf(fp, "%lf",&simuCell.A[i][j]);
+            printf("i,j: %d,%d Cellc: %d %19.12e\n",i,j,c,simuCell.A[i][j]);
         }
     }
     lattice(&simuCell);
@@ -472,20 +477,25 @@ void read_next_traj (FILE *fp){
 
     //atypit : types char
     for (int it=0;it<ntype;it++) {
-        c=fscanf(fp,"%s",atypit[it]);
+        c=fscanf(fp,"%s ",atypit[it]);
     }
     for (int it=0;it<ntype;it++) {
         c=fscanf(fp,"%d",&nionit[it]);
     }
     // Direct or Cartesian
-    c=fscanf(fp, "%s", cpos);
+    c=fscanf(fp, "%s ", cpos);
+    printf("%d %s\n",c,cpos);
 
     // reading positions of ions
     for (int ia=0;ia<nion;ia++) {
-        c=fscanf(fp," %s ",atypia[ia]);
-        c=fscanf(fp,"%lf %lf %lf ",&rx[ia],&ry[ia],&rz[ia]);
-        c=fscanf(fp,"%lf %lf %lf ",&vx[ia],&vy[ia],&vz[ia]);
-        c=fscanf(fp,"%lf %lf %lf ",&fx[ia],&fy[ia],&fz[ia]);
+        c=fscanf(fp,"%s ",atypia[ia]);
+        if (c != 1) printf("ia: %d ac: %d %s\n",ia,c,atypia[ia]);
+        c=fscanf(fp," %lf %lf %lf ",&rx[ia],&ry[ia],&rz[ia]);
+        if (c !=3 ) printf("ia: %d rc: %d %19.12e %19.12e %19.12e\n",ia,c,rx[ia],ry[ia],rz[ia]);
+        c=fscanf(fp," %lf %lf %lf ",&vx[ia],&vy[ia],&vz[ia]);
+        if (c !=3 ) printf("ia: %d vc: %d %19.12e %19.12e %19.12e\n",ia,c,vx[ia],vy[ia],vz[ia]);
+        c=fscanf(fp," %lf %lf %lf ",&fx[ia],&fy[ia],&fz[ia]);
+        if (c !=3 ) printf("ia: %d fc: %d %19.12e %19.12e %19.12e \n",ia,c,fx[ia],fy[ia],fz[ia]);
     }
     // if position are in direct coordinates => cartesian coordinates
     if ((strcmp(cpos,"Direct") == 0 ) || (strcmp(cpos,"D") == 0 )) {

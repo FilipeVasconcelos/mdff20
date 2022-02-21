@@ -86,9 +86,6 @@ int rdf_readtraj(){
     //closing TRAJFF 
     if (fclose(fp))     {
        io_node printf("error closing file.");
-#ifdef MPI
-        MPI_Finalize();
-#endif
        return -1;
     }
     /* debug
@@ -163,17 +160,22 @@ int write_rdf(){
 }
 
 void init_rdf(char * controlfn ){
+    printf("here 0\n");
     /* default values */
     default_rdf();
+    printf("here 2\n");
     /* read parameters */
     read_rdf(controlfn);
+    printf("here 3\n");
     /* check parameters */
     //check_rdf();
     /* alloc memory */
     alloc_rdf();
+    printf("here 4\n");
     /* print information */
     info_rdf();
     rdf_readtraj();
+    printf("here 5\n");
 }
 void get_gr(){
   
