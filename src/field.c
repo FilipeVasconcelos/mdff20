@@ -382,14 +382,12 @@ void engforce()
                 true,  true,  false, false, true, true, false, !lpim);
         statime(25);
         mestime(&engforce_coulCPUtime,25,24);
-
 #ifdef DEBUG_CONGIG_FIELD_COUL
         printf("  u_coul %e\n",u_coul);
         printf("  u_pol %e\n",u_pol);
         sample_config(0);
         sample_field_coulombic(ef,efg);
 #endif
-
         free(mu);
         free(ef);
         free(efg);

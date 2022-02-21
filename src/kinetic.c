@@ -16,7 +16,6 @@ void init_velocities()
 {
     double comit[NTYPEMAX+1][3];
 
-
     maxwellboltzmann_velocities();
     rescale_velocities(0);
 
@@ -89,6 +88,7 @@ void rescale_velocities(int quiet)
     double T    = calc_temp(ekin);
 
     double lambda;
+//    printf("debug rescale\n");
     if (egrator !=2 ) {
         lambda = sqrt(1.0 + (dt / tauTberendsen) * (( temp / T / boltz_unit ) - 1.0 )) ;
     }
@@ -126,6 +126,10 @@ void rescale_velocities(int quiet)
     }
     ekin = calc_kin();
     T    = calc_temp(ekin);
+    //sample_config(0);
+//    printf("debug\n");
+//    printf("debug : %d %d %d\n",ionode,istep,nprint);
+//    printf("debug : %d \n",ionode && istep%nprint==0 && !istep);
     if (ionode && istep%nprint==0 && !istep) {
         printf("  rescaling  :  %f \n",lambda);
     }
