@@ -104,7 +104,7 @@ void default_md(){
 
     nprint=1;
     fprint=1;
-    cprint=1;
+    cprint=1000;
 }
 /******************************************************************************/
 void check_md(){
@@ -219,7 +219,7 @@ void run_md()
         /* --------------------------------- */
         /*     integration / propagators     */
         /* --------------------------------- */
-        prop_agate();
+        prop_agate(istep);
         /* --------------------------------- */
         /*     check_verlet_list             */
         /* --------------------------------- */
@@ -248,7 +248,6 @@ void run_md()
         if ( iopnode(istep,npas,fprint) ) {
             info_thermo(1,fpOSZIFF);   /*OSZIFF*/
         }
-
         /* --------------------------------- */
         /*          CONTFF info              */
         /* --------------------------------- */
