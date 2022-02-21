@@ -1,7 +1,7 @@
 #!/bin/bash
 
 pwds=$PWD
-EXEMDFF=mdff20.x
+EXEMDFF=/home/filipe/dev/mdff20/src/mdff20.x
 EXECP2K=cp2k
 
 echo "generate control files"
