@@ -36,9 +36,9 @@ void writime(char* label,int step,int from,int to){
 /******************************************************************************/
 void writimewhole(char* label, double whole){
 #if defined(MPI) || defined(OMP)
-    printf("  %-20s  : %12.3f\n",label,whole);
+    printf("%-20s  : %12.3f\n",label,whole);
 #else
-    printf("  %-20s  : %12.3f\n",label,(double) (whole/CLOCKS_PER_SEC));
+    printf("%-20s  : %12.3f\n",label,(double) (whole/CLOCKS_PER_SEC));
 #endif
 }
 /******************************************************************************/
@@ -56,7 +56,7 @@ void info_timing(){
     if (ionode){
         BLANKLINE;
         LSEPARATOR;
-        printf("  Timing Info  \n");
+        printf("Timing Info  \n");
         LSEPARATOR;
         writimewhole("Engforce",engforceCPUtime);
         if (lnmlj)   writimewhole("  -> nmlj",engforce_nmljCPUtime);

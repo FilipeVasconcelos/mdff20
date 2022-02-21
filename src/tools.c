@@ -36,8 +36,11 @@ int sum(int *arr,size_t n){
 }
 /******************************************************************************/
 double dmin(double a,double b){
-    if (a > b) return b;
-    return a;
+    return a<b?a:b;
+}
+/******************************************************************************/
+double dmin3(double a,double b,double c){
+    return dmin(dmin(a,b),c);
 }
 
 /******************************************************************************/
@@ -64,6 +67,11 @@ int check_string(char* label,char buffer[MAX_LEN+1], char allwd[][MAX_LEN+1], in
     }
     return check;
 }
+
+//int check_fscanf(char* label, int out, int check){
+//    return out = check ;
+//}
+
 
 /******************************************************************************/
 /* return true if index is even  */

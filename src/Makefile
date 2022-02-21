@@ -15,7 +15,7 @@ CC=gcc
 $(info CC  $(shell which $(CC) ))
 
 #CFLAGS=-O0 -msse4 -mavx2 -Wall -ffast-math -fopenmp
-CFLAGS=-O3 -msse4 -mavx2 -ffast-math -fopenmp -Ofast
+CFLAGS=-O3 -msse4 -mavx2 -ffast-math -fopenmp -Ofast -Wunused-result
 CFLAGS+=-I/usr/lib/gcc/x86_64-linux-gnu/6.3.0/include/
 $(info CFLAGS   $(CFLAGS))
 LDFLAGS = -lm -fopenmp -lblas -llapack -llapacke # bibliotheque math 
@@ -26,7 +26,7 @@ $(info LDFLAGS   $(LDFLAGS))
 
 OBJ=mdff20.o io.o mpi_mdff.o functions.o inverse_matrix.o timing.o constants.o tt_damp.o \
     global.o pbc.o verlet.o config.o cell.o kspace.o \
-    nonbonded.o nmlj.o bhmftd.o pim.o coulombic.o ewald.o integration.o field.o md.o rand.o\
+    radial_distribution.o nonbonded.o nmlj.o bhmftd.o pim.o coulombic.o ewald.o integration.o field.o md.o rand.o\
     cell.o thermo.o tools.o kinetic.o
 
 

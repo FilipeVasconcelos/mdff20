@@ -6,6 +6,7 @@ struct sort
     int index;
 };
 double dmin(double a,double b);
+double dmin3(double a,double b,double c);
 double dmin_arr(double *arr, int n);
 void expro(double H[3], double U1[3], double U2[3]);
 void sliceC(double S[3],double A[3][3],int index);
