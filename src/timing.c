@@ -75,6 +75,7 @@ void info_timing(){
         writimewhole("MD",mdstepCPUtime);
         writimewhole("Verlet List",verletLCPUtime);
         writimewhole("Integration ",propagatorCPUtime);
+        writimewhole("Velocity Verlet ",velocityverletCPUtime);
         writimewhole("Dir<->Kar",dirkardirCPUtime);
         writimewhole("MPI communication",COMMCPUtime);
         writimewhole("test measure",CPUtime);

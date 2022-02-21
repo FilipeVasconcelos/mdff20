@@ -13,6 +13,7 @@
 // 18 -> 19 ewald dir
 // 19 -> 20 ewald rec
 // 15 -> 22 bhmftd
+// 23 -> 24 prop_velocity_verlet
 #include <time.h>
 #if defined(MPI) || defined(OMP)
 double ttt[MAX_INDEX_TIME]; /* ttt[0] reference time */
@@ -34,7 +35,7 @@ double CPUtime; /* tmp measure */
 double COMMCPUtime; /* tmp measure */
 double verletLCPUtime ;
 double propagatorCPUtime;
-
+double velocityverletCPUtime;
 
 void info_timing();
 void statime(int x);
